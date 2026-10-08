@@ -1,0 +1,3602 @@
+{
+  "nodes": [
+    {
+      "provider": "aws",
+      "node_type": "IAMUser",
+      "provider_id": "arn:aws:iam::900000000001:user/attacker_a",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMUser",
+      "provider_id": "arn:aws:iam::900000000001:user/attacker_b",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMUser",
+      "provider_id": "arn:aws:iam::900000000001:user/attacker_c",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/entry_00",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/entry_01",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/entry_02",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/entry_03",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/entry_04",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/entry_05",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/entry_06",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/entry_07",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/entry_08",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/entry_09",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/entry_10",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/entry_11",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/mid_00",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/mid_01",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/mid_02",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/mid_03",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/mid_04",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/mid_05",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/mid_06",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/mid_07",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/mid_08",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/mid_09",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/mid_10",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/mid_11",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/mid_12",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/mid_13",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/mid_14",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/mid_15",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/mid_16",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/mid_17",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/mid_18",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/mid_19",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/mid_20",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/mid_21",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/mid_22",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/mid_23",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/gov_00",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/gov_01",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/gov_02",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/gov_03",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/gov_04",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/gov_05",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/gov_06",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/gov_07",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/gov_08",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/gov_09",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/prod_admin",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/infra_admin",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/billing_admin",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/deep_00",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/deep_01",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/deep_02",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/deep_03",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/deep_04",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/deep_05",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/dead_0_00",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/dead_0_01",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/dead_0_02",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/dead_0_03",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/dead_0_04",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/dead_0_05",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/dead_1_00",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/dead_1_01",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/dead_1_02",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/dead_1_03",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/dead_1_04",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/dead_1_05",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/dead_2_00",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/dead_2_01",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/dead_2_02",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/dead_2_03",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/dead_2_04",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::900000000001:role/dead_2_05",
+      "region": "-"
+    }
+  ],
+  "edges": [
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMUser",
+        "provider_id": "arn:aws:iam::900000000001:user/attacker_a",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_00",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMUser",
+        "provider_id": "arn:aws:iam::900000000001:user/attacker_a",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_01",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMUser",
+        "provider_id": "arn:aws:iam::900000000001:user/attacker_a",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_02",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMUser",
+        "provider_id": "arn:aws:iam::900000000001:user/attacker_a",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_03",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMUser",
+        "provider_id": "arn:aws:iam::900000000001:user/attacker_b",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_04",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMUser",
+        "provider_id": "arn:aws:iam::900000000001:user/attacker_b",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_05",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMUser",
+        "provider_id": "arn:aws:iam::900000000001:user/attacker_b",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_06",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMUser",
+        "provider_id": "arn:aws:iam::900000000001:user/attacker_b",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_07",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMUser",
+        "provider_id": "arn:aws:iam::900000000001:user/attacker_c",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_08",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMUser",
+        "provider_id": "arn:aws:iam::900000000001:user/attacker_c",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_09",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMUser",
+        "provider_id": "arn:aws:iam::900000000001:user/attacker_c",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_10",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMUser",
+        "provider_id": "arn:aws:iam::900000000001:user/attacker_c",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_11",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_00",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_00",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_00",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_01",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_01",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_02",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_01",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_03",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_01",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_04",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_02",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_04",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_02",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_05",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_03",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_06",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_03",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_07",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_03",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_08",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_04",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_08",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_04",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_09",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_05",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_10",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_05",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_11",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_05",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_12",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_06",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_12",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_06",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_13",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_07",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_14",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_07",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_15",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_07",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_16",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_08",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_16",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_08",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_17",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_09",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_18",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_09",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_19",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_09",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_20",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_10",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_20",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_10",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_21",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_11",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_22",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_11",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_23",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/entry_11",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_00",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_00",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_07",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_03",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_10",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_06",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_13",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_09",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_16",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_12",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_19",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_15",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_22",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_18",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_01",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_21",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_04",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_00",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_07",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_03",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_10",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_00",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_00",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_03",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_01",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_06",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_02",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_09",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_03",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_12",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_04",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_15",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_05",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_18",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_06",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_21",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_07",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_00",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_08",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_03",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_09",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_06",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_00",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_09",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_01",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_12",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_02",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_15",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_03",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_18",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_04",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_21",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_05",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_00",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_06",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_03",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_07",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_06",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_08",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_09",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_09",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_12",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_00",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_15",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_01",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_18",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_02",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_21",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_03",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_00",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_04",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_00",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/prod_admin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_01",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/prod_admin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_02",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/prod_admin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_03",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/prod_admin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_04",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/prod_admin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_05",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/prod_admin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_03",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/infra_admin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_04",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/infra_admin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_05",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/infra_admin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_06",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/infra_admin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_05",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/infra_admin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_06",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/infra_admin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_07",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/infra_admin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_08",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/infra_admin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_09",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/infra_admin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_02",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/billing_admin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_03",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/billing_admin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_04",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/billing_admin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_05",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/billing_admin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_07",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/billing_admin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_08",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/billing_admin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_09",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/billing_admin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_00",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/infra_admin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_01",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/infra_admin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/gov_02",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/infra_admin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_00",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/deep_00",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/deep_00",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/deep_01",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/deep_01",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/deep_02",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/deep_02",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/deep_03",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/deep_03",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/deep_04",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/deep_04",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/deep_05",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/deep_05",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/prod_admin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_00",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_0_00",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_01",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_0_01",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_0_00",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_0_01",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_0_01",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_0_02",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_0_02",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_0_03",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_0_03",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_0_04",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_0_04",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_0_05",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_0_05",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_0_00",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_04",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_1_00",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_05",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_1_01",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_1_00",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_1_01",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_1_01",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_1_02",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_1_02",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_1_03",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_1_03",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_1_04",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_1_04",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_1_05",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_1_05",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_1_00",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_08",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_2_00",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/mid_09",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_2_01",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_2_00",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_2_01",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_2_01",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_2_02",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_2_02",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_2_03",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_2_03",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_2_04",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_2_04",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_2_05",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_2_05",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::900000000001:role/dead_2_00",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    }
+  ],
+  "constraints": [
+    {
+      "provider": "aws",
+      "constraint_type": "SCP",
+      "scope_type": "OU",
+      "scope_id": "ou-prod",
+      "region": "-",
+      "properties": {
+        "policy_id": "p-blockcrossaccountprod",
+        "policy_name": "BlockCrossAccountProd",
+        "ou_name": "ou-prod",
+        "denied_actions": [
+          "sts:AssumeRole"
+        ]
+      },
+      "status": "ACTIVE",
+      "validation_status": "UNVALIDATED",
+      "confidence_q": 800
+    },
+    {
+      "provider": "aws",
+      "constraint_type": "TRUST_CONDITION",
+      "scope_type": "OU",
+      "scope_id": "ou-external",
+      "region": "-",
+      "properties": {
+        "policy_id": "p-external-id",
+        "policy_name": "ExternalIdRequired",
+        "ou_name": "ou-external",
+        "condition_type": "sts:ExternalId",
+        "denied_actions": [
+          "sts:AssumeRole"
+        ]
+      },
+      "status": "ACTIVE",
+      "validation_status": "UNVALIDATED",
+      "confidence_q": 800
+    },
+    {
+      "provider": "aws",
+      "constraint_type": "SCP",
+      "scope_type": "OU",
+      "scope_id": "ou-infra",
+      "region": "-",
+      "properties": {
+        "policy_id": "p-blockinfraadmin",
+        "policy_name": "BlockInfraAdmin",
+        "ou_name": "ou-infra",
+        "denied_actions": [
+          "sts:AssumeRole"
+        ]
+      },
+      "status": "ACTIVE",
+      "validation_status": "UNVALIDATED",
+      "confidence_q": 800
+    },
+    {
+      "provider": "aws",
+      "constraint_type": "SCP",
+      "scope_type": "OU",
+      "scope_id": "ou-billing",
+      "region": "-",
+      "properties": {
+        "policy_id": "p-blockbillingaccess",
+        "policy_name": "BlockBillingAccess",
+        "ou_name": "ou-billing",
+        "denied_actions": [
+          "sts:AssumeRole"
+        ]
+      },
+      "status": "ACTIVE",
+      "validation_status": "UNVALIDATED",
+      "confidence_q": 800
+    }
+  ],
+  "edge_constraints": [
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/gov_00",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/prod_admin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "OU",
+        "scope_id": "ou-prod",
+        "region": "-",
+        "properties": {
+          "policy_id": "p-blockcrossaccountprod",
+          "policy_name": "BlockCrossAccountProd",
+          "ou_name": "ou-prod",
+          "denied_actions": [
+            "sts:AssumeRole"
+          ]
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/gov_01",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/prod_admin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "OU",
+        "scope_id": "ou-prod",
+        "region": "-",
+        "properties": {
+          "policy_id": "p-blockcrossaccountprod",
+          "policy_name": "BlockCrossAccountProd",
+          "ou_name": "ou-prod",
+          "denied_actions": [
+            "sts:AssumeRole"
+          ]
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/gov_02",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/prod_admin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "OU",
+        "scope_id": "ou-prod",
+        "region": "-",
+        "properties": {
+          "policy_id": "p-blockcrossaccountprod",
+          "policy_name": "BlockCrossAccountProd",
+          "ou_name": "ou-prod",
+          "denied_actions": [
+            "sts:AssumeRole"
+          ]
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/gov_03",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/prod_admin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "OU",
+        "scope_id": "ou-prod",
+        "region": "-",
+        "properties": {
+          "policy_id": "p-blockcrossaccountprod",
+          "policy_name": "BlockCrossAccountProd",
+          "ou_name": "ou-prod",
+          "denied_actions": [
+            "sts:AssumeRole"
+          ]
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/gov_04",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/prod_admin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "OU",
+        "scope_id": "ou-prod",
+        "region": "-",
+        "properties": {
+          "policy_id": "p-blockcrossaccountprod",
+          "policy_name": "BlockCrossAccountProd",
+          "ou_name": "ou-prod",
+          "denied_actions": [
+            "sts:AssumeRole"
+          ]
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/gov_05",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/prod_admin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "OU",
+        "scope_id": "ou-prod",
+        "region": "-",
+        "properties": {
+          "policy_id": "p-blockcrossaccountprod",
+          "policy_name": "BlockCrossAccountProd",
+          "ou_name": "ou-prod",
+          "denied_actions": [
+            "sts:AssumeRole"
+          ]
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/gov_03",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/infra_admin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "TRUST_CONDITION",
+        "scope_type": "OU",
+        "scope_id": "ou-external",
+        "region": "-",
+        "properties": {
+          "policy_id": "p-external-id",
+          "policy_name": "ExternalIdRequired",
+          "ou_name": "ou-external",
+          "condition_type": "sts:ExternalId",
+          "denied_actions": [
+            "sts:AssumeRole"
+          ]
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/gov_04",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/infra_admin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "TRUST_CONDITION",
+        "scope_type": "OU",
+        "scope_id": "ou-external",
+        "region": "-",
+        "properties": {
+          "policy_id": "p-external-id",
+          "policy_name": "ExternalIdRequired",
+          "ou_name": "ou-external",
+          "condition_type": "sts:ExternalId",
+          "denied_actions": [
+            "sts:AssumeRole"
+          ]
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/gov_05",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/infra_admin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "TRUST_CONDITION",
+        "scope_type": "OU",
+        "scope_id": "ou-external",
+        "region": "-",
+        "properties": {
+          "policy_id": "p-external-id",
+          "policy_name": "ExternalIdRequired",
+          "ou_name": "ou-external",
+          "condition_type": "sts:ExternalId",
+          "denied_actions": [
+            "sts:AssumeRole"
+          ]
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/gov_06",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/infra_admin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "TRUST_CONDITION",
+        "scope_type": "OU",
+        "scope_id": "ou-external",
+        "region": "-",
+        "properties": {
+          "policy_id": "p-external-id",
+          "policy_name": "ExternalIdRequired",
+          "ou_name": "ou-external",
+          "condition_type": "sts:ExternalId",
+          "denied_actions": [
+            "sts:AssumeRole"
+          ]
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/gov_05",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/infra_admin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "OU",
+        "scope_id": "ou-infra",
+        "region": "-",
+        "properties": {
+          "policy_id": "p-blockinfraadmin",
+          "policy_name": "BlockInfraAdmin",
+          "ou_name": "ou-infra",
+          "denied_actions": [
+            "sts:AssumeRole"
+          ]
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/gov_06",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/infra_admin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "OU",
+        "scope_id": "ou-infra",
+        "region": "-",
+        "properties": {
+          "policy_id": "p-blockinfraadmin",
+          "policy_name": "BlockInfraAdmin",
+          "ou_name": "ou-infra",
+          "denied_actions": [
+            "sts:AssumeRole"
+          ]
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/gov_07",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/infra_admin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "OU",
+        "scope_id": "ou-infra",
+        "region": "-",
+        "properties": {
+          "policy_id": "p-blockinfraadmin",
+          "policy_name": "BlockInfraAdmin",
+          "ou_name": "ou-infra",
+          "denied_actions": [
+            "sts:AssumeRole"
+          ]
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/gov_08",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/infra_admin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "OU",
+        "scope_id": "ou-infra",
+        "region": "-",
+        "properties": {
+          "policy_id": "p-blockinfraadmin",
+          "policy_name": "BlockInfraAdmin",
+          "ou_name": "ou-infra",
+          "denied_actions": [
+            "sts:AssumeRole"
+          ]
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/gov_09",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/infra_admin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "OU",
+        "scope_id": "ou-infra",
+        "region": "-",
+        "properties": {
+          "policy_id": "p-blockinfraadmin",
+          "policy_name": "BlockInfraAdmin",
+          "ou_name": "ou-infra",
+          "denied_actions": [
+            "sts:AssumeRole"
+          ]
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/gov_02",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/billing_admin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "OU",
+        "scope_id": "ou-billing",
+        "region": "-",
+        "properties": {
+          "policy_id": "p-blockbillingaccess",
+          "policy_name": "BlockBillingAccess",
+          "ou_name": "ou-billing",
+          "denied_actions": [
+            "sts:AssumeRole"
+          ]
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/gov_03",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/billing_admin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "OU",
+        "scope_id": "ou-billing",
+        "region": "-",
+        "properties": {
+          "policy_id": "p-blockbillingaccess",
+          "policy_name": "BlockBillingAccess",
+          "ou_name": "ou-billing",
+          "denied_actions": [
+            "sts:AssumeRole"
+          ]
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/gov_04",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/billing_admin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "OU",
+        "scope_id": "ou-billing",
+        "region": "-",
+        "properties": {
+          "policy_id": "p-blockbillingaccess",
+          "policy_name": "BlockBillingAccess",
+          "ou_name": "ou-billing",
+          "denied_actions": [
+            "sts:AssumeRole"
+          ]
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/gov_05",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/billing_admin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "OU",
+        "scope_id": "ou-billing",
+        "region": "-",
+        "properties": {
+          "policy_id": "p-blockbillingaccess",
+          "policy_name": "BlockBillingAccess",
+          "ou_name": "ou-billing",
+          "denied_actions": [
+            "sts:AssumeRole"
+          ]
+        }
+      }
+    }
+  ],
+  "objectives": [
+    {
+      "objective_type": "REACHABILITY",
+      "start_nodes": [
+        {
+          "provider": "aws",
+          "node_type": "IAMUser",
+          "provider_id": "arn:aws:iam::900000000001:user/attacker_a",
+          "region": "-"
+        }
+      ],
+      "target_nodes": [
+        {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/prod_admin",
+          "region": "-"
+        }
+      ],
+      "max_depth": 8,
+      "k": 10
+    },
+    {
+      "objective_type": "REACHABILITY",
+      "start_nodes": [
+        {
+          "provider": "aws",
+          "node_type": "IAMUser",
+          "provider_id": "arn:aws:iam::900000000001:user/attacker_b",
+          "region": "-"
+        }
+      ],
+      "target_nodes": [
+        {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/infra_admin",
+          "region": "-"
+        }
+      ],
+      "max_depth": 8,
+      "k": 10
+    },
+    {
+      "objective_type": "REACHABILITY",
+      "start_nodes": [
+        {
+          "provider": "aws",
+          "node_type": "IAMUser",
+          "provider_id": "arn:aws:iam::900000000001:user/attacker_c",
+          "region": "-"
+        }
+      ],
+      "target_nodes": [
+        {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/billing_admin",
+          "region": "-"
+        }
+      ],
+      "max_depth": 8,
+      "k": 10
+    }
+  ],
+  "observations": [
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/gov_00",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/prod_admin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "DENY",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 90,
+      "is_counterfactual": false,
+      "constraint_relevant": true,
+      "evidence_hash": "g1_deny_0"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/gov_01",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/prod_admin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "DENY",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 90,
+      "is_counterfactual": false,
+      "constraint_relevant": true,
+      "evidence_hash": "g1_deny_1"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/gov_03",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/infra_admin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 85,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "g2_allow_0"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMUser",
+          "provider_id": "arn:aws:iam::900000000001:user/attacker_a",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::900000000001:role/entry_00",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 95,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "entry_allow_0"
+    }
+  ]
+}

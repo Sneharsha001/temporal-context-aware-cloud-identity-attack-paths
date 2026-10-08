@@ -1,0 +1,75 @@
+{
+  "org_id": "o-realdemo1",
+  "root_id": "r-demo",
+  "ous": [
+    {"ou_id": "ou-dev", "name": "Development", "parent_id": "r-demo"},
+    {"ou_id": "ou-staging", "name": "Staging", "parent_id": "r-demo"},
+    {"ou_id": "ou-prod", "name": "Production", "parent_id": "r-demo"}
+  ],
+  "accounts": [
+    {"account_id": "100000000001", "parent_id": "ou-dev"},
+    {"account_id": "200000000002", "parent_id": "ou-staging"},
+    {"account_id": "300000000003", "parent_id": "ou-prod"},
+    {"account_id": "400000000004", "parent_id": "ou-prod"}
+  ],
+  "scp_attachments": [
+    {"policy_id": "p-block-assume-prod", "target_id": "ou-prod", "target_type": "OU"},
+    {"policy_id": "p-block-iam-staging", "target_id": "ou-staging", "target_type": "OU"},
+    {"policy_id": "p-block-lambda-prod", "target_id": "ou-prod", "target_type": "OU"},
+    {"policy_id": "p-require-mfa-prod", "target_id": "ou-prod", "target_type": "OU"},
+    {"policy_id": "p-deny-ec2-staging", "target_id": "ou-staging", "target_type": "OU"}
+  ],
+  "scp_policies": [
+    {
+      "policy_id": "p-block-assume-prod",
+      "name": "BlockCrossAccountAssumeProd",
+      "document": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {"Sid": "DenyCrossAccountAssume", "Effect": "Deny", "Action": "sts:AssumeRole", "Resource": "*"}
+        ]
+      }
+    },
+    {
+      "policy_id": "p-block-iam-staging",
+      "name": "BlockIAMWriteStaging",
+      "document": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {"Sid": "DenyIAMWrite", "Effect": "Deny", "Action": ["iam:CreateAccessKey", "iam:CreateUser", "iam:AttachRolePolicy"], "Resource": "*"}
+        ]
+      }
+    },
+    {
+      "policy_id": "p-block-lambda-prod",
+      "name": "BlockLambdaDeployProd",
+      "document": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {"Sid": "DenyLambdaDeploy", "Effect": "Deny", "Action": "lambda:UpdateFunctionCode", "Resource": "*"}
+        ]
+      }
+    },
+    {
+      "policy_id": "p-require-mfa-prod",
+      "name": "RequireMFAForProd",
+      "document": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {"Sid": "DenyWithoutMFA", "Effect": "Deny", "Action": "*", "Resource": "*",
+           "Condition": {"BoolIfExists": {"aws:MultiFactorAuthPresent": "false"}}}
+        ]
+      }
+    },
+    {
+      "policy_id": "p-deny-ec2-staging",
+      "name": "DenyEC2InStaging",
+      "document": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {"Sid": "DenyEC2", "Effect": "Deny", "Action": "ec2:RunInstances", "Resource": "*"}
+        ]
+      }
+    }
+  ]
+}

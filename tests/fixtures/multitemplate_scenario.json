@@ -1,0 +1,83 @@
+{
+  "nodes": [
+    {"provider": "aws", "node_type": "IAMRole", "provider_id": "attacker", "region": "us-east-1"},
+    {"provider": "aws", "node_type": "IAMRole", "provider_id": "pivot", "region": "us-east-1"},
+    {"provider": "aws", "node_type": "S3Bucket", "provider_id": "target-bucket", "region": "us-east-1"},
+    {"provider": "aws", "node_type": "IAMRole", "provider_id": "admin", "region": "us-east-1"}
+  ],
+  "edges": [
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "attacker", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "pivot", "region": "us-east-1"},
+      "region": "us-east-1",
+      "features": {"action": "sts:AssumeRole", "effect": "Allow"}
+    },
+    {
+      "edge_type": "s3:GetObject",
+      "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "pivot", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "S3Bucket", "provider_id": "target-bucket", "region": "us-east-1"},
+      "region": "us-east-1",
+      "features": {"action": "s3:GetObject", "effect": "Allow"}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "pivot", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "admin", "region": "us-east-1"},
+      "region": "us-east-1",
+      "features": {"action": "sts:AssumeRole", "effect": "Allow"}
+    }
+  ],
+  "objectives": [
+    {
+      "objective_type": "REACHABILITY",
+      "start_nodes": [{"provider": "aws", "node_type": "IAMRole", "provider_id": "attacker", "region": "us-east-1"}],
+      "target_nodes": [{"provider": "aws", "node_type": "S3Bucket", "provider_id": "target-bucket", "region": "us-east-1"}],
+      "max_depth": 3, "k": 3
+    },
+    {
+      "objective_type": "REACHABILITY",
+      "start_nodes": [{"provider": "aws", "node_type": "IAMRole", "provider_id": "attacker", "region": "us-east-1"}],
+      "target_nodes": [{"provider": "aws", "node_type": "IAMRole", "provider_id": "admin", "region": "us-east-1"}],
+      "max_depth": 3, "k": 3
+    }
+  ],
+  "observations": [
+    {
+      "edge_ref": {"edge_type": "sts:AssumeRole",
+        "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "attacker", "region": "us-east-1"},
+        "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "pivot", "region": "us-east-1"},
+        "region": "us-east-1"},
+      "probe_type": "REPLAY_SCRIPTED", "result": "ALLOW", "reason_class": "UNKNOWN",
+      "strength": "DIRECT", "signal_q": 90, "is_counterfactual": false,
+      "constraint_relevant": false, "evidence_hash": "ev_ar1"
+    },
+    {
+      "edge_ref": {"edge_type": "sts:AssumeRole",
+        "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "attacker", "region": "us-east-1"},
+        "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "pivot", "region": "us-east-1"},
+        "region": "us-east-1"},
+      "probe_type": "REPLAY_SCRIPTED", "result": "ALLOW", "reason_class": "UNKNOWN",
+      "strength": "DIRECT", "signal_q": 85, "is_counterfactual": false,
+      "constraint_relevant": false, "evidence_hash": "ev_ar2"
+    },
+    {
+      "edge_ref": {"edge_type": "s3:GetObject",
+        "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "pivot", "region": "us-east-1"},
+        "dst": {"provider": "aws", "node_type": "S3Bucket", "provider_id": "target-bucket", "region": "us-east-1"},
+        "region": "us-east-1"},
+      "probe_type": "REPLAY_SCRIPTED", "result": "DENY", "reason_class": "MISSING_PERMISSION",
+      "strength": "DIRECT", "signal_q": 95, "is_counterfactual": false,
+      "constraint_relevant": false, "evidence_hash": "ev_s3_1"
+    },
+    {
+      "edge_ref": {"edge_type": "sts:AssumeRole",
+        "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "pivot", "region": "us-east-1"},
+        "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "admin", "region": "us-east-1"},
+        "region": "us-east-1"},
+      "probe_type": "REPLAY_SCRIPTED", "result": "ALLOW", "reason_class": "UNKNOWN",
+      "strength": "DIRECT", "signal_q": 80, "is_counterfactual": false,
+      "constraint_relevant": false, "evidence_hash": "ev_ar3"
+    }
+  ]
+}

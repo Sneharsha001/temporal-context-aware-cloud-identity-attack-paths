@@ -1,0 +1,1358 @@
+{
+  "nodes": [
+    {
+      "provider": "aws",
+      "node_type": "IAMUser",
+      "provider_id": "arn:aws:iam::111111111111:user/pentester",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::111111111111:role/MgmtOpsRole",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::222222222222:role/DevJumpRole",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::222222222222:role/DevCIRole",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::222222222222:role/DevDeployRole",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::222222222222:role/SharedLambdaDeploy",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::222222222222:role/DevReadOnly",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::222222222222:role/DevBuildRunner",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::333333333333:role/ProdDeployRole",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::333333333333:role/ProdAdminRole",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::333333333333:role/ProdDBRole",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::333333333333:role/ProdLambdaExec",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::333333333333:role/ProdReadOnly",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::333333333333:role/ProdBackupRole",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::333333333333:role/BillingAdminRole",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::222222222222:role/DeadEnd00",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::222222222222:role/DeadEnd01",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::222222222222:role/DeadEnd02",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::222222222222:role/DeadEnd03",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::222222222222:role/DeadEnd04",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::222222222222:role/DeadEnd05",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::222222222222:role/DeadEnd06",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::222222222222:role/DeadEnd07",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::333333333333:role/ProdDead00",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::333333333333:role/ProdDead01",
+      "region": "-"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::333333333333:role/ProdDead02",
+      "region": "-"
+    }
+  ],
+  "edges": [
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMUser",
+        "provider_id": "arn:aws:iam::111111111111:user/pentester",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::111111111111:role/MgmtOpsRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMUser",
+        "provider_id": "arn:aws:iam::111111111111:user/pentester",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DevJumpRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMUser",
+        "provider_id": "arn:aws:iam::111111111111:user/pentester",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DevCIRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::111111111111:role/MgmtOpsRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DevJumpRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DevJumpRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DevDeployRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DevJumpRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DevReadOnly",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DevCIRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DevDeployRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DevCIRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DevBuildRunner",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DevDeployRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/SharedLambdaDeploy",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DevBuildRunner",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/SharedLambdaDeploy",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DevJumpRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdDeployRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DevCIRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdDeployRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/SharedLambdaDeploy",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdDeployRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DevJumpRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdDBRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdDeployRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdAdminRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdDeployRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdDBRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdDBRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdAdminRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdLambdaExec",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdDeployRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdDeployRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdReadOnly",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdBackupRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdDBRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/SharedLambdaDeploy",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdAdminRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DevCIRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/BillingAdminRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DevJumpRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/BillingAdminRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/SharedLambdaDeploy",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/BillingAdminRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::111111111111:role/MgmtOpsRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/BillingAdminRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdDBRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/BillingAdminRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DevReadOnly",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DeadEnd00",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DevReadOnly",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DeadEnd01",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DevBuildRunner",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DeadEnd02",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DeadEnd00",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DeadEnd03",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DeadEnd01",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DeadEnd04",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DeadEnd02",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DeadEnd05",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DeadEnd03",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DeadEnd06",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DeadEnd04",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DeadEnd07",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DeadEnd05",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DeadEnd00",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DeadEnd06",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DeadEnd01",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DeadEnd07",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/DeadEnd02",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdReadOnly",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdDead00",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdBackupRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdDead01",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdDead00",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdDead02",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdDead01",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdDead02",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {}
+    }
+  ],
+  "constraints": [
+    {
+      "provider": "aws",
+      "constraint_type": "SCP",
+      "scope_type": "OU",
+      "scope_id": "ou-prod",
+      "region": "-",
+      "properties": {
+        "policy_id": "p-denyassumeroleprod",
+        "policy_name": "DenyAssumeRoleProd",
+        "ou_name": "ou-prod",
+        "denied_actions": [
+          "sts:AssumeRole"
+        ]
+      },
+      "status": "ACTIVE",
+      "validation_status": "UNVALIDATED",
+      "confidence_q": 800
+    },
+    {
+      "provider": "aws",
+      "constraint_type": "TRUST_CONDITION",
+      "scope_type": "OU",
+      "scope_id": "ou-billing",
+      "region": "-",
+      "properties": {
+        "policy_id": "p-externalidrequired",
+        "policy_name": "ExternalIdRequired",
+        "ou_name": "ou-billing",
+        "condition_type": "sts:ExternalId",
+        "denied_actions": [
+          "sts:AssumeRole"
+        ]
+      },
+      "status": "ACTIVE",
+      "validation_status": "UNVALIDATED",
+      "confidence_q": 800
+    }
+  ],
+  "edge_constraints": [
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::222222222222:role/DevJumpRole",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::333333333333:role/ProdDeployRole",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "OU",
+        "scope_id": "ou-prod",
+        "region": "-",
+        "properties": {
+          "policy_id": "p-denyassumeroleprod",
+          "policy_name": "DenyAssumeRoleProd",
+          "ou_name": "ou-prod",
+          "denied_actions": [
+            "sts:AssumeRole"
+          ]
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::222222222222:role/DevCIRole",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::333333333333:role/ProdDeployRole",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "OU",
+        "scope_id": "ou-prod",
+        "region": "-",
+        "properties": {
+          "policy_id": "p-denyassumeroleprod",
+          "policy_name": "DenyAssumeRoleProd",
+          "ou_name": "ou-prod",
+          "denied_actions": [
+            "sts:AssumeRole"
+          ]
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::222222222222:role/SharedLambdaDeploy",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::333333333333:role/ProdDeployRole",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "OU",
+        "scope_id": "ou-prod",
+        "region": "-",
+        "properties": {
+          "policy_id": "p-denyassumeroleprod",
+          "policy_name": "DenyAssumeRoleProd",
+          "ou_name": "ou-prod",
+          "denied_actions": [
+            "sts:AssumeRole"
+          ]
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::222222222222:role/DevJumpRole",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::333333333333:role/ProdDBRole",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "OU",
+        "scope_id": "ou-prod",
+        "region": "-",
+        "properties": {
+          "policy_id": "p-denyassumeroleprod",
+          "policy_name": "DenyAssumeRoleProd",
+          "ou_name": "ou-prod",
+          "denied_actions": [
+            "sts:AssumeRole"
+          ]
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::333333333333:role/ProdDeployRole",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::333333333333:role/ProdAdminRole",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "OU",
+        "scope_id": "ou-prod",
+        "region": "-",
+        "properties": {
+          "policy_id": "p-denyassumeroleprod",
+          "policy_name": "DenyAssumeRoleProd",
+          "ou_name": "ou-prod",
+          "denied_actions": [
+            "sts:AssumeRole"
+          ]
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::333333333333:role/ProdDeployRole",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::333333333333:role/ProdDBRole",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "OU",
+        "scope_id": "ou-prod",
+        "region": "-",
+        "properties": {
+          "policy_id": "p-denyassumeroleprod",
+          "policy_name": "DenyAssumeRoleProd",
+          "ou_name": "ou-prod",
+          "denied_actions": [
+            "sts:AssumeRole"
+          ]
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::222222222222:role/DevCIRole",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::333333333333:role/BillingAdminRole",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "TRUST_CONDITION",
+        "scope_type": "OU",
+        "scope_id": "ou-billing",
+        "region": "-",
+        "properties": {
+          "policy_id": "p-externalidrequired",
+          "policy_name": "ExternalIdRequired",
+          "ou_name": "ou-billing",
+          "condition_type": "sts:ExternalId",
+          "denied_actions": [
+            "sts:AssumeRole"
+          ]
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::222222222222:role/DevJumpRole",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::333333333333:role/BillingAdminRole",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "TRUST_CONDITION",
+        "scope_type": "OU",
+        "scope_id": "ou-billing",
+        "region": "-",
+        "properties": {
+          "policy_id": "p-externalidrequired",
+          "policy_name": "ExternalIdRequired",
+          "ou_name": "ou-billing",
+          "condition_type": "sts:ExternalId",
+          "denied_actions": [
+            "sts:AssumeRole"
+          ]
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::222222222222:role/SharedLambdaDeploy",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::333333333333:role/BillingAdminRole",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "TRUST_CONDITION",
+        "scope_type": "OU",
+        "scope_id": "ou-billing",
+        "region": "-",
+        "properties": {
+          "policy_id": "p-externalidrequired",
+          "policy_name": "ExternalIdRequired",
+          "ou_name": "ou-billing",
+          "condition_type": "sts:ExternalId",
+          "denied_actions": [
+            "sts:AssumeRole"
+          ]
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::111111111111:role/MgmtOpsRole",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::333333333333:role/BillingAdminRole",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "TRUST_CONDITION",
+        "scope_type": "OU",
+        "scope_id": "ou-billing",
+        "region": "-",
+        "properties": {
+          "policy_id": "p-externalidrequired",
+          "policy_name": "ExternalIdRequired",
+          "ou_name": "ou-billing",
+          "condition_type": "sts:ExternalId",
+          "denied_actions": [
+            "sts:AssumeRole"
+          ]
+        }
+      }
+    }
+  ],
+  "objectives": [
+    {
+      "objective_type": "REACHABILITY",
+      "start_nodes": [
+        {
+          "provider": "aws",
+          "node_type": "IAMUser",
+          "provider_id": "arn:aws:iam::111111111111:user/pentester",
+          "region": "-"
+        }
+      ],
+      "target_nodes": [
+        {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::333333333333:role/ProdAdminRole",
+          "region": "-"
+        }
+      ],
+      "max_depth": 8,
+      "k": 10
+    },
+    {
+      "objective_type": "REACHABILITY",
+      "start_nodes": [
+        {
+          "provider": "aws",
+          "node_type": "IAMUser",
+          "provider_id": "arn:aws:iam::111111111111:user/pentester",
+          "region": "-"
+        }
+      ],
+      "target_nodes": [
+        {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::333333333333:role/BillingAdminRole",
+          "region": "-"
+        }
+      ],
+      "max_depth": 6,
+      "k": 10
+    }
+  ],
+  "observations": [
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMUser",
+          "provider_id": "arn:aws:iam::111111111111:user/pentester",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::222222222222:role/DevJumpRole",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 95,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "recon_01"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMUser",
+          "provider_id": "arn:aws:iam::111111111111:user/pentester",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::222222222222:role/DevCIRole",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 90,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "recon_02"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::222222222222:role/DevCIRole",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::333333333333:role/BillingAdminRole",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 85,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "tc_allow_01"
+    }
+  ]
+}

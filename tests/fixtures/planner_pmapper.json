@@ -1,0 +1,89 @@
+{
+  "metadata": {
+    "account_id": "100000000001",
+    "pmapper_version": "1.2.0"
+  },
+  "nodes": [
+    {
+      "arn": "arn:aws:iam::100000000001:user/attacker",
+      "id_value": "AIDA_ATTACKER",
+      "is_admin": false
+    },
+    {
+      "arn": "arn:aws:iam::100000000001:role/JumpRole",
+      "id_value": "AROA_JUMP",
+      "is_admin": false,
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {"Effect": "Allow", "Principal": {"AWS": "arn:aws:iam::100000000001:root"}, "Action": "sts:AssumeRole"}
+        ]
+      }
+    },
+    {
+      "arn": "arn:aws:iam::200000000002:role/ProdDeploy",
+      "id_value": "AROA_PRODDEPLOY",
+      "is_admin": false,
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {"Effect": "Allow", "Principal": {"AWS": "arn:aws:iam::100000000001:root"}, "Action": "sts:AssumeRole"}
+        ]
+      }
+    },
+    {
+      "arn": "arn:aws:iam::200000000002:role/ProdAdmin",
+      "id_value": "AROA_PRODADMIN",
+      "is_admin": true,
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {"Effect": "Allow", "Principal": {"AWS": "*"}, "Action": "sts:AssumeRole"}
+        ]
+      }
+    },
+    {
+      "arn": "arn:aws:iam::100000000001:role/LambdaExec",
+      "id_value": "AROA_LAMBDA",
+      "is_admin": false,
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {"Effect": "Allow", "Principal": {"Service": "lambda.amazonaws.com"}, "Action": "sts:AssumeRole"}
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "arn:aws:iam::100000000001:user/attacker",
+      "destination": "arn:aws:iam::100000000001:role/JumpRole",
+      "reason": "can call sts:AssumeRole to access",
+      "short_reason": "sts:AssumeRole"
+    },
+    {
+      "source": "arn:aws:iam::100000000001:role/JumpRole",
+      "destination": "arn:aws:iam::200000000002:role/ProdDeploy",
+      "reason": "can call sts:AssumeRole to access",
+      "short_reason": "sts:AssumeRole"
+    },
+    {
+      "source": "arn:aws:iam::200000000002:role/ProdDeploy",
+      "destination": "arn:aws:iam::200000000002:role/ProdAdmin",
+      "reason": "can call sts:AssumeRole to access",
+      "short_reason": "sts:AssumeRole"
+    },
+    {
+      "source": "arn:aws:iam::100000000001:role/JumpRole",
+      "destination": "arn:aws:iam::100000000001:role/LambdaExec",
+      "reason": "can call lambda:UpdateFunctionCode to access",
+      "short_reason": "lambda:UpdateFunctionCode"
+    },
+    {
+      "source": "arn:aws:iam::100000000001:role/LambdaExec",
+      "destination": "arn:aws:iam::200000000002:role/ProdAdmin",
+      "reason": "can call sts:AssumeRole to access",
+      "short_reason": "sts:AssumeRole"
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "org_id": "o-demo123",
+  "root_id": "r-demo",
+  "ous": [
+    {"ou_id": "ou-dev", "name": "Development", "parent_id": "r-demo"},
+    {"ou_id": "ou-prod", "name": "Production", "parent_id": "r-demo"}
+  ],
+  "accounts": [
+    {"account_id": "100000000001", "parent_id": "ou-dev"},
+    {"account_id": "200000000002", "parent_id": "ou-prod"}
+  ],
+  "scp_attachments": [
+    {
+      "policy_id": "p-block-assume-prod",
+      "target_id": "ou-prod",
+      "target_type": "OU"
+    },
+    {
+      "policy_id": "p-block-iam-write",
+      "target_id": "200000000002",
+      "target_type": "ACCOUNT"
+    },
+    {
+      "policy_id": "p-conditional-deny",
+      "target_id": "ou-prod",
+      "target_type": "OU"
+    }
+  ],
+  "scp_policies": [
+    {
+      "policy_id": "p-block-assume-prod",
+      "name": "BlockAssumeRoleInProd",
+      "document": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Deny",
+            "Action": "sts:AssumeRole",
+            "Resource": "*"
+          }
+        ]
+      }
+    },
+    {
+      "policy_id": "p-block-iam-write",
+      "name": "BlockIAMWriteInProdAccount",
+      "document": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Deny",
+            "Action": ["iam:PutRolePolicy", "iam:AttachRolePolicy", "iam:CreateRole"],
+            "Resource": "*"
+          }
+        ]
+      }
+    },
+    {
+      "policy_id": "p-conditional-deny",
+      "name": "BlockAssumeUnlessVPN",
+      "document": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Deny",
+            "Action": "sts:AssumeRole",
+            "Resource": "*",
+            "Condition": {
+              "NotIpAddress": {
+                "aws:SourceIp": "10.0.0.0/8"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

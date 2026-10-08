@@ -1,0 +1,111 @@
+{
+  "scenario_id": "constraint_validation_test",
+  "nodes": [
+    {"label": "user1", "provider": "generic", "node_type": "identity", "provider_id": "user_1"},
+    {"label": "user2", "provider": "generic", "node_type": "identity", "provider_id": "user_2"},
+    {"label": "roleA", "provider": "generic", "node_type": "role", "provider_id": "role_a"},
+    {"label": "roleB", "provider": "generic", "node_type": "role", "provider_id": "role_b"},
+    {"label": "target", "provider": "generic", "node_type": "resource", "provider_id": "target_res"}
+  ],
+  "edges": [
+    {"label": "e_u1_rA", "provider": "generic", "edge_type": "assume_role", "src": "user1", "dst": "roleA"},
+    {"label": "e_u2_rA", "provider": "generic", "edge_type": "assume_role", "src": "user2", "dst": "roleA"},
+    {"label": "e_rA_rB", "provider": "generic", "edge_type": "escalate", "src": "roleA", "dst": "roleB"},
+    {"label": "e_rA_tgt", "provider": "generic", "edge_type": "access", "src": "roleA", "dst": "target"},
+    {"label": "e_rB_tgt", "provider": "generic", "edge_type": "access", "src": "roleB", "dst": "target"}
+  ],
+  "constraints": [
+    {
+      "label": "scp_multi",
+      "provider": "generic",
+      "constraint_type": "SCP",
+      "scope_type": "ACCOUNT",
+      "scope_id": "acct_001",
+      "properties": {"effect": "deny", "actions": ["s3:*"]},
+      "edges": [
+        {"edge": "e_rA_tgt", "confidence_q": 900, "relation_type": "APPLIES_TO"},
+        {"edge": "e_rB_tgt", "confidence_q": 850, "relation_type": "APPLIES_TO"}
+      ]
+    },
+    {
+      "label": "trust_cond",
+      "provider": "generic",
+      "constraint_type": "TRUST_CONDITION",
+      "scope_type": "ROLE",
+      "scope_id": "role_b",
+      "properties": {"condition": "mfa_required"},
+      "edges": [
+        {"edge": "e_rA_rB", "confidence_q": 700, "relation_type": "APPLIES_TO"}
+      ]
+    }
+  ],
+  "objectives": [
+    {
+      "objective_type": "privilege_escalation",
+      "start_nodes": ["user1", "user2"],
+      "target_nodes": ["target"],
+      "max_depth": 4,
+      "k": 5,
+      "description": "Can users reach target resource?"
+    }
+  ],
+  "observations": [
+    {
+      "edge": "e_rA_tgt",
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "DENY",
+      "reason_class": "CONSTRAINT_DENY",
+      "strength": "DIRECT",
+      "signal_q": 90,
+      "evidence_hash": "scp_ev_1",
+      "constraint_relevant": 1
+    },
+    {
+      "edge": "e_rB_tgt",
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "DENY",
+      "reason_class": "CONSTRAINT_DENY",
+      "strength": "DIRECT",
+      "signal_q": 85,
+      "evidence_hash": "scp_ev_2",
+      "constraint_relevant": 1
+    },
+    {
+      "edge": "e_rA_tgt",
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "DENY",
+      "reason_class": "UNKNOWN",
+      "strength": "INFERRED",
+      "signal_q": 50,
+      "constraint_relevant": 0
+    },
+    {
+      "edge": "e_rA_rB",
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "DENY",
+      "reason_class": "CONDITION_MISMATCH",
+      "strength": "DIRECT",
+      "signal_q": 80,
+      "evidence_hash": "trust_ev_1",
+      "constraint_relevant": 0
+    },
+    {
+      "edge": "e_u1_rA",
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 95,
+      "evidence_hash": "allow_ev_1"
+    },
+    {
+      "edge": "e_u2_rA",
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 90,
+      "evidence_hash": "allow_ev_2"
+    }
+  ]
+}

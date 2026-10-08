@@ -1,0 +1,5783 @@
+{
+  "nodes": [
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "src",
+      "region": "us-east-1"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "dst",
+      "region": "us-east-1"
+    }
+  ],
+  "edges": [
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "src",
+        "region": "us-east-1"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "dst",
+        "region": "us-east-1"
+      },
+      "region": "us-east-1",
+      "features": {
+        "action": "sts:AssumeRole",
+        "effect": "Allow"
+      }
+    }
+  ],
+  "objectives": [
+    {
+      "objective_type": "REACHABILITY",
+      "start_nodes": [
+        {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        }
+      ],
+      "target_nodes": [
+        {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        }
+      ],
+      "max_depth": 2,
+      "k": 3
+    }
+  ],
+  "observations": [
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0000"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0001"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0002"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0003"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0004"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0005"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0006"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0007"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0008"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0009"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0010"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0011"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0012"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0013"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0014"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0015"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0016"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0017"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0018"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0019"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0020"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0021"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0022"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0023"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0024"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0025"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0026"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0027"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0028"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0029"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0030"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0031"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0032"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0033"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0034"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0035"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0036"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0037"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0038"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0039"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0040"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0041"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0042"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0043"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0044"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0045"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0046"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0047"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0048"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0049"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0050"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0051"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0052"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0053"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0054"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0055"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0056"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0057"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0058"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0059"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0060"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0061"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0062"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0063"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0064"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0065"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0066"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0067"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0068"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0069"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0070"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0071"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0072"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0073"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0074"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0075"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0076"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0077"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0078"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0079"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0080"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0081"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0082"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0083"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0084"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0085"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0086"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0087"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0088"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0089"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0090"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0091"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0092"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0093"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0094"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0095"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0096"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0097"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0098"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0099"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0100"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0101"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0102"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0103"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0104"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0105"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0106"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0107"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0108"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0109"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0110"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0111"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0112"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0113"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0114"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0115"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0116"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0117"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0118"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0119"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0120"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0121"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0122"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0123"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0124"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0125"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0126"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0127"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0128"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0129"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0130"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0131"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0132"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0133"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0134"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0135"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0136"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0137"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0138"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0139"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0140"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0141"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0142"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0143"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0144"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0145"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0146"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0147"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0148"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0149"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0150"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0151"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0152"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0153"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0154"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0155"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0156"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0157"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0158"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0159"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0160"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0161"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0162"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0163"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0164"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0165"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0166"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0167"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0168"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0169"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0170"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0171"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0172"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0173"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0174"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0175"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0176"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0177"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0178"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0179"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0180"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0181"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0182"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0183"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0184"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0185"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0186"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0187"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0188"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0189"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0190"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0191"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0192"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0193"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0194"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0195"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0196"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0197"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0198"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0199"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0200"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0201"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0202"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0203"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0204"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0205"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0206"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0207"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0208"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0209"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0210"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0211"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0212"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0213"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0214"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0215"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0216"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0217"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0218"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "src",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "dst",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "probe_type": "REPLAY_SCRIPTED",
+      "result": "ALLOW",
+      "reason_class": "UNKNOWN",
+      "strength": "DIRECT",
+      "signal_q": 100,
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev0219"
+    }
+  ]
+}

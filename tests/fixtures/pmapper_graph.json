@@ -1,0 +1,185 @@
+{
+  "metadata": {
+    "account_id": "111111111111",
+    "pmapper_version": "1.2.0"
+  },
+  "nodes": [
+    {
+      "arn": "arn:aws:iam::111111111111:role/DevOpsEngineer",
+      "id_value": "AROA111111DEVOPS",
+      "is_admin": false,
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {"Effect": "Allow", "Principal": {"AWS": "arn:aws:iam::111111111111:root"}, "Action": "sts:AssumeRole"}
+        ]
+      }
+    },
+    {
+      "arn": "arn:aws:iam::111111111111:role/LambdaExecRole",
+      "id_value": "AROA111111LAMBDA",
+      "is_admin": false,
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {"Effect": "Allow", "Principal": {"Service": "lambda.amazonaws.com"}, "Action": "sts:AssumeRole"}
+        ]
+      }
+    },
+    {
+      "arn": "arn:aws:iam::111111111111:user/ci-deploy",
+      "id_value": "AIDA111111CIDEPLOY",
+      "is_admin": false
+    },
+    {
+      "arn": "arn:aws:iam::222222222222:role/ProdAdmin",
+      "id_value": "AROA222222ADMIN",
+      "is_admin": true,
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {"AWS": "arn:aws:iam::111111111111:root"},
+            "Action": "sts:AssumeRole",
+            "Condition": {"StringEquals": {"sts:ExternalId": "prod-xacct-8472"}}
+          }
+        ]
+      }
+    },
+    {
+      "arn": "arn:aws:iam::222222222222:role/ProdAppRole",
+      "id_value": "AROA222222APP",
+      "is_admin": false,
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {"Effect": "Allow", "Principal": {"Service": "ec2.amazonaws.com"}, "Action": "sts:AssumeRole"}
+        ]
+      }
+    },
+    {
+      "arn": "arn:aws:iam::222222222222:role/ProdDBAccess",
+      "id_value": "AROA222222DB",
+      "is_admin": false,
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {"Effect": "Allow", "Principal": {"AWS": "arn:aws:iam::222222222222:role/ProdAppRole"}, "Action": "sts:AssumeRole"}
+        ]
+      }
+    },
+    {
+      "arn": "arn:aws:iam::333333333333:role/SharedServiceRole",
+      "id_value": "AROA333333SHARED",
+      "is_admin": false,
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {"AWS": "*"},
+            "Action": "sts:AssumeRole",
+            "Condition": {"StringEquals": {"aws:PrincipalOrgID": "o-testorg123"}}
+          }
+        ]
+      }
+    },
+    {
+      "arn": "arn:aws:iam::333333333333:role/SharedAdmin",
+      "id_value": "AROA333333ADMIN",
+      "is_admin": true,
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {"Effect": "Allow", "Principal": {"AWS": "arn:aws:iam::333333333333:root"}, "Action": "sts:AssumeRole"}
+        ]
+      }
+    },
+    {
+      "arn": "arn:aws:iam::111111111111:role/EC2InstanceRole",
+      "id_value": "AROA111111EC2",
+      "is_admin": false,
+      "trust_policy": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {"Effect": "Allow", "Principal": {"Service": "ec2.amazonaws.com"}, "Action": "sts:AssumeRole"}
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "arn:aws:iam::111111111111:user/ci-deploy",
+      "destination": "arn:aws:iam::111111111111:role/DevOpsEngineer",
+      "reason": "can call sts:AssumeRole to access",
+      "short_reason": "sts:AssumeRole"
+    },
+    {
+      "source": "arn:aws:iam::111111111111:role/DevOpsEngineer",
+      "destination": "arn:aws:iam::222222222222:role/ProdAdmin",
+      "reason": "can call sts:AssumeRole to access",
+      "short_reason": "sts:AssumeRole"
+    },
+    {
+      "source": "arn:aws:iam::111111111111:role/DevOpsEngineer",
+      "destination": "arn:aws:iam::333333333333:role/SharedServiceRole",
+      "reason": "can call sts:AssumeRole to access",
+      "short_reason": "sts:AssumeRole"
+    },
+    {
+      "source": "arn:aws:iam::111111111111:role/DevOpsEngineer",
+      "destination": "arn:aws:iam::111111111111:role/LambdaExecRole",
+      "reason": "can use Lambda to edit an existing function to access",
+      "short_reason": "lambda"
+    },
+    {
+      "source": "arn:aws:iam::111111111111:role/LambdaExecRole",
+      "destination": "arn:aws:iam::333333333333:role/SharedServiceRole",
+      "reason": "can call sts:AssumeRole to access",
+      "short_reason": "sts:AssumeRole"
+    },
+    {
+      "source": "arn:aws:iam::222222222222:role/ProdAdmin",
+      "destination": "arn:aws:iam::222222222222:role/ProdAppRole",
+      "reason": "(admin) can access",
+      "short_reason": "admin"
+    },
+    {
+      "source": "arn:aws:iam::222222222222:role/ProdAppRole",
+      "destination": "arn:aws:iam::222222222222:role/ProdDBAccess",
+      "reason": "can call sts:AssumeRole to access",
+      "short_reason": "sts:AssumeRole"
+    },
+    {
+      "source": "arn:aws:iam::333333333333:role/SharedServiceRole",
+      "destination": "arn:aws:iam::333333333333:role/SharedAdmin",
+      "reason": "can call iam:AttachRolePolicy to access",
+      "short_reason": "iam:AttachRolePolicy"
+    },
+    {
+      "source": "arn:aws:iam::111111111111:user/ci-deploy",
+      "destination": "arn:aws:iam::111111111111:role/EC2InstanceRole",
+      "reason": "can use EC2 to run an instance with an existing instance profile to access",
+      "short_reason": "ec2"
+    },
+    {
+      "source": "arn:aws:iam::111111111111:role/EC2InstanceRole",
+      "destination": "arn:aws:iam::222222222222:role/ProdAppRole",
+      "reason": "can call sts:AssumeRole to access",
+      "short_reason": "sts:AssumeRole"
+    },
+    {
+      "source": "arn:aws:iam::222222222222:role/ProdAdmin",
+      "destination": "arn:aws:iam::222222222222:role/ProdDBAccess",
+      "reason": "(admin) can access",
+      "short_reason": "admin"
+    },
+    {
+      "source": "arn:aws:iam::111111111111:user/ci-deploy",
+      "destination": "arn:aws:iam::111111111111:role/LambdaExecRole",
+      "reason": "can call iam:CreateAccessKey to access",
+      "short_reason": "iam:CreateAccessKey"
+    }
+  ]
+}

@@ -1,0 +1,1617 @@
+{
+  "metadata": {
+    "fixture": "complex-fintech-4bu",
+    "accounts": 8,
+    "node_count": 24,
+    "edge_count": 33,
+    "constraint_count": 6,
+    "edge_constraint_count": 17,
+    "scp1_bound_edges": 10,
+    "high_value_targets": 4,
+    "generated_at": "2026-03-07T00:00:00Z"
+  },
+  "nodes": [
+    {
+      "provider": "aws",
+      "node_type": "IAMUser",
+      "provider_id": "arn:aws:iam::110000000001:user/attacker-dev",
+      "region": "-",
+      "display_name": "attacker-dev (platform-dev)",
+      "properties": {
+        "account_id": "110000000001",
+        "compromised": true
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::110000000001:role/PlatformDevRole",
+      "region": "-",
+      "display_name": "PlatformDevRole (platform-dev)",
+      "properties": {
+        "account_id": "110000000001"
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::110000000001:role/PlatformCIRole",
+      "region": "-",
+      "display_name": "PlatformCIRole (platform-dev)",
+      "properties": {
+        "account_id": "110000000001"
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::110000000002:role/PlatformStagingDeploy",
+      "region": "-",
+      "display_name": "PlatformStagingDeploy (platform-prod)",
+      "properties": {
+        "account_id": "110000000002"
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::110000000002:role/PlatformProdDeploy",
+      "region": "-",
+      "display_name": "PlatformProdDeploy (platform-prod)",
+      "properties": {
+        "account_id": "110000000002"
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::110000000002:role/PlatformProdAdmin",
+      "region": "-",
+      "display_name": "PlatformProdAdmin (platform-prod)",
+      "properties": {
+        "account_id": "110000000002",
+        "high_value": true
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::120000000001:role/PaymentDevRole",
+      "region": "-",
+      "display_name": "PaymentDevRole (payments-dev)",
+      "properties": {
+        "account_id": "120000000001"
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::120000000002:role/PaymentProcessorRole",
+      "region": "-",
+      "display_name": "PaymentProcessorRole (payments-prod)",
+      "properties": {
+        "account_id": "120000000002"
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::120000000002:role/PaymentProdAdmin",
+      "region": "-",
+      "display_name": "PaymentProdAdmin (payments-prod)",
+      "properties": {
+        "account_id": "120000000002",
+        "high_value": true
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::120000000002:role/PaymentDBAccess",
+      "region": "-",
+      "display_name": "PaymentDBAccess (payments-prod)",
+      "properties": {
+        "account_id": "120000000002"
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::130000000001:role/DataEngRole",
+      "region": "-",
+      "display_name": "DataEngRole (data-dev)",
+      "properties": {
+        "account_id": "130000000001"
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::130000000002:role/DataPipelineRole",
+      "region": "-",
+      "display_name": "DataPipelineRole (data-prod)",
+      "properties": {
+        "account_id": "130000000002"
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::130000000002:role/DataLakeAdmin",
+      "region": "-",
+      "display_name": "DataLakeAdmin (data-prod)",
+      "properties": {
+        "account_id": "130000000002",
+        "high_value": true
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "LambdaFunction",
+      "provider_id": "arn:aws:lambda:us-east-1:130000000002:function:GlueJobRole",
+      "region": "-",
+      "display_name": "GlueJobRole (data-prod)",
+      "properties": {
+        "account_id": "130000000002"
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::140000000001:role/InfraJumpRole",
+      "region": "-",
+      "display_name": "InfraJumpRole (shared-infra)",
+      "properties": {
+        "account_id": "140000000001"
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::140000000001:role/InfraTerraformRole",
+      "region": "-",
+      "display_name": "InfraTerraformRole (shared-infra)",
+      "properties": {
+        "account_id": "140000000001"
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::140000000001:role/InfraNetworkAdmin",
+      "region": "-",
+      "display_name": "InfraNetworkAdmin (shared-infra)",
+      "properties": {
+        "account_id": "140000000001"
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::140000000001:role/CrossAccountBridge",
+      "region": "-",
+      "display_name": "CrossAccountBridge (shared-infra)",
+      "properties": {
+        "account_id": "140000000001"
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::150000000001:role/SecurityAuditRole",
+      "region": "-",
+      "display_name": "SecurityAuditRole (security)",
+      "properties": {
+        "account_id": "150000000001"
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::150000000001:role/IncidentResponseRole",
+      "region": "-",
+      "display_name": "IncidentResponseRole (security)",
+      "properties": {
+        "account_id": "150000000001"
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::150000000001:role/SecurityAdmin",
+      "region": "-",
+      "display_name": "SecurityAdmin (security)",
+      "properties": {
+        "account_id": "150000000001",
+        "high_value": true
+      }
+    },
+    {
+      "provider": "github",
+      "node_type": "ActionsRunner",
+      "provider_id": "github:AcmePlatform/api:actions",
+      "region": "-",
+      "display_name": "AcmePlatform/api:actions",
+      "properties": {
+        "account_id": "-"
+      }
+    },
+    {
+      "provider": "github",
+      "node_type": "ActionsRunner",
+      "provider_id": "github:AcmePlatform/infra:actions",
+      "region": "-",
+      "display_name": "AcmePlatform/infra:actions",
+      "properties": {
+        "account_id": "-"
+      }
+    },
+    {
+      "provider": "github",
+      "node_type": "ActionsRunner",
+      "provider_id": "github:AcmePayments/processor:actions",
+      "region": "-",
+      "display_name": "AcmePayments/processor:actions",
+      "properties": {
+        "account_id": "-"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMUser",
+        "provider_id": "arn:aws:iam::110000000001:user/attacker-dev",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::110000000001:role/PlatformDevRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {},
+      "alpha_i": 3,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMUser",
+        "provider_id": "arn:aws:iam::110000000001:user/attacker-dev",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::110000000001:role/PlatformCIRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {},
+      "alpha_i": 2,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::110000000001:role/PlatformDevRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::140000000001:role/InfraJumpRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {
+        "cross_account": true
+      },
+      "alpha_i": 2,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::110000000001:role/PlatformCIRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::140000000001:role/InfraJumpRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {
+        "cross_account": true
+      },
+      "alpha_i": 2,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::140000000001:role/InfraJumpRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::110000000002:role/PlatformProdDeploy",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {
+        "cross_account": true
+      },
+      "alpha_i": 1,
+      "beta_i": 2
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::140000000001:role/InfraJumpRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::120000000002:role/PaymentProcessorRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {
+        "cross_account": true
+      },
+      "alpha_i": 1,
+      "beta_i": 2
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::140000000001:role/InfraJumpRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::130000000002:role/DataPipelineRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {
+        "cross_account": true
+      },
+      "alpha_i": 1,
+      "beta_i": 2
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::140000000001:role/InfraJumpRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::140000000001:role/InfraTerraformRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {},
+      "alpha_i": 3,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::140000000001:role/InfraTerraformRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::110000000002:role/PlatformProdAdmin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {
+        "cross_account": true
+      },
+      "alpha_i": 1,
+      "beta_i": 2
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::140000000001:role/InfraTerraformRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::120000000002:role/PaymentProdAdmin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {
+        "cross_account": true
+      },
+      "alpha_i": 1,
+      "beta_i": 2
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::140000000001:role/InfraTerraformRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::130000000002:role/DataLakeAdmin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {
+        "cross_account": true
+      },
+      "alpha_i": 1,
+      "beta_i": 2
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::110000000002:role/PlatformProdDeploy",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::110000000002:role/PlatformProdAdmin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {},
+      "alpha_i": 2,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::120000000002:role/PaymentProcessorRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::120000000002:role/PaymentProdAdmin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {},
+      "alpha_i": 2,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::130000000002:role/DataPipelineRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::130000000002:role/DataLakeAdmin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {},
+      "alpha_i": 2,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::120000000002:role/PaymentProcessorRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::120000000002:role/PaymentDBAccess",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {},
+      "alpha_i": 3,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::130000000001:role/DataEngRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::130000000002:role/DataPipelineRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {
+        "cross_account": true
+      },
+      "alpha_i": 1,
+      "beta_i": 2
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::130000000002:role/DataPipelineRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "LambdaFunction",
+        "provider_id": "arn:aws:lambda:us-east-1:130000000002:function:GlueJobRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {},
+      "alpha_i": 3,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "LambdaFunction",
+        "provider_id": "arn:aws:lambda:us-east-1:130000000002:function:GlueJobRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::130000000002:role/DataLakeAdmin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {},
+      "alpha_i": 2,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::110000000001:role/PlatformDevRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::120000000001:role/PaymentDevRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {
+        "cross_account": true
+      },
+      "alpha_i": 1,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::120000000001:role/PaymentDevRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::120000000002:role/PaymentProcessorRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {
+        "cross_account": true
+      },
+      "alpha_i": 1,
+      "beta_i": 2
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::140000000001:role/InfraJumpRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::140000000001:role/CrossAccountBridge",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {},
+      "alpha_i": 2,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::140000000001:role/CrossAccountBridge",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::150000000001:role/SecurityAuditRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {
+        "cross_account": true
+      },
+      "alpha_i": 1,
+      "beta_i": 2
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::150000000001:role/SecurityAuditRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::150000000001:role/IncidentResponseRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {},
+      "alpha_i": 2,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::150000000001:role/IncidentResponseRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::150000000001:role/SecurityAdmin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {},
+      "alpha_i": 2,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "repo:Write",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMUser",
+        "provider_id": "arn:aws:iam::110000000001:user/attacker-dev",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "github",
+        "node_type": "ActionsRunner",
+        "provider_id": "github:AcmePlatform/api:actions",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {
+        "cross_environment": true
+      },
+      "alpha_i": 3,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "repo:Write",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMUser",
+        "provider_id": "arn:aws:iam::110000000001:user/attacker-dev",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "github",
+        "node_type": "ActionsRunner",
+        "provider_id": "github:AcmePlatform/infra:actions",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {
+        "cross_environment": true
+      },
+      "alpha_i": 3,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "oidc:AssumeRole",
+      "src": {
+        "provider": "github",
+        "node_type": "ActionsRunner",
+        "provider_id": "github:AcmePlatform/api:actions",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::110000000002:role/PlatformProdDeploy",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {
+        "has_oidc_subject": true,
+        "oidc_subject_pattern": "repo:AcmePlatform/api:ref:refs/heads/main",
+        "cross_environment": true
+      },
+      "alpha_i": 1,
+      "beta_i": 2
+    },
+    {
+      "edge_type": "oidc:AssumeRole",
+      "src": {
+        "provider": "github",
+        "node_type": "ActionsRunner",
+        "provider_id": "github:AcmePlatform/infra:actions",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::140000000001:role/InfraTerraformRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {
+        "has_oidc_subject": true,
+        "oidc_subject_pattern": "repo:AcmePlatform/infra:ref:refs/heads/*",
+        "cross_environment": true,
+        "naked_trust": true
+      },
+      "alpha_i": 1,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "oidc:AssumeRole",
+      "src": {
+        "provider": "github",
+        "node_type": "ActionsRunner",
+        "provider_id": "github:AcmePayments/processor:actions",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::120000000002:role/PaymentProcessorRole",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {
+        "has_oidc_subject": true,
+        "oidc_subject_pattern": "repo:AcmePayments/processor:environment:production"
+      },
+      "alpha_i": 1,
+      "beta_i": 2
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::110000000001:role/PlatformCIRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::110000000002:role/PlatformStagingDeploy",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {
+        "cross_account": true
+      },
+      "alpha_i": 1,
+      "beta_i": 2
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::110000000002:role/PlatformStagingDeploy",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::110000000002:role/PlatformProdDeploy",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {},
+      "alpha_i": 1,
+      "beta_i": 2
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::140000000001:role/InfraNetworkAdmin",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::110000000002:role/PlatformProdAdmin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {
+        "cross_account": true
+      },
+      "alpha_i": 1,
+      "beta_i": 2
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::140000000001:role/InfraTerraformRole",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::140000000001:role/InfraNetworkAdmin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {},
+      "alpha_i": 3,
+      "beta_i": 1
+    }
+  ],
+  "constraints": [
+    {
+      "provider": "aws",
+      "constraint_type": "SCP",
+      "scope_type": "ou",
+      "scope_id": "ou-production",
+      "region": "-",
+      "properties": {
+        "policy_id": "scp-BlockCrossAccountAssumeProd",
+        "statement_id": "DenyCrossAccountAssumeIntoProd",
+        "effect": "DENY",
+        "action": "sts:AssumeRole",
+        "description": "Denies cross-account AssumeRole into production OU accounts"
+      },
+      "status": "ACTIVE",
+      "validation_status": "UNVALIDATED",
+      "confidence_q": 500
+    },
+    {
+      "provider": "aws",
+      "constraint_type": "SCP",
+      "scope_type": "ou",
+      "scope_id": "ou-data",
+      "region": "-",
+      "properties": {
+        "policy_id": "scp-BlockDataExfil",
+        "statement_id": "DenyS3PublicAccess",
+        "effect": "DENY",
+        "action": "s3:PutBucketPolicy",
+        "description": "Blocks data exfiltration paths in data OU"
+      },
+      "status": "ACTIVE",
+      "validation_status": "UNVALIDATED",
+      "confidence_q": 500
+    },
+    {
+      "provider": "aws",
+      "constraint_type": "TRUST_CONDITION",
+      "scope_type": "edge",
+      "scope_id": "tc-security-externalid",
+      "region": "-",
+      "properties": {
+        "condition_key": "sts:ExternalId",
+        "condition_value": "sec-*",
+        "policy_id": "trust-security-access",
+        "statement_id": "RequireExternalId"
+      },
+      "status": "ACTIVE",
+      "validation_status": "UNVALIDATED",
+      "confidence_q": 400
+    },
+    {
+      "provider": "aws",
+      "constraint_type": "TRUST_CONDITION",
+      "scope_type": "edge",
+      "scope_id": "oidc-repo-AcmePlatform-api-ref-refs-heads-main",
+      "region": "-",
+      "properties": {
+        "condition_key": "token.actions.githubusercontent.com:sub",
+        "oidc_subject_pattern": "repo:AcmePlatform/api:ref:refs/heads/main",
+        "policy_id": "oidc-trust-oidc-repo-AcmePlatform-api-ref-refs-heads-main",
+        "statement_id": "AllowGitHubOIDC"
+      },
+      "status": "ACTIVE",
+      "validation_status": "UNVALIDATED",
+      "confidence_q": 500
+    },
+    {
+      "provider": "aws",
+      "constraint_type": "TRUST_CONDITION",
+      "scope_type": "edge",
+      "scope_id": "oidc-repo-AcmePlatform-infra-ref-refs-heads-*",
+      "region": "-",
+      "properties": {
+        "condition_key": "token.actions.githubusercontent.com:sub",
+        "oidc_subject_pattern": "repo:AcmePlatform/infra:ref:refs/heads/*",
+        "policy_id": "oidc-trust-oidc-repo-AcmePlatform-infra-ref-refs-heads-*",
+        "statement_id": "AllowGitHubOIDC"
+      },
+      "status": "ACTIVE",
+      "validation_status": "UNVALIDATED",
+      "confidence_q": 300
+    },
+    {
+      "provider": "aws",
+      "constraint_type": "TRUST_CONDITION",
+      "scope_type": "edge",
+      "scope_id": "oidc-repo-AcmePayments-processor-environment-production",
+      "region": "-",
+      "properties": {
+        "condition_key": "token.actions.githubusercontent.com:sub",
+        "oidc_subject_pattern": "repo:AcmePayments/processor:environment:production",
+        "policy_id": "oidc-trust-oidc-repo-AcmePayments-processor-environment-production",
+        "statement_id": "AllowGitHubOIDC"
+      },
+      "status": "ACTIVE",
+      "validation_status": "UNVALIDATED",
+      "confidence_q": 500
+    }
+  ],
+  "edge_constraints": [
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::140000000001:role/InfraJumpRole",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::110000000002:role/PlatformProdDeploy",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "ou",
+        "scope_id": "ou-production",
+        "region": "-",
+        "properties": {
+          "policy_id": "scp-BlockCrossAccountAssumeProd",
+          "statement_id": "DenyCrossAccountAssumeIntoProd",
+          "effect": "DENY",
+          "action": "sts:AssumeRole",
+          "description": "Denies cross-account AssumeRole into production OU accounts"
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::140000000001:role/InfraJumpRole",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::120000000002:role/PaymentProcessorRole",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "ou",
+        "scope_id": "ou-production",
+        "region": "-",
+        "properties": {
+          "policy_id": "scp-BlockCrossAccountAssumeProd",
+          "statement_id": "DenyCrossAccountAssumeIntoProd",
+          "effect": "DENY",
+          "action": "sts:AssumeRole",
+          "description": "Denies cross-account AssumeRole into production OU accounts"
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::140000000001:role/InfraJumpRole",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::130000000002:role/DataPipelineRole",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "ou",
+        "scope_id": "ou-production",
+        "region": "-",
+        "properties": {
+          "policy_id": "scp-BlockCrossAccountAssumeProd",
+          "statement_id": "DenyCrossAccountAssumeIntoProd",
+          "effect": "DENY",
+          "action": "sts:AssumeRole",
+          "description": "Denies cross-account AssumeRole into production OU accounts"
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::140000000001:role/InfraTerraformRole",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::110000000002:role/PlatformProdAdmin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "ou",
+        "scope_id": "ou-production",
+        "region": "-",
+        "properties": {
+          "policy_id": "scp-BlockCrossAccountAssumeProd",
+          "statement_id": "DenyCrossAccountAssumeIntoProd",
+          "effect": "DENY",
+          "action": "sts:AssumeRole",
+          "description": "Denies cross-account AssumeRole into production OU accounts"
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::140000000001:role/InfraTerraformRole",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::120000000002:role/PaymentProdAdmin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "ou",
+        "scope_id": "ou-production",
+        "region": "-",
+        "properties": {
+          "policy_id": "scp-BlockCrossAccountAssumeProd",
+          "statement_id": "DenyCrossAccountAssumeIntoProd",
+          "effect": "DENY",
+          "action": "sts:AssumeRole",
+          "description": "Denies cross-account AssumeRole into production OU accounts"
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::140000000001:role/InfraTerraformRole",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::130000000002:role/DataLakeAdmin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "ou",
+        "scope_id": "ou-production",
+        "region": "-",
+        "properties": {
+          "policy_id": "scp-BlockCrossAccountAssumeProd",
+          "statement_id": "DenyCrossAccountAssumeIntoProd",
+          "effect": "DENY",
+          "action": "sts:AssumeRole",
+          "description": "Denies cross-account AssumeRole into production OU accounts"
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::130000000001:role/DataEngRole",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::130000000002:role/DataPipelineRole",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "ou",
+        "scope_id": "ou-production",
+        "region": "-",
+        "properties": {
+          "policy_id": "scp-BlockCrossAccountAssumeProd",
+          "statement_id": "DenyCrossAccountAssumeIntoProd",
+          "effect": "DENY",
+          "action": "sts:AssumeRole",
+          "description": "Denies cross-account AssumeRole into production OU accounts"
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::120000000001:role/PaymentDevRole",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::120000000002:role/PaymentProcessorRole",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "ou",
+        "scope_id": "ou-production",
+        "region": "-",
+        "properties": {
+          "policy_id": "scp-BlockCrossAccountAssumeProd",
+          "statement_id": "DenyCrossAccountAssumeIntoProd",
+          "effect": "DENY",
+          "action": "sts:AssumeRole",
+          "description": "Denies cross-account AssumeRole into production OU accounts"
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::110000000001:role/PlatformCIRole",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::110000000002:role/PlatformStagingDeploy",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "ou",
+        "scope_id": "ou-production",
+        "region": "-",
+        "properties": {
+          "policy_id": "scp-BlockCrossAccountAssumeProd",
+          "statement_id": "DenyCrossAccountAssumeIntoProd",
+          "effect": "DENY",
+          "action": "sts:AssumeRole",
+          "description": "Denies cross-account AssumeRole into production OU accounts"
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::140000000001:role/InfraNetworkAdmin",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::110000000002:role/PlatformProdAdmin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "ou",
+        "scope_id": "ou-production",
+        "region": "-",
+        "properties": {
+          "policy_id": "scp-BlockCrossAccountAssumeProd",
+          "statement_id": "DenyCrossAccountAssumeIntoProd",
+          "effect": "DENY",
+          "action": "sts:AssumeRole",
+          "description": "Denies cross-account AssumeRole into production OU accounts"
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::130000000002:role/DataPipelineRole",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::130000000002:role/DataLakeAdmin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "ou",
+        "scope_id": "ou-data",
+        "region": "-",
+        "properties": {
+          "policy_id": "scp-BlockDataExfil",
+          "statement_id": "DenyS3PublicAccess",
+          "effect": "DENY",
+          "action": "s3:PutBucketPolicy",
+          "description": "Blocks data exfiltration paths in data OU"
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::130000000002:role/DataPipelineRole",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "LambdaFunction",
+          "provider_id": "arn:aws:lambda:us-east-1:130000000002:function:GlueJobRole",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "ou",
+        "scope_id": "ou-data",
+        "region": "-",
+        "properties": {
+          "policy_id": "scp-BlockDataExfil",
+          "statement_id": "DenyS3PublicAccess",
+          "effect": "DENY",
+          "action": "s3:PutBucketPolicy",
+          "description": "Blocks data exfiltration paths in data OU"
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "LambdaFunction",
+          "provider_id": "arn:aws:lambda:us-east-1:130000000002:function:GlueJobRole",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::130000000002:role/DataLakeAdmin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "ou",
+        "scope_id": "ou-data",
+        "region": "-",
+        "properties": {
+          "policy_id": "scp-BlockDataExfil",
+          "statement_id": "DenyS3PublicAccess",
+          "effect": "DENY",
+          "action": "s3:PutBucketPolicy",
+          "description": "Blocks data exfiltration paths in data OU"
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::140000000001:role/CrossAccountBridge",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::150000000001:role/SecurityAuditRole",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "TRUST_CONDITION",
+        "scope_type": "edge",
+        "scope_id": "tc-security-externalid",
+        "region": "-",
+        "properties": {
+          "condition_key": "sts:ExternalId",
+          "condition_value": "sec-*",
+          "policy_id": "trust-security-access",
+          "statement_id": "RequireExternalId"
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "oidc:AssumeRole",
+        "src": {
+          "provider": "github",
+          "node_type": "ActionsRunner",
+          "provider_id": "github:AcmePlatform/api:actions",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::110000000002:role/PlatformProdDeploy",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "TRUST_CONDITION",
+        "scope_type": "edge",
+        "scope_id": "oidc-repo-AcmePlatform-api-ref-refs-heads-main",
+        "region": "-",
+        "properties": {
+          "condition_key": "token.actions.githubusercontent.com:sub",
+          "oidc_subject_pattern": "repo:AcmePlatform/api:ref:refs/heads/main",
+          "policy_id": "oidc-trust-oidc-repo-AcmePlatform-api-ref-refs-heads-main",
+          "statement_id": "AllowGitHubOIDC"
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "oidc:AssumeRole",
+        "src": {
+          "provider": "github",
+          "node_type": "ActionsRunner",
+          "provider_id": "github:AcmePlatform/infra:actions",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::140000000001:role/InfraTerraformRole",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "TRUST_CONDITION",
+        "scope_type": "edge",
+        "scope_id": "oidc-repo-AcmePlatform-infra-ref-refs-heads-*",
+        "region": "-",
+        "properties": {
+          "condition_key": "token.actions.githubusercontent.com:sub",
+          "oidc_subject_pattern": "repo:AcmePlatform/infra:ref:refs/heads/*",
+          "policy_id": "oidc-trust-oidc-repo-AcmePlatform-infra-ref-refs-heads-*",
+          "statement_id": "AllowGitHubOIDC"
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "oidc:AssumeRole",
+        "src": {
+          "provider": "github",
+          "node_type": "ActionsRunner",
+          "provider_id": "github:AcmePayments/processor:actions",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::120000000002:role/PaymentProcessorRole",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "TRUST_CONDITION",
+        "scope_type": "edge",
+        "scope_id": "oidc-repo-AcmePayments-processor-environment-production",
+        "region": "-",
+        "properties": {
+          "condition_key": "token.actions.githubusercontent.com:sub",
+          "oidc_subject_pattern": "repo:AcmePayments/processor:environment:production",
+          "policy_id": "oidc-trust-oidc-repo-AcmePayments-processor-environment-production",
+          "statement_id": "AllowGitHubOIDC"
+        }
+      }
+    }
+  ],
+  "objectives": [
+    {
+      "objective_type": "reachability",
+      "start_nodes": [
+        {
+          "provider": "aws",
+          "node_type": "IAMUser",
+          "provider_id": "arn:aws:iam::110000000001:user/attacker-dev",
+          "region": "-"
+        }
+      ],
+      "target_nodes": [
+        {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::110000000002:role/PlatformProdAdmin",
+          "region": "-"
+        },
+        {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::120000000002:role/PaymentProdAdmin",
+          "region": "-"
+        },
+        {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::130000000002:role/DataLakeAdmin",
+          "region": "-"
+        },
+        {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::150000000001:role/SecurityAdmin",
+          "region": "-"
+        }
+      ],
+      "max_depth": 8,
+      "k": 15
+    }
+  ],
+  "observations": []
+}

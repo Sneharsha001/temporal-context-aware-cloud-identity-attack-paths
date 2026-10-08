@@ -1,0 +1,108 @@
+{
+  "org_id": "o-testorg123",
+  "root_id": "r-root1",
+  "ous": [
+    {"ou_id": "ou-prod", "name": "Production", "parent_id": "r-root1"},
+    {"ou_id": "ou-dev", "name": "Development", "parent_id": "r-root1"},
+    {"ou_id": "ou-shared", "name": "SharedServices", "parent_id": "r-root1"}
+  ],
+  "accounts": [
+    {"account_id": "111111111111", "parent_id": "ou-dev"},
+    {"account_id": "222222222222", "parent_id": "ou-prod"},
+    {"account_id": "333333333333", "parent_id": "ou-shared"}
+  ],
+  "scp_attachments": [
+    {
+      "policy_id": "p-deny-assume-prod",
+      "target_id": "ou-prod",
+      "target_type": "OU"
+    },
+    {
+      "policy_id": "p-deny-createkey",
+      "target_id": "ou-dev",
+      "target_type": "OU"
+    },
+    {
+      "policy_id": "p-deny-dangerous",
+      "target_id": "r-root1",
+      "target_type": "OU"
+    },
+    {
+      "policy_id": "p-deny-conditional",
+      "target_id": "ou-dev",
+      "target_type": "OU"
+    }
+  ],
+  "scp_policies": [
+    {
+      "policy_id": "p-deny-assume-prod",
+      "name": "DenyAssumeRoleFromProd",
+      "document": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Deny",
+            "Action": "sts:AssumeRole",
+            "Resource": "*"
+          }
+        ]
+      }
+    },
+    {
+      "policy_id": "p-deny-createkey",
+      "name": "DenyCreateAccessKey",
+      "document": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Deny",
+            "Action": ["iam:CreateAccessKey", "iam:CreateLoginProfile"],
+            "Resource": "*"
+          }
+        ]
+      }
+    },
+    {
+      "policy_id": "p-deny-dangerous",
+      "name": "DenyDangerousActionsOrgWide",
+      "document": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Deny",
+            "Action": [
+              "iam:CreateUser",
+              "iam:AttachRolePolicy",
+              "organizations:LeaveOrganization"
+            ],
+            "Resource": "*"
+          },
+          {
+            "Effect": "Allow",
+            "Action": "*",
+            "Resource": "*"
+          }
+        ]
+      }
+    },
+    {
+      "policy_id": "p-deny-conditional",
+      "name": "DenyAssumeRoleUnlessVPN",
+      "document": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Deny",
+            "Action": "sts:AssumeRole",
+            "Resource": "*",
+            "Condition": {
+              "NotIpAddress": {
+                "aws:SourceIp": "10.0.0.0/8"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

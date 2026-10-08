@@ -1,0 +1,83 @@
+{
+  "canonical_run_hash": "dce797ca6e26ebcf843d8fdecd0a2e71fece4ec4863844c426639ca773481209",
+  "conflicts": [],
+  "constraint_validation": [
+    {
+      "confidence_q": 800,
+      "constraint_id": "113ff3c443d912334591f6d8f9127653d15b0555e6d9686abf600c16c027b4d0",
+      "constraint_type": "SCP",
+      "status": "ACTIVE",
+      "validation_status": "VALIDATED"
+    }
+  ],
+  "evidence_coverage": {
+    "coverage_percent": 100,
+    "observed_edges": 4,
+    "total_edges": 4
+  },
+  "objectives": [
+    {
+      "k": 5,
+      "max_depth": 4,
+      "objective_id": "e364f564e3231743009eb212d295784955c0fce668b9ca9f9f76a3d03f1fc0e6",
+      "objective_type": "REACHABILITY",
+      "paths": [
+        {
+          "confidence_band": "VERY_LOW",
+          "edge_id_sequence": [
+            "b34ea265251d0bbbc8697960e3316856a24f1f9020c5c53975d7cd980bbd3319",
+            "871aede1987072bb7546a4147c72cdc4aada838b28c08d9aa2844074a9f5261b"
+          ],
+          "flags": {
+            "conflict": false,
+            "counterfactual_override": false,
+            "prior_only": false,
+            "stale": false
+          },
+          "p_best_q8": 1205494,
+          "p_worst_q8": 1205494,
+          "path_length": 2,
+          "rank": 1
+        },
+        {
+          "confidence_band": "VERY_LOW",
+          "edge_id_sequence": [
+            "88a6e613bf13aa4af70dbe3c0e22b8f6950a020d3265a6e980adf2e5056396ec",
+            "6d891c1125e80edf345544c110ad638dfd8bbada1fd0286830699547558834e1"
+          ],
+          "flags": {
+            "conflict": false,
+            "counterfactual_override": false,
+            "prior_only": false,
+            "stale": false
+          },
+          "p_best_q8": 1203877,
+          "p_worst_q8": 1203877,
+          "path_length": 2,
+          "rank": 2
+        }
+      ],
+      "start_nodes": [
+        "c03d2825f7b62ffd35f0845d98ed201bd4deee044e1e5eee9b440d72402be197"
+      ],
+      "target_nodes": [
+        "00c883ee54794699b1fd9da7e3194b7822c16731a067368a62f63cb8bb5076af"
+      ]
+    }
+  ],
+  "obs_digests": {
+    "6d891c1125e80edf345544c110ad638dfd8bbada1fd0286830699547558834e1": "b1a2301af24ee76e4a0626056380b95d0cece446f0bf4805cb6f62ad4267785e",
+    "871aede1987072bb7546a4147c72cdc4aada838b28c08d9aa2844074a9f5261b": "c6aee1fd8c292658fa8da931b09f5655f6281ae7e7f21a76daad75f7f013ad1b",
+    "88a6e613bf13aa4af70dbe3c0e22b8f6950a020d3265a6e980adf2e5056396ec": "2aa25d45c2277b6427336a4a8ade121d8b8fb1d222146a428ff89ec76936ce38",
+    "b34ea265251d0bbbc8697960e3316856a24f1f9020c5c53975d7cd980bbd3319": "23b5e496b882e753cf597d80c1b6e353aeecc08cd9374a56de9cfb2e5207b063"
+  },
+  "semantics_version": "1.0.0",
+  "summary": {
+    "constraint_count": 1,
+    "edge_count": 4,
+    "node_count": 4,
+    "objective_count": 1,
+    "observation_count": 5
+  },
+  "warnings": []
+}

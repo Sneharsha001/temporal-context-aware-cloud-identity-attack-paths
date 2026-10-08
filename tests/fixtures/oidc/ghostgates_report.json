@@ -1,0 +1,109 @@
+{
+  "scan_id": 1,
+  "org": "AcmeFintech",
+  "timestamp": "2026-03-07T00:00:00Z",
+  "summary": {
+    "repos_scanned": 3,
+    "total_findings": 4,
+    "critical": 1,
+    "high": 2,
+    "medium": 1,
+    "low": 0
+  },
+  "findings": [
+    {
+      "rule_id": "GHOST-BP-001",
+      "name": "Admin bypass of required reviews (enforce_admins disabled)",
+      "severity": "HIGH",
+      "repo": "AcmeFintech/payment-api",
+      "branch": "main",
+      "gate_type": "branch_protection",
+      "attacker_level": "repo-admin",
+      "bypass_path": [
+        "1. Attacker has repo-admin privileges on AcmeFintech/payment-api",
+        "2. Branch protection on 'main' has enforce_admins=false",
+        "3. Admin pushes directly to main, bypassing required review",
+        "4. GitHub Actions workflow triggers on push to main",
+        "5. Workflow assumes AWS ProdDeployRole via OIDC"
+      ],
+      "evidence": {
+        "branch": "main",
+        "enforce_admins": false,
+        "required_approving_review_count": 2,
+        "dismiss_stale_reviews": true
+      },
+      "confidence": "HIGH"
+    },
+    {
+      "rule_id": "GHOST-BP-005",
+      "name": "Workflows can approve their own PRs",
+      "severity": "HIGH",
+      "repo": "AcmeFintech/payment-api",
+      "branch": "main",
+      "gate_type": "branch_protection",
+      "attacker_level": "repo-write",
+      "bypass_path": [
+        "1. Attacker has repo-write privileges",
+        "2. Creates PR with malicious workflow changes",
+        "3. GitHub Actions bot auto-approves via GITHUB_TOKEN",
+        "4. PR merges to main with bot approval counting",
+        "5. Malicious workflow executes and assumes ProdDeployRole"
+      ],
+      "evidence": {
+        "branch": "main",
+        "allow_auto_merge": true,
+        "github_actions_can_approve": true
+      },
+      "confidence": "HIGH"
+    },
+    {
+      "rule_id": "GHOST-WF-001",
+      "name": "pull_request_target + PR head checkout (supply chain attack)",
+      "severity": "CRITICAL",
+      "repo": "AcmeFintech/infra-terraform",
+      "branch": null,
+      "gate_type": "workflow",
+      "attacker_level": "external",
+      "bypass_path": [
+        "1. EXTERNAL attacker forks AcmeFintech/infra-terraform",
+        "2. Modifies workflow to exfiltrate OIDC token",
+        "3. Opens PR against main branch",
+        "4. Workflow uses pull_request_target and checks out PR head",
+        "5. Attacker's code runs in the context of the base repo",
+        "6. OIDC token issued for AcmeFintech/infra-terraform",
+        "7. Token assumes InfraProvisionRole (wildcard branch OIDC claim)"
+      ],
+      "evidence": {
+        "workflow_file": ".github/workflows/terraform-plan.yml",
+        "trigger": "pull_request_target",
+        "checks_out_pr_head": true,
+        "has_oidc_step": true,
+        "oidc_role": "arn:aws:iam::222222222222:role/InfraProvisionRole"
+      },
+      "confidence": "HIGH"
+    },
+    {
+      "rule_id": "GHOST-ENV-001",
+      "name": "Production environment with no required reviewers",
+      "severity": "MEDIUM",
+      "repo": "AcmeFintech/db-migrations",
+      "branch": null,
+      "environment": "production",
+      "gate_type": "environment",
+      "attacker_level": "repo-write",
+      "bypass_path": [
+        "1. Attacker has repo-write privileges on db-migrations",
+        "2. Production environment has zero required reviewers",
+        "3. Workflow targeting production environment runs without approval",
+        "4. Assumes ProdDBMigrationRole via OIDC environment claim"
+      ],
+      "evidence": {
+        "environment": "production",
+        "required_reviewers": 0,
+        "wait_timer": 0,
+        "deployment_branch_policy": null
+      },
+      "confidence": "HIGH"
+    }
+  ]
+}

@@ -1,0 +1,1143 @@
+{
+  "metadata": {
+    "fixture": "primary-realistic-vii-a",
+    "accounts": 4,
+    "node_count": 14,
+    "edge_count": 16,
+    "constraint_count": 4,
+    "edge_constraint_count": 9,
+    "observation_count": 11,
+    "paper_section": "VII-A",
+    "target_baseline_entropy_nats": 0.3013,
+    "target_paths": 5,
+    "target_canonical_run_hash": "638b76cd453f2a04565cc40d4181adbd44a077102866cc1a209bcd21ea381d6b"
+  },
+  "nodes": [
+    {
+      "provider": "aws",
+      "node_type": "IAMUser",
+      "provider_id": "arn:aws:iam::111111111111:user/attacker",
+      "region": "-",
+      "display_name": "attacker",
+      "properties": {
+        "account_id": "111111111111",
+        "compromised": true
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::111111111111:role/DevOps",
+      "region": "-",
+      "display_name": "DevOps",
+      "properties": {
+        "account_id": "111111111111"
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::111111111111:role/CI-Runner",
+      "region": "-",
+      "display_name": "CI-Runner",
+      "properties": {
+        "account_id": "111111111111"
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::111111111111:role/LambdaDeploy",
+      "region": "-",
+      "display_name": "LambdaDeploy",
+      "properties": {
+        "account_id": "111111111111"
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::111111111111:role/EC2Bastion",
+      "region": "-",
+      "display_name": "EC2Bastion",
+      "properties": {
+        "account_id": "111111111111"
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::222222222222:role/StagingDeploy",
+      "region": "-",
+      "display_name": "StagingDeploy",
+      "properties": {
+        "account_id": "222222222222"
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::222222222222:role/StagingAdmin",
+      "region": "-",
+      "display_name": "StagingAdmin",
+      "properties": {
+        "account_id": "222222222222"
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::222222222222:role/StagingDB",
+      "region": "-",
+      "display_name": "StagingDB",
+      "properties": {
+        "account_id": "222222222222"
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::333333333333:role/ProdDeploy",
+      "region": "-",
+      "display_name": "ProdDeploy",
+      "properties": {
+        "account_id": "333333333333"
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::333333333333:role/ProdApp",
+      "region": "-",
+      "display_name": "ProdApp",
+      "properties": {
+        "account_id": "333333333333"
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::333333333333:role/ProdDBAdmin",
+      "region": "-",
+      "display_name": "ProdDBAdmin",
+      "properties": {
+        "account_id": "333333333333"
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::333333333333:role/ProdAdmin",
+      "region": "-",
+      "display_name": "ProdAdmin",
+      "properties": {
+        "account_id": "333333333333",
+        "high_value": true
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::444444444444:role/SharedInfra",
+      "region": "-",
+      "display_name": "SharedInfra",
+      "properties": {
+        "account_id": "444444444444"
+      }
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "arn:aws:iam::444444444444:role/SharedSecrets",
+      "region": "-",
+      "display_name": "SharedSecrets",
+      "properties": {
+        "account_id": "444444444444"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMUser",
+        "provider_id": "arn:aws:iam::111111111111:user/attacker",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::111111111111:role/DevOps",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {},
+      "alpha_i": 1,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::111111111111:role/DevOps",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::111111111111:role/CI-Runner",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {},
+      "alpha_i": 1,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::111111111111:role/DevOps",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::111111111111:role/LambdaDeploy",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {},
+      "alpha_i": 1,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::111111111111:role/LambdaDeploy",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/StagingDeploy",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {
+        "cross_account": true
+      },
+      "alpha_i": 1,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::111111111111:role/CI-Runner",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/StagingDeploy",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {
+        "cross_account": true
+      },
+      "alpha_i": 1,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/StagingDeploy",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdDeploy",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {
+        "cross_account": true,
+        "trust_external_id": true
+      },
+      "alpha_i": 1,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMUser",
+        "provider_id": "arn:aws:iam::111111111111:user/attacker",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::111111111111:role/EC2Bastion",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {},
+      "alpha_i": 1,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::111111111111:role/EC2Bastion",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::444444444444:role/SharedInfra",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {
+        "cross_account": true,
+        "trust_principal_org": true
+      },
+      "alpha_i": 1,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/StagingDeploy",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/StagingAdmin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {},
+      "alpha_i": 1,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdDeploy",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdApp",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {
+        "cross_account": true
+      },
+      "alpha_i": 1,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/StagingDeploy",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::222222222222:role/StagingDB",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {},
+      "alpha_i": 1,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdApp",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdAdmin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {
+        "cross_account": true
+      },
+      "alpha_i": 1,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdDBAdmin",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdAdmin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {
+        "cross_account": true
+      },
+      "alpha_i": 1,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdDeploy",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdDBAdmin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {
+        "cross_account": true
+      },
+      "alpha_i": 1,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::444444444444:role/SharedInfra",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::444444444444:role/SharedSecrets",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {
+        "cross_account": true
+      },
+      "alpha_i": 1,
+      "beta_i": 1
+    },
+    {
+      "edge_type": "sts:AssumeRole_permission",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::444444444444:role/SharedSecrets",
+        "region": "-"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "arn:aws:iam::333333333333:role/ProdAdmin",
+        "region": "-"
+      },
+      "region": "-",
+      "features": {
+        "cross_account": true
+      },
+      "alpha_i": 1,
+      "beta_i": 1
+    }
+  ],
+  "constraints": [
+    {
+      "provider": "aws",
+      "constraint_type": "SCP",
+      "scope_type": "ou",
+      "scope_id": "ou-staging",
+      "region": "-",
+      "properties": {
+        "policy_id": "scp-BlockIAMWriteStaging",
+        "statement_id": "DenyIAMWriteInStaging",
+        "effect": "DENY",
+        "action": "iam:*",
+        "description": "Denies iam:CreateAccessKey, iam:CreateUser, iam:AttachRolePolicy"
+      },
+      "status": "ACTIVE",
+      "validation_status": "UNVALIDATED",
+      "confidence_q": 500
+    },
+    {
+      "provider": "aws",
+      "constraint_type": "SCP",
+      "scope_type": "ou",
+      "scope_id": "ou-prod",
+      "region": "-",
+      "properties": {
+        "policy_id": "scp-BlockCrossAccountAssumeProd",
+        "statement_id": "DenyCrossAccountAssumeIntoProd",
+        "effect": "DENY",
+        "action": "sts:AssumeRole",
+        "description": "Denies cross-account AssumeRole into production OU"
+      },
+      "status": "ACTIVE",
+      "validation_status": "UNVALIDATED",
+      "confidence_q": 500
+    },
+    {
+      "provider": "aws",
+      "constraint_type": "TRUST_CONDITION",
+      "scope_type": "edge",
+      "scope_id": "tc-prod-deploy-externalid",
+      "region": "-",
+      "properties": {
+        "policy_id": "trust-prod-deploy",
+        "statement_id": "RequireExternalId",
+        "condition_key": "sts:ExternalId",
+        "condition_value": "prod-deploy-xid-9281"
+      },
+      "status": "ACTIVE",
+      "validation_status": "UNVALIDATED",
+      "confidence_q": 500
+    },
+    {
+      "provider": "aws",
+      "constraint_type": "TRUST_CONDITION",
+      "scope_type": "edge",
+      "scope_id": "tc-shared-infra-orgid",
+      "region": "-",
+      "properties": {
+        "policy_id": "trust-shared-infra",
+        "statement_id": "RequirePrincipalOrgID",
+        "condition_key": "aws:PrincipalOrgID",
+        "condition_value": "o-realdemo1"
+      },
+      "status": "ACTIVE",
+      "validation_status": "UNVALIDATED",
+      "confidence_q": 500
+    }
+  ],
+  "edge_constraints": [
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::222222222222:role/StagingDeploy",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::222222222222:role/StagingAdmin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "ou",
+        "scope_id": "ou-staging",
+        "region": "-",
+        "properties": {
+          "policy_id": "scp-BlockIAMWriteStaging",
+          "statement_id": "DenyIAMWriteInStaging",
+          "effect": "DENY",
+          "action": "iam:*",
+          "description": "Denies iam:CreateAccessKey, iam:CreateUser, iam:AttachRolePolicy"
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::333333333333:role/ProdDeploy",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::333333333333:role/ProdApp",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "ou",
+        "scope_id": "ou-prod",
+        "region": "-",
+        "properties": {
+          "policy_id": "scp-BlockCrossAccountAssumeProd",
+          "statement_id": "DenyCrossAccountAssumeIntoProd",
+          "effect": "DENY",
+          "action": "sts:AssumeRole",
+          "description": "Denies cross-account AssumeRole into production OU"
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::333333333333:role/ProdDeploy",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::333333333333:role/ProdDBAdmin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "ou",
+        "scope_id": "ou-prod",
+        "region": "-",
+        "properties": {
+          "policy_id": "scp-BlockCrossAccountAssumeProd",
+          "statement_id": "DenyCrossAccountAssumeIntoProd",
+          "effect": "DENY",
+          "action": "sts:AssumeRole",
+          "description": "Denies cross-account AssumeRole into production OU"
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::444444444444:role/SharedSecrets",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::333333333333:role/ProdAdmin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "ou",
+        "scope_id": "ou-prod",
+        "region": "-",
+        "properties": {
+          "policy_id": "scp-BlockCrossAccountAssumeProd",
+          "statement_id": "DenyCrossAccountAssumeIntoProd",
+          "effect": "DENY",
+          "action": "sts:AssumeRole",
+          "description": "Denies cross-account AssumeRole into production OU"
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::333333333333:role/ProdDBAdmin",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::333333333333:role/ProdAdmin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "ou",
+        "scope_id": "ou-prod",
+        "region": "-",
+        "properties": {
+          "policy_id": "scp-BlockCrossAccountAssumeProd",
+          "statement_id": "DenyCrossAccountAssumeIntoProd",
+          "effect": "DENY",
+          "action": "sts:AssumeRole",
+          "description": "Denies cross-account AssumeRole into production OU"
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::333333333333:role/ProdApp",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::333333333333:role/ProdAdmin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "ou",
+        "scope_id": "ou-prod",
+        "region": "-",
+        "properties": {
+          "policy_id": "scp-BlockCrossAccountAssumeProd",
+          "statement_id": "DenyCrossAccountAssumeIntoProd",
+          "effect": "DENY",
+          "action": "sts:AssumeRole",
+          "description": "Denies cross-account AssumeRole into production OU"
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::444444444444:role/SharedInfra",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::444444444444:role/SharedSecrets",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SCP",
+        "scope_type": "ou",
+        "scope_id": "ou-prod",
+        "region": "-",
+        "properties": {
+          "policy_id": "scp-BlockCrossAccountAssumeProd",
+          "statement_id": "DenyCrossAccountAssumeIntoProd",
+          "effect": "DENY",
+          "action": "sts:AssumeRole",
+          "description": "Denies cross-account AssumeRole into production OU"
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::222222222222:role/StagingDeploy",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::333333333333:role/ProdDeploy",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "TRUST_CONDITION",
+        "scope_type": "edge",
+        "scope_id": "tc-prod-deploy-externalid",
+        "region": "-",
+        "properties": {
+          "policy_id": "trust-prod-deploy",
+          "statement_id": "RequireExternalId",
+          "condition_key": "sts:ExternalId",
+          "condition_value": "prod-deploy-xid-9281"
+        }
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::111111111111:role/EC2Bastion",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::444444444444:role/SharedInfra",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "TRUST_CONDITION",
+        "scope_type": "edge",
+        "scope_id": "tc-shared-infra-orgid",
+        "region": "-",
+        "properties": {
+          "policy_id": "trust-shared-infra",
+          "statement_id": "RequirePrincipalOrgID",
+          "condition_key": "aws:PrincipalOrgID",
+          "condition_value": "o-realdemo1"
+        }
+      }
+    }
+  ],
+  "objectives": [
+    {
+      "objective_type": "REACHABILITY",
+      "start_nodes": [
+        {
+          "provider": "aws",
+          "node_type": "IAMUser",
+          "provider_id": "arn:aws:iam::111111111111:user/attacker",
+          "region": "-"
+        }
+      ],
+      "target_nodes": [
+        {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::333333333333:role/ProdAdmin",
+          "region": "-"
+        }
+      ],
+      "max_depth": 8,
+      "k": 5
+    }
+  ],
+  "observations": [
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMUser",
+          "provider_id": "arn:aws:iam::111111111111:user/attacker",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::111111111111:role/DevOps",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "result": "ALLOW",
+      "strength": "DIRECT",
+      "signal_q": 92,
+      "reason_class": "UNKNOWN",
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev-attacker-DevOps-ALLOW"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMUser",
+          "provider_id": "arn:aws:iam::111111111111:user/attacker",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::111111111111:role/DevOps",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "result": "ALLOW",
+      "strength": "DIRECT",
+      "signal_q": 93,
+      "reason_class": "UNKNOWN",
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev-attacker-DevOps-ALLOW"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::111111111111:role/DevOps",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::111111111111:role/CI-Runner",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "result": "ALLOW",
+      "strength": "DIRECT",
+      "signal_q": 85,
+      "reason_class": "UNKNOWN",
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev-DevOps-CI-Runner-ALLOW"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::111111111111:role/DevOps",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::111111111111:role/LambdaDeploy",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "result": "ALLOW",
+      "strength": "DIRECT",
+      "signal_q": 81,
+      "reason_class": "UNKNOWN",
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev-DevOps-LambdaDeploy-ALLOW"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::111111111111:role/LambdaDeploy",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::222222222222:role/StagingDeploy",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "result": "ALLOW",
+      "strength": "DIRECT",
+      "signal_q": 85,
+      "reason_class": "UNKNOWN",
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev-LambdaDeploy-StagingDeploy-ALLOW"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::111111111111:role/CI-Runner",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::222222222222:role/StagingDeploy",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "result": "ALLOW",
+      "strength": "DIRECT",
+      "signal_q": 90,
+      "reason_class": "UNKNOWN",
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev-CI-Runner-StagingDeploy-ALLOW"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::222222222222:role/StagingDeploy",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::333333333333:role/ProdDeploy",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "result": "ALLOW",
+      "strength": "DIRECT",
+      "signal_q": 60,
+      "reason_class": "UNKNOWN",
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev-StagingDeploy-ProdDeploy-ALLOW"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMUser",
+          "provider_id": "arn:aws:iam::111111111111:user/attacker",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::111111111111:role/EC2Bastion",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "result": "ALLOW",
+      "strength": "DIRECT",
+      "signal_q": 70,
+      "reason_class": "UNKNOWN",
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev-attacker-EC2Bastion-ALLOW"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::111111111111:role/EC2Bastion",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::444444444444:role/SharedInfra",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "result": "ALLOW",
+      "strength": "DIRECT",
+      "signal_q": 50,
+      "reason_class": "UNKNOWN",
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev-EC2Bastion-SharedInfra-ALLOW"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::222222222222:role/StagingDeploy",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::222222222222:role/StagingAdmin",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "result": "DENY",
+      "strength": "DIRECT",
+      "signal_q": 95,
+      "reason_class": "CONSTRAINT_DENY",
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev-StagingDeploy-StagingAdmin-DENY"
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole_permission",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::333333333333:role/ProdDeploy",
+          "region": "-"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "arn:aws:iam::333333333333:role/ProdApp",
+          "region": "-"
+        },
+        "region": "-"
+      },
+      "result": "DENY",
+      "strength": "DIRECT",
+      "signal_q": 90,
+      "reason_class": "CONSTRAINT_DENY",
+      "is_counterfactual": false,
+      "constraint_relevant": false,
+      "evidence_hash": "ev-ProdDeploy-ProdApp-DENY"
+    }
+  ]
+}

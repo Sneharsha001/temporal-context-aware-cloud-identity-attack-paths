@@ -1,0 +1,230 @@
+{
+  "nodes": [
+    {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-A", "region": "us-east-1", "display_name": "Alpha"},
+    {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-B", "region": "us-east-1", "display_name": "Bravo"},
+    {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-C", "region": "us-east-1", "display_name": "Charlie"},
+    {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-D", "region": "us-east-1", "display_name": "Delta"},
+    {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-E", "region": "us-east-1", "display_name": "Echo"}
+  ],
+  "edges": [
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-A", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-B", "region": "us-east-1"},
+      "region": "us-east-1",
+      "features": {"action": "sts:AssumeRole", "effect": "Allow"}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-A", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-C", "region": "us-east-1"},
+      "region": "us-east-1",
+      "features": {"action": "sts:AssumeRole", "effect": "Allow"}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-B", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-D", "region": "us-east-1"},
+      "region": "us-east-1",
+      "features": {"action": "sts:AssumeRole", "effect": "Allow"}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-C", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-D", "region": "us-east-1"},
+      "region": "us-east-1",
+      "features": {"action": "sts:AssumeRole", "effect": "Allow"}
+    },
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-D", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-E", "region": "us-east-1"},
+      "region": "us-east-1",
+      "features": {"action": "sts:AssumeRole", "effect": "Allow"}
+    }
+  ],
+  "constraints": [
+    {
+      "provider": "aws", "constraint_type": "SCP",
+      "scope_type": "OU", "scope_id": "ou-prod-001", "region": "us-east-1",
+      "properties": {"action": "sts:AssumeRole", "effect": "Deny", "scope": "prod"},
+      "confidence_q": 800
+    },
+    {
+      "provider": "aws", "constraint_type": "SCP",
+      "scope_type": "OU", "scope_id": "ou-dev-001", "region": "us-east-1",
+      "properties": {"action": "sts:AssumeRole", "effect": "Deny", "scope": "dev"},
+      "confidence_q": 800
+    },
+    {
+      "provider": "aws", "constraint_type": "TRUST_CONDITION",
+      "scope_type": "RESOURCE", "scope_id": "role-E-trust", "region": "us-east-1",
+      "properties": {"condition": "sts:ExternalId"},
+      "confidence_q": 800
+    }
+  ],
+  "edge_constraints": [
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-A", "region": "us-east-1"},
+        "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-B", "region": "us-east-1"},
+        "region": "us-east-1"
+      },
+      "constraint_ref": {
+        "provider": "aws", "constraint_type": "SCP",
+        "scope_type": "OU", "scope_id": "ou-prod-001", "region": "us-east-1",
+        "properties": {"action": "sts:AssumeRole", "effect": "Deny", "scope": "prod"}
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-B", "region": "us-east-1"},
+        "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-D", "region": "us-east-1"},
+        "region": "us-east-1"
+      },
+      "constraint_ref": {
+        "provider": "aws", "constraint_type": "SCP",
+        "scope_type": "OU", "scope_id": "ou-prod-001", "region": "us-east-1",
+        "properties": {"action": "sts:AssumeRole", "effect": "Deny", "scope": "prod"}
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-A", "region": "us-east-1"},
+        "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-C", "region": "us-east-1"},
+        "region": "us-east-1"
+      },
+      "constraint_ref": {
+        "provider": "aws", "constraint_type": "SCP",
+        "scope_type": "OU", "scope_id": "ou-dev-001", "region": "us-east-1",
+        "properties": {"action": "sts:AssumeRole", "effect": "Deny", "scope": "dev"}
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-C", "region": "us-east-1"},
+        "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-D", "region": "us-east-1"},
+        "region": "us-east-1"
+      },
+      "constraint_ref": {
+        "provider": "aws", "constraint_type": "SCP",
+        "scope_type": "OU", "scope_id": "ou-dev-001", "region": "us-east-1",
+        "properties": {"action": "sts:AssumeRole", "effect": "Deny", "scope": "dev"}
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-D", "region": "us-east-1"},
+        "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-E", "region": "us-east-1"},
+        "region": "us-east-1"
+      },
+      "constraint_ref": {
+        "provider": "aws", "constraint_type": "TRUST_CONDITION",
+        "scope_type": "RESOURCE", "scope_id": "role-E-trust", "region": "us-east-1",
+        "properties": {"condition": "sts:ExternalId"}
+      }
+    }
+  ],
+  "objectives": [
+    {
+      "objective_type": "REACHABILITY",
+      "start_nodes": [{"provider": "aws", "node_type": "IAMRole", "provider_id": "role-A", "region": "us-east-1"}],
+      "target_nodes": [{"provider": "aws", "node_type": "IAMRole", "provider_id": "role-E", "region": "us-east-1"}],
+      "max_depth": 5, "k": 5
+    },
+    {
+      "objective_type": "REACHABILITY",
+      "start_nodes": [{"provider": "aws", "node_type": "IAMRole", "provider_id": "role-B", "region": "us-east-1"}],
+      "target_nodes": [{"provider": "aws", "node_type": "IAMRole", "provider_id": "role-E", "region": "us-east-1"}],
+      "max_depth": 3, "k": 3
+    }
+  ],
+  "observations": [
+    {
+      "edge_ref": {"edge_type": "sts:AssumeRole",
+        "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-A", "region": "us-east-1"},
+        "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-B", "region": "us-east-1"},
+        "region": "us-east-1"},
+      "probe_type": "REPLAY_SCRIPTED", "result": "ALLOW", "reason_class": "UNKNOWN",
+      "strength": "DIRECT", "signal_q": 85, "is_counterfactual": false,
+      "constraint_relevant": false, "evidence_hash": "ev001"
+    },
+    {
+      "edge_ref": {"edge_type": "sts:AssumeRole",
+        "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-A", "region": "us-east-1"},
+        "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-B", "region": "us-east-1"},
+        "region": "us-east-1"},
+      "probe_type": "REPLAY_SCRIPTED", "result": "DENY", "reason_class": "CONSTRAINT_DENY",
+      "strength": "DIRECT", "signal_q": 90, "is_counterfactual": false,
+      "constraint_relevant": true, "evidence_hash": "ev002"
+    },
+    {
+      "edge_ref": {"edge_type": "sts:AssumeRole",
+        "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-A", "region": "us-east-1"},
+        "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-C", "region": "us-east-1"},
+        "region": "us-east-1"},
+      "probe_type": "REPLAY_SCRIPTED", "result": "ALLOW", "reason_class": "UNKNOWN",
+      "strength": "DETERMINISTIC", "signal_q": 100, "is_counterfactual": false,
+      "constraint_relevant": false, "evidence_hash": "ev003"
+    },
+    {
+      "edge_ref": {"edge_type": "sts:AssumeRole",
+        "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-B", "region": "us-east-1"},
+        "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-D", "region": "us-east-1"},
+        "region": "us-east-1"},
+      "probe_type": "REPLAY_SCRIPTED", "result": "DENY", "reason_class": "CONSTRAINT_DENY",
+      "strength": "DIRECT", "signal_q": 95, "is_counterfactual": false,
+      "constraint_relevant": true, "evidence_hash": "ev004"
+    },
+    {
+      "edge_ref": {"edge_type": "sts:AssumeRole",
+        "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-B", "region": "us-east-1"},
+        "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-D", "region": "us-east-1"},
+        "region": "us-east-1"},
+      "probe_type": "REPLAY_SCRIPTED", "result": "ALLOW", "reason_class": "UNKNOWN",
+      "strength": "DIRECT", "signal_q": 70, "is_counterfactual": false,
+      "constraint_relevant": false, "evidence_hash": "ev005"
+    },
+    {
+      "edge_ref": {"edge_type": "sts:AssumeRole",
+        "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-C", "region": "us-east-1"},
+        "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-D", "region": "us-east-1"},
+        "region": "us-east-1"},
+      "probe_type": "REPLAY_SCRIPTED", "result": "ALLOW", "reason_class": "UNKNOWN",
+      "strength": "DIRECT", "signal_q": 80, "is_counterfactual": false,
+      "constraint_relevant": false, "evidence_hash": "ev006"
+    },
+    {
+      "edge_ref": {"edge_type": "sts:AssumeRole",
+        "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-D", "region": "us-east-1"},
+        "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-E", "region": "us-east-1"},
+        "region": "us-east-1"},
+      "probe_type": "REPLAY_SCRIPTED", "result": "ALLOW", "reason_class": "UNKNOWN",
+      "strength": "DETERMINISTIC", "signal_q": 100, "is_counterfactual": false,
+      "constraint_relevant": false, "evidence_hash": "ev007"
+    },
+    {
+      "edge_ref": {"edge_type": "sts:AssumeRole",
+        "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-D", "region": "us-east-1"},
+        "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-E", "region": "us-east-1"},
+        "region": "us-east-1"},
+      "probe_type": "REPLAY_SCRIPTED", "result": "DENY", "reason_class": "MISSING_PERMISSION",
+      "strength": "DIRECT", "signal_q": 85, "is_counterfactual": false,
+      "constraint_relevant": false, "evidence_hash": "ev008"
+    },
+    {
+      "edge_ref": {"edge_type": "sts:AssumeRole",
+        "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-C", "region": "us-east-1"},
+        "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "role-D", "region": "us-east-1"},
+        "region": "us-east-1"},
+      "probe_type": "REPLAY_SCRIPTED", "result": "DENY", "reason_class": "CONSTRAINT_DENY",
+      "strength": "DIRECT", "signal_q": 75, "is_counterfactual": false,
+      "constraint_relevant": true, "evidence_hash": "ev009"
+    }
+  ]
+}
