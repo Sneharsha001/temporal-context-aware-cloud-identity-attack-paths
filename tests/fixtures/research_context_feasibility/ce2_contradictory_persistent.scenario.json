@@ -1,0 +1,120 @@
+{
+  "metadata": {
+    "scenario_id": "ce2_contradictory_persistent",
+    "research_counterexample_id": "CE2",
+    "description": "Contradictory persistent context under static origin assumption"
+  },
+  "nodes": [
+    {
+      "provider": "aws",
+      "node_type": "IAMUser",
+      "provider_id": "AttackerOrigin",
+      "region": "us-east-1"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "JumpRole",
+      "region": "us-east-1"
+    },
+    {
+      "provider": "aws",
+      "node_type": "S3Bucket",
+      "provider_id": "TargetData",
+      "region": "us-east-1"
+    }
+  ],
+  "edges": [
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {"provider": "aws", "node_type": "IAMUser", "provider_id": "AttackerOrigin", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "JumpRole", "region": "us-east-1"},
+      "region": "us-east-1",
+      "features": {"action": "sts:AssumeRole"}
+    },
+    {
+      "edge_type": "s3:GetObject",
+      "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "JumpRole", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "S3Bucket", "provider_id": "TargetData", "region": "us-east-1"},
+      "region": "us-east-1",
+      "features": {"action": "s3:GetObject"}
+    }
+  ],
+  "constraints": [
+    {
+      "provider": "aws",
+      "constraint_type": "TRUST_CONDITION",
+      "scope_type": "ROLE",
+      "scope_id": "JumpRole",
+      "region": "us-east-1",
+      "properties": {
+        "conditions": [
+          {
+            "key": "aws:SourceIp",
+            "operator": "IpAddress",
+            "values": ["10.0.0.0/8"]
+          }
+        ]
+      },
+      "confidence_q": 900
+    },
+    {
+      "provider": "aws",
+      "constraint_type": "RESOURCE_POLICY",
+      "scope_type": "BUCKET",
+      "scope_id": "TargetData",
+      "region": "us-east-1",
+      "properties": {
+        "conditions": [
+          {
+            "key": "aws:SourceIp",
+            "operator": "IpAddress",
+            "values": ["192.168.0.0/16"]
+          }
+        ]
+      },
+      "confidence_q": 900
+    }
+  ],
+  "edge_constraints": [
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {"provider": "aws", "node_type": "IAMUser", "provider_id": "AttackerOrigin", "region": "us-east-1"},
+        "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "JumpRole", "region": "us-east-1"},
+        "region": "us-east-1"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "TRUST_CONDITION",
+        "scope_type": "ROLE",
+        "scope_id": "JumpRole",
+        "region": "us-east-1"
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "s3:GetObject",
+        "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "JumpRole", "region": "us-east-1"},
+        "dst": {"provider": "aws", "node_type": "S3Bucket", "provider_id": "TargetData", "region": "us-east-1"},
+        "region": "us-east-1"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "RESOURCE_POLICY",
+        "scope_type": "BUCKET",
+        "scope_id": "TargetData",
+        "region": "us-east-1"
+      }
+    }
+  ],
+  "objectives": [
+    {
+      "objective_type": "REACHABILITY",
+      "start_nodes": [{"provider": "aws", "node_type": "IAMUser", "provider_id": "AttackerOrigin", "region": "us-east-1"}],
+      "target_nodes": [{"provider": "aws", "node_type": "S3Bucket", "provider_id": "TargetData", "region": "us-east-1"}],
+      "max_depth": 4,
+      "k": 5
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "manifest_schema_version": "1.0.0",
+  "research_project": "Context-Conditioned Attack-Path Feasibility",
+  "target_extension": "ARF-RT Formal Feasibility Model (Phase 15)",
+  "fixture_count": 6,
+  "fixtures": [
+    {
+      "fixture_id": "CE1",
+      "name": "Compatible Persistent Context",
+      "research_question": "Does the CSP evaluator return SAT when sequential hops impose non-disjoint constraints on an explicitly persistent context variable under static origin assumption?",
+      "scenario_file": "ce1_compatible_persistent.scenario.json",
+      "context_file": "ce1_compatible_persistent.context.json",
+      "expected_csp_outcome": "SAT",
+      "expected_feasibility_multiplier": 1.0,
+      "expected_path_score_effect": "PRESERVED"
+    },
+    {
+      "fixture_id": "CE2",
+      "name": "Contradictory Persistent Context",
+      "research_question": "Does the CSP evaluator return UNSAT when sequential hops impose disjoint constraints on an explicitly persistent context variable under a static origin assumption?",
+      "scenario_file": "ce2_contradictory_persistent.scenario.json",
+      "context_file": "ce2_contradictory_persistent.context.json",
+      "expected_csp_outcome": "UNSAT",
+      "expected_feasibility_multiplier": 0.0,
+      "expected_path_score_effect": "ELIMINATED"
+    },
+    {
+      "fixture_id": "CE3",
+      "name": "Context-Changing Transition Permitted",
+      "research_question": "Does the CSP evaluator determine feasibility based on explicit transition constraints rather than falsely assuming contradiction when request-scoped values differ across a pivot?",
+      "scenario_file": "ce3_transition_permitted.scenario.json",
+      "context_file": "ce3_transition_permitted.context.json",
+      "expected_csp_outcome": "SAT",
+      "expected_feasibility_multiplier": 1.0,
+      "expected_path_score_effect": "PRESERVED"
+    },
+    {
+      "fixture_id": "CE4",
+      "name": "Missing or Unsupported Context Metadata",
+      "research_question": "Does the CSP evaluator return UNKNOWN (rather than SAT or UNSAT) and fall back safely to baseline scoring when required context metadata is unsupported or missing?",
+      "scenario_file": "ce4_unsupported_metadata.scenario.json",
+      "context_file": "ce4_unsupported_metadata.context.json",
+      "expected_csp_outcome": "UNKNOWN",
+      "expected_feasibility_multiplier": 1.0,
+      "expected_path_score_effect": "PRESERVED_FALLBACK"
+    },
+    {
+      "fixture_id": "CE5",
+      "name": "Baseline Compatibility",
+      "research_question": "Does the proposed extension strictly preserve original ARF-RT results when evaluating unmodified baseline fixtures without research context metadata?",
+      "scenario_file": null,
+      "referenced_baseline_fixtures": [
+        "tests/fixtures/diamond_scenario.json",
+        "tests/fixtures/primary_realistic_scenario.json"
+      ],
+      "context_file": "ce5_baseline_compatibility.context.json",
+      "expected_csp_outcome": "UNKNOWN",
+      "expected_feasibility_multiplier": 1.0,
+      "expected_path_score_effect": "STRICT_IDENTITY"
+    },
+    {
+      "fixture_id": "CE6",
+      "name": "Principal Scope Boundary Across AssumeRole",
+      "research_question": "Does the CSP evaluator return UNSAT when an action requires an identity principal tag that is neither present on the assumed role nor propagated across the AssumeRole boundary?",
+      "scenario_file": "ce6_principal_scope_boundary.scenario.json",
+      "context_file": "ce6_principal_scope_boundary.context.json",
+      "expected_csp_outcome": "UNSAT",
+      "expected_feasibility_multiplier": 0.0,
+      "expected_path_score_effect": "ELIMINATED"
+    }
+  ]
+}

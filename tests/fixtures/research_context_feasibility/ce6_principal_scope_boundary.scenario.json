@@ -1,0 +1,184 @@
+{
+  "metadata": {
+    "scenario_id": "ce6_principal_scope_boundary",
+    "research_counterexample_id": "CE6",
+    "description": "Principal-scoped tag mismatch across AssumeRole boundary with prohibited session tagging"
+  },
+  "nodes": [
+    {
+      "provider": "aws",
+      "node_type": "IAMUser",
+      "provider_id": "DevUser",
+      "region": "us-east-1"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "AppDevRole",
+      "region": "us-east-1"
+    },
+    {
+      "provider": "aws",
+      "node_type": "SecretsManagerSecret",
+      "provider_id": "ProductionMasterKey",
+      "region": "us-east-1"
+    }
+  ],
+  "edges": [
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMUser",
+        "provider_id": "DevUser",
+        "region": "us-east-1"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "AppDevRole",
+        "region": "us-east-1"
+      },
+      "region": "us-east-1",
+      "features": {
+        "action": "sts:AssumeRole"
+      }
+    },
+    {
+      "edge_type": "secretsmanager:GetSecretValue",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "AppDevRole",
+        "region": "us-east-1"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "SecretsManagerSecret",
+        "provider_id": "ProductionMasterKey",
+        "region": "us-east-1"
+      },
+      "region": "us-east-1",
+      "features": {
+        "action": "secretsmanager:GetSecretValue"
+      }
+    }
+  ],
+  "constraints": [
+    {
+      "provider": "aws",
+      "constraint_type": "TRUST_CONDITION",
+      "scope_type": "ROLE",
+      "scope_id": "AppDevRole",
+      "region": "us-east-1",
+      "properties": {
+        "action": "sts:AssumeRole",
+        "session_tagging": "PROHIBITED",
+        "conditions": [
+          {
+            "key": "aws:RequestTag/Department",
+            "operator": "Null",
+            "values": [
+              "true"
+            ]
+          }
+        ]
+      },
+      "confidence_q": 900
+    },
+    {
+      "provider": "aws",
+      "constraint_type": "RESOURCE_POLICY",
+      "scope_type": "SECRET",
+      "scope_id": "ProductionMasterKey",
+      "region": "us-east-1",
+      "properties": {
+        "conditions": [
+          {
+            "key": "aws:PrincipalTag/Department",
+            "operator": "StringEquals",
+            "values": [
+              "SecurityOperations"
+            ]
+          }
+        ]
+      },
+      "confidence_q": 900
+    }
+  ],
+  "edge_constraints": [
+    {
+      "edge_ref": {
+        "edge_type": "sts:AssumeRole",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMUser",
+          "provider_id": "DevUser",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "AppDevRole",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "TRUST_CONDITION",
+        "scope_type": "ROLE",
+        "scope_id": "AppDevRole",
+        "region": "us-east-1"
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "secretsmanager:GetSecretValue",
+        "src": {
+          "provider": "aws",
+          "node_type": "IAMRole",
+          "provider_id": "AppDevRole",
+          "region": "us-east-1"
+        },
+        "dst": {
+          "provider": "aws",
+          "node_type": "SecretsManagerSecret",
+          "provider_id": "ProductionMasterKey",
+          "region": "us-east-1"
+        },
+        "region": "us-east-1"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "RESOURCE_POLICY",
+        "scope_type": "SECRET",
+        "scope_id": "ProductionMasterKey",
+        "region": "us-east-1"
+      }
+    }
+  ],
+  "objectives": [
+    {
+      "objective_type": "REACHABILITY",
+      "start_nodes": [
+        {
+          "provider": "aws",
+          "node_type": "IAMUser",
+          "provider_id": "DevUser",
+          "region": "us-east-1"
+        }
+      ],
+      "target_nodes": [
+        {
+          "provider": "aws",
+          "node_type": "SecretsManagerSecret",
+          "provider_id": "ProductionMasterKey",
+          "region": "us-east-1"
+        }
+      ],
+      "max_depth": 4,
+      "k": 5
+    }
+  ]
+}

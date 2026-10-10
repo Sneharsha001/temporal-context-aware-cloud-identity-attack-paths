@@ -1,0 +1,26 @@
+{
+  "fixture_id": "CE5",
+  "name": "Baseline Compatibility",
+  "research_question": "Does the proposed extension strictly preserve original ARF-RT results when evaluating unmodified baseline fixtures without research context metadata?",
+  "referenced_baseline_fixtures": [
+    {
+      "path": "tests/fixtures/diamond_scenario.json",
+      "sha256_verified": true,
+      "description": "Diamond scenario with four roles and cross-account SCP constraint"
+    },
+    {
+      "path": "tests/fixtures/primary_realistic_scenario.json",
+      "sha256_verified": true,
+      "description": "Primary realistic AWS enterprise scenario with 14 nodes and complex topologies"
+    }
+  ],
+  "context_variables": [],
+  "edge_context_specifications": [],
+  "transition_constraints": [],
+  "complete_constraint_system": "NONE (No research context condition schema present)",
+  "expected_csp_outcome": "UNKNOWN",
+  "expected_feasibility_multiplier": 1.0,
+  "expected_path_score_effect": "STRICT_IDENTITY",
+  "formal_rationale": "As proven in docs/PHASE15_FORMAL_FEASIBILITY_MODEL.md (§4.2 & §6 CE5), any scenario lacking the research condition schema must evaluate to UNKNOWN feasibility. UNKNOWN feasibility universally assigns a multiplier of 1.0, ensuring that no path scores are altered and search frontier orderings are completely identical to the baseline ARF-RT engine.",
+  "falsification_criteria": "The backward compatibility invariant is falsified if running the extended pipeline against unmodified diamond_scenario.json or primary_realistic_scenario.json yields any difference in top-K path sequences, rank order, p_worst_q8, or p_best_q8 compared to baseline ARF-RT."
+}

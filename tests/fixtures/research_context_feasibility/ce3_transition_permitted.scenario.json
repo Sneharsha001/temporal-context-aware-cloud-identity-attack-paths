@@ -1,0 +1,120 @@
+{
+  "metadata": {
+    "scenario_id": "ce3_transition_permitted",
+    "research_counterexample_id": "CE3",
+    "description": "Context-changing transition permitting different request-scoped values across a pivot"
+  },
+  "nodes": [
+    {
+      "provider": "aws",
+      "node_type": "Identity",
+      "provider_id": "ExternalAttacker",
+      "region": "us-east-1"
+    },
+    {
+      "provider": "aws",
+      "node_type": "EC2Instance",
+      "provider_id": "BastionPivotHost",
+      "region": "us-east-1"
+    },
+    {
+      "provider": "aws",
+      "node_type": "RDSInstance",
+      "provider_id": "InternalDatabase",
+      "region": "us-east-1"
+    }
+  ],
+  "edges": [
+    {
+      "edge_type": "ssh:Connect",
+      "src": {"provider": "aws", "node_type": "Identity", "provider_id": "ExternalAttacker", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "EC2Instance", "provider_id": "BastionPivotHost", "region": "us-east-1"},
+      "region": "us-east-1",
+      "features": {"action": "ssh:Connect"}
+    },
+    {
+      "edge_type": "rds:Connect",
+      "src": {"provider": "aws", "node_type": "EC2Instance", "provider_id": "BastionPivotHost", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "RDSInstance", "provider_id": "InternalDatabase", "region": "us-east-1"},
+      "region": "us-east-1",
+      "features": {"action": "rds:Connect"}
+    }
+  ],
+  "constraints": [
+    {
+      "provider": "aws",
+      "constraint_type": "SECURITY_GROUP",
+      "scope_type": "INSTANCE",
+      "scope_id": "BastionPivotHost",
+      "region": "us-east-1",
+      "properties": {
+        "conditions": [
+          {
+            "key": "aws:SourceIp",
+            "operator": "IpAddress",
+            "values": ["198.51.100.0/24"]
+          }
+        ]
+      },
+      "confidence_q": 900
+    },
+    {
+      "provider": "aws",
+      "constraint_type": "SECURITY_GROUP",
+      "scope_type": "INSTANCE",
+      "scope_id": "InternalDatabase",
+      "region": "us-east-1",
+      "properties": {
+        "conditions": [
+          {
+            "key": "aws:SourceIp",
+            "operator": "IpAddress",
+            "values": ["10.0.0.0/16"]
+          }
+        ]
+      },
+      "confidence_q": 900
+    }
+  ],
+  "edge_constraints": [
+    {
+      "edge_ref": {
+        "edge_type": "ssh:Connect",
+        "src": {"provider": "aws", "node_type": "Identity", "provider_id": "ExternalAttacker", "region": "us-east-1"},
+        "dst": {"provider": "aws", "node_type": "EC2Instance", "provider_id": "BastionPivotHost", "region": "us-east-1"},
+        "region": "us-east-1"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SECURITY_GROUP",
+        "scope_type": "INSTANCE",
+        "scope_id": "BastionPivotHost",
+        "region": "us-east-1"
+      }
+    },
+    {
+      "edge_ref": {
+        "edge_type": "rds:Connect",
+        "src": {"provider": "aws", "node_type": "EC2Instance", "provider_id": "BastionPivotHost", "region": "us-east-1"},
+        "dst": {"provider": "aws", "node_type": "RDSInstance", "provider_id": "InternalDatabase", "region": "us-east-1"},
+        "region": "us-east-1"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "SECURITY_GROUP",
+        "scope_type": "INSTANCE",
+        "scope_id": "InternalDatabase",
+        "region": "us-east-1"
+      }
+    }
+  ],
+  "objectives": [
+    {
+      "objective_type": "REACHABILITY",
+      "start_nodes": [{"provider": "aws", "node_type": "Identity", "provider_id": "ExternalAttacker", "region": "us-east-1"}],
+      "target_nodes": [{"provider": "aws", "node_type": "RDSInstance", "provider_id": "InternalDatabase", "region": "us-east-1"}],
+      "max_depth": 4,
+      "k": 5
+    }
+  ]
+}

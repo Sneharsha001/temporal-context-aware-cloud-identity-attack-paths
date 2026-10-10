@@ -1,0 +1,82 @@
+{
+  "fixture_id": "CE3",
+  "name": "Context-Changing Transition Permitted",
+  "research_question": "Does the CSP evaluator determine feasibility based on explicit transition constraints rather than falsely assuming contradiction when request-scoped values differ across a pivot?",
+  "scenario_file": "ce3_transition_permitted.scenario.json",
+  "path_under_evaluation": [
+    {
+      "hop": 1,
+      "edge_type": "ssh:Connect",
+      "src": {"provider": "aws", "node_type": "Identity", "provider_id": "ExternalAttacker", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "EC2Instance", "provider_id": "BastionPivotHost", "region": "us-east-1"}
+    },
+    {
+      "hop": 2,
+      "edge_type": "rds:Connect",
+      "src": {"provider": "aws", "node_type": "EC2Instance", "provider_id": "BastionPivotHost", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "RDSInstance", "provider_id": "InternalDatabase", "region": "us-east-1"}
+    }
+  ],
+  "context_variables": [
+    {
+      "key": "aws:SourceIp",
+      "scope": "request",
+      "persistence_model": "mutable_across_network_pivot",
+      "data_type": "ipv4_cidr"
+    }
+  ],
+  "edge_context_specifications": [
+    {
+      "hop": 1,
+      "required_context": [
+        {
+          "key": "aws:SourceIp",
+          "operator": "IpAddress",
+          "values": ["198.51.100.0/24"],
+          "scope": "request"
+        }
+      ],
+      "produced_context": [
+        {
+          "key": "network_execution_origin",
+          "operation": "SET",
+          "value": "10.0.1.100",
+          "cidr_subnet": "10.0.0.0/16",
+          "description": "Compromised bastion host establishes an internal VPC origin for subsequent requests"
+        }
+      ]
+    },
+    {
+      "hop": 2,
+      "required_context": [
+        {
+          "key": "aws:SourceIp",
+          "operator": "IpAddress",
+          "values": ["10.0.0.0/16"],
+          "scope": "request"
+        }
+      ],
+      "produced_context": []
+    }
+  ],
+  "transition_constraints": [
+    {
+      "from_hop": 1,
+      "to_hop": 2,
+      "variable": "aws:SourceIp",
+      "relation": "PIVOT_TRANSITION",
+      "formula": "SourceIp(hop2) == ProducedContext(hop1).network_execution_origin",
+      "rationale": "Traversal of hop 1 compromises the bastion host, shifting the attacker's request-origin from the external internet to the bastion's VPC IP (10.0.1.100). The transition does not enforce SourceIp(hop1) == SourceIp(hop2)."
+    }
+  ],
+  "complete_constraint_system": "(SourceIp(hop1) in 198.51.100.0/24) AND (SourceIp(hop2) in 10.0.0.0/16) AND (SourceIp(hop2) == 10.0.1.100)",
+  "expected_csp_outcome": "SAT",
+  "witness": {
+    "SourceIp(hop1)": "198.51.100.42",
+    "SourceIp(hop2)": "10.0.1.100"
+  },
+  "expected_feasibility_multiplier": 1.0,
+  "expected_path_score_effect": "PRESERVED",
+  "formal_rationale": "Although 198.51.100.0/24 and 10.0.0.0/16 are disjoint CIDR blocks, aws:SourceIp is a request-scoped attribute whose origin mutates across the pivot hop. Hop 1 produces an internal VPC execution context (10.0.1.100). The transition constraint explicitly binds SourceIp(hop2) to this produced context rather than equating it to SourceIp(hop1). The system is fully satisfied by SourceIp(hop1) = 198.51.100.42 and SourceIp(hop2) = 10.0.1.100.",
+  "falsification_criteria": "The feasibility hypothesis is falsified if the evaluator blindly flags disjoint request-scoped values as a contradiction (returning UNSAT) without evaluating the explicit pivot transition constraints."
+}

@@ -1,0 +1,62 @@
+{
+  "fixture_id": "CE4",
+  "name": "Missing or Unsupported Context Metadata",
+  "research_question": "Does the CSP evaluator return UNKNOWN (rather than SAT or UNSAT) and fall back safely to baseline scoring when required context metadata is unsupported or missing?",
+  "scenario_file": "ce4_unsupported_metadata.scenario.json",
+  "path_under_evaluation": [
+    {
+      "hop": 1,
+      "edge_type": "sts:AssumeRole",
+      "src": {"provider": "aws", "node_type": "IAMUser", "provider_id": "AttackerOrigin", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "JumpRole", "region": "us-east-1"}
+    },
+    {
+      "hop": 2,
+      "edge_type": "app:Invoke",
+      "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "JumpRole", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "Service", "provider_id": "CustomAppBackend", "region": "us-east-1"}
+    }
+  ],
+  "context_variables": [
+    {
+      "key": "vendor:ProprietaryBiometricToken",
+      "scope": "unknown",
+      "persistence_model": "unspecified",
+      "data_type": "proprietary_token"
+    }
+  ],
+  "edge_context_specifications": [
+    {
+      "hop": 1,
+      "required_context": [],
+      "produced_context": [
+        {
+          "key": "active_principal",
+          "operation": "SET",
+          "value": "arn:aws:iam::123456789012:role/JumpRole"
+        }
+      ]
+    },
+    {
+      "hop": 2,
+      "required_context": [
+        {
+          "key": "vendor:ProprietaryBiometricToken",
+          "operator": "UnsupportedFuzzyMatch",
+          "values": ["hash:9a8f..."],
+          "scope": "unknown",
+          "support_status": "UNSUPPORTED_OPERATOR_AND_KEY"
+        }
+      ],
+      "produced_context": []
+    }
+  ],
+  "transition_constraints": [],
+  "complete_constraint_system": "UNKNOWN_PREDICATE(vendor:ProprietaryBiometricToken, UnsupportedFuzzyMatch, ['hash:9a8f...'])",
+  "expected_csp_outcome": "UNKNOWN",
+  "witness": null,
+  "expected_feasibility_multiplier": 1.0,
+  "expected_path_score_effect": "PRESERVED_FALLBACK",
+  "formal_rationale": "Under the formal feasibility model (§2 & §4.2), conditions with unsupported condition keys, unknown scopes, or unsupported relational operators cannot be proven SAT or UNSAT. To preserve safety in open-world reasoning, the evaluator must classify such paths as UNKNOWN. To avoid erroneously eliminating feasible attack paths without logical proof, the system applies the baseline fallback multiplier of 1.0, preserving the unmodified Bayesian score.",
+  "falsification_criteria": "The feasibility hypothesis is falsified if the evaluator outputs SAT (falsely asserting proven feasibility) or UNSAT (falsely pruning the path without proof), or if it fails to apply the 1.0 fallback multiplier."
+}

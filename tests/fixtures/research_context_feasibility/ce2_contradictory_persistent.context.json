@@ -1,0 +1,77 @@
+{
+  "fixture_id": "CE2",
+  "name": "Contradictory Persistent Context",
+  "research_question": "Does the CSP evaluator return UNSAT when sequential hops impose disjoint constraints on an explicitly persistent context variable under a static-origin assumption?",
+  "scenario_file": "ce2_contradictory_persistent.scenario.json",
+  "path_under_evaluation": [
+    {
+      "hop": 1,
+      "edge_type": "sts:AssumeRole",
+      "src": {"provider": "aws", "node_type": "IAMUser", "provider_id": "AttackerOrigin", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "JumpRole", "region": "us-east-1"}
+    },
+    {
+      "hop": 2,
+      "edge_type": "s3:GetObject",
+      "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "JumpRole", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "S3Bucket", "provider_id": "TargetData", "region": "us-east-1"}
+    }
+  ],
+  "context_variables": [
+    {
+      "key": "aws:SourceIp",
+      "scope": "request",
+      "persistence_model": "persistent_under_static_origin_assumption",
+      "data_type": "ipv4_cidr"
+    }
+  ],
+  "edge_context_specifications": [
+    {
+      "hop": 1,
+      "required_context": [
+        {
+          "key": "aws:SourceIp",
+          "operator": "IpAddress",
+          "values": ["10.0.0.0/8"],
+          "scope": "request"
+        }
+      ],
+      "produced_context": [
+        {
+          "key": "active_principal",
+          "operation": "SET",
+          "value": "arn:aws:iam::123456789012:role/JumpRole"
+        }
+      ]
+    },
+    {
+      "hop": 2,
+      "required_context": [
+        {
+          "key": "aws:SourceIp",
+          "operator": "IpAddress",
+          "values": ["192.168.0.0/16"],
+          "scope": "request"
+        }
+      ],
+      "produced_context": []
+    }
+  ],
+  "transition_constraints": [
+    {
+      "from_hop": 1,
+      "to_hop": 2,
+      "variable": "aws:SourceIp",
+      "relation": "EQUAL",
+      "formula": "SourceIp(hop1) == SourceIp(hop2)",
+      "rationale": "Static origin assumption: attacker does not route through an intermediate proxy/bastion between AssumeRole and GetObject."
+    }
+  ],
+  "complete_constraint_system": "(SourceIp(hop1) in 10.0.0.0/8) AND (SourceIp(hop2) in 192.168.0.0/16) AND (SourceIp(hop1) == SourceIp(hop2))",
+  "expected_csp_outcome": "UNSAT",
+  "witness": null,
+  "expected_feasibility_multiplier": 0.0,
+  "expected_path_score_effect": "ELIMINATED",
+  "formal_rationale": "The subnets 10.0.0.0/8 and 192.168.0.0/16 are disjoint: (10.0.0.0/8) INTERSECT (192.168.0.0/16) = EMPTY_SET. Under the static origin transition constraint (SourceIp(hop1) == SourceIp(hop2)), no IPv4 address exists that satisfies both constraints simultaneously. The CSP is unsatisfiable, rendering the path infeasible.",
+  "falsification_criteria": "The feasibility hypothesis is falsified if the solver outputs SAT or UNKNOWN for this scenario, or assigns any non-zero probability multiplier (e.g. > 0.0)."
+}

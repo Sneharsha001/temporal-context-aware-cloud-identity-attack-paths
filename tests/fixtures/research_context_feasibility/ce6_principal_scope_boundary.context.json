@@ -1,0 +1,108 @@
+{
+  "fixture_id": "CE6",
+  "name": "Principal Scope Boundary Across AssumeRole",
+  "research_question": "Does the CSP evaluator return UNSAT when an action requires an identity principal tag that cannot be supplied, propagated, or recreated under the modeled AssumeRole transition?",
+  "scenario_file": "ce6_principal_scope_boundary.scenario.json",
+  "path_under_evaluation": [
+    {
+      "hop": 1,
+      "edge_type": "sts:AssumeRole",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMUser",
+        "provider_id": "DevUser",
+        "region": "us-east-1"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "AppDevRole",
+        "region": "us-east-1"
+      }
+    },
+    {
+      "hop": 2,
+      "edge_type": "secretsmanager:GetSecretValue",
+      "src": {
+        "provider": "aws",
+        "node_type": "IAMRole",
+        "provider_id": "AppDevRole",
+        "region": "us-east-1"
+      },
+      "dst": {
+        "provider": "aws",
+        "node_type": "SecretsManagerSecret",
+        "provider_id": "ProductionMasterKey",
+        "region": "us-east-1"
+      }
+    }
+  ],
+  "context_variables": [
+    {
+      "key": "aws:PrincipalTag/Department",
+      "scope": "principal",
+      "persistence_model": "reset_on_role_assumption_unless_propagated",
+      "data_type": "string"
+    }
+  ],
+  "edge_context_specifications": [
+    {
+      "hop": 1,
+      "required_context": [
+        {
+          "key": "aws:RequestTag/Department",
+          "operator": "Null",
+          "values": [
+            "true"
+          ],
+          "scope": "request",
+          "description": "AppDevRole trust policy strictly forbids passing session tags for Department (sts:TagSession authorization absent/denied)"
+        }
+      ],
+      "produced_context": [
+        {
+          "key": "active_principal",
+          "operation": "SET",
+          "value": "arn:aws:iam::123456789012:role/AppDevRole"
+        },
+        {
+          "key": "aws:PrincipalTag/Department",
+          "operation": "SET",
+          "value": "ApplicationDevelopment",
+          "description": "AppDevRole has static attached principal tag Department = ApplicationDevelopment; no custom session tags can be asserted"
+        }
+      ]
+    },
+    {
+      "hop": 2,
+      "required_context": [
+        {
+          "key": "aws:PrincipalTag/Department",
+          "operator": "StringEquals",
+          "values": [
+            "SecurityOperations"
+          ],
+          "scope": "principal"
+        }
+      ],
+      "produced_context": []
+    }
+  ],
+  "transition_constraints": [
+    {
+      "from_hop": 1,
+      "to_hop": 2,
+      "variable": "aws:PrincipalTag/Department",
+      "relation": "IDENTITY_DERIVATION",
+      "formula": "PrincipalTag/Department(hop2) == ProducedContext(hop1)['aws:PrincipalTag/Department']",
+      "rationale": "Hop 2 evaluates using the role session credentials generated in Hop 1. Because the trust policy enforces Null(aws:RequestTag/Department) and denies sts:TagSession, the active principal tag is strictly fixed to the role static tag (ApplicationDevelopment). Custom tags cannot be supplied or propagated across this boundary under AWS IAM authorization rules."
+    }
+  ],
+  "complete_constraint_system": "(PrincipalTag/Department(hop2) == 'ApplicationDevelopment') AND (PrincipalTag/Department(hop2) == 'SecurityOperations')",
+  "expected_csp_outcome": "UNSAT",
+  "witness": null,
+  "expected_feasibility_multiplier": 0.0,
+  "expected_path_score_effect": "ELIMINATED",
+  "formal_rationale": "Under AWS IAM semantics, session tags (aws:PrincipalTag) can only be supplied during sts:AssumeRole if the principal is authorized for sts:TagSession. Here, the modeled trust policy constraint on Hop 1 explicitly forbids session tags (enforcing Null on RequestTag/Department). Consequently, the resulting credentials inherit solely the role static tag ('ApplicationDevelopment'). Hop 2 strictly requires 'SecurityOperations'. Because 'ApplicationDevelopment' != 'SecurityOperations', a genuine logical contradiction exists that cannot be bypassed by supplying session tags. The constraint set is mathematically and authorizationally UNSAT.",
+  "falsification_criteria": "The feasibility hypothesis is falsified if the evaluator treats principal tags as persistently carried over from prior user attributes without checking the AssumeRole boundary, or outputs SAT despite the explicit trust policy prohibition on session tagging."
+}

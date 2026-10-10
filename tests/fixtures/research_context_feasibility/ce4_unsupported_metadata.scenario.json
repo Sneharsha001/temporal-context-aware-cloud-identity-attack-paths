@@ -1,0 +1,88 @@
+{
+  "metadata": {
+    "scenario_id": "ce4_unsupported_metadata",
+    "research_counterexample_id": "CE4",
+    "description": "Missing or unsupported context metadata resulting in UNKNOWN feasibility"
+  },
+  "nodes": [
+    {
+      "provider": "aws",
+      "node_type": "IAMUser",
+      "provider_id": "AttackerOrigin",
+      "region": "us-east-1"
+    },
+    {
+      "provider": "aws",
+      "node_type": "IAMRole",
+      "provider_id": "JumpRole",
+      "region": "us-east-1"
+    },
+    {
+      "provider": "aws",
+      "node_type": "Service",
+      "provider_id": "CustomAppBackend",
+      "region": "us-east-1"
+    }
+  ],
+  "edges": [
+    {
+      "edge_type": "sts:AssumeRole",
+      "src": {"provider": "aws", "node_type": "IAMUser", "provider_id": "AttackerOrigin", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "JumpRole", "region": "us-east-1"},
+      "region": "us-east-1",
+      "features": {"action": "sts:AssumeRole"}
+    },
+    {
+      "edge_type": "app:Invoke",
+      "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "JumpRole", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "Service", "provider_id": "CustomAppBackend", "region": "us-east-1"},
+      "region": "us-east-1",
+      "features": {"action": "app:Invoke"}
+    }
+  ],
+  "constraints": [
+    {
+      "provider": "aws",
+      "constraint_type": "CUSTOM_POLICY",
+      "scope_type": "SERVICE",
+      "scope_id": "CustomAppBackend",
+      "region": "us-east-1",
+      "properties": {
+        "conditions": [
+          {
+            "key": "vendor:ProprietaryBiometricToken",
+            "operator": "UnsupportedFuzzyMatch",
+            "values": ["hash:9a8f..."]
+          }
+        ]
+      },
+      "confidence_q": 500
+    }
+  ],
+  "edge_constraints": [
+    {
+      "edge_ref": {
+        "edge_type": "app:Invoke",
+        "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "JumpRole", "region": "us-east-1"},
+        "dst": {"provider": "aws", "node_type": "Service", "provider_id": "CustomAppBackend", "region": "us-east-1"},
+        "region": "us-east-1"
+      },
+      "constraint_ref": {
+        "provider": "aws",
+        "constraint_type": "CUSTOM_POLICY",
+        "scope_type": "SERVICE",
+        "scope_id": "CustomAppBackend",
+        "region": "us-east-1"
+      }
+    }
+  ],
+  "objectives": [
+    {
+      "objective_type": "REACHABILITY",
+      "start_nodes": [{"provider": "aws", "node_type": "IAMUser", "provider_id": "AttackerOrigin", "region": "us-east-1"}],
+      "target_nodes": [{"provider": "aws", "node_type": "Service", "provider_id": "CustomAppBackend", "region": "us-east-1"}],
+      "max_depth": 4,
+      "k": 5
+    }
+  ]
+}
