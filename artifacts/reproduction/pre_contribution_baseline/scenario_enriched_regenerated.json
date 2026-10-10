@@ -1,0 +1,600 @@
+{
+  "constraints": [
+    {
+      "confidence_q": 500,
+      "constraint_type": "TRUST_CONDITION",
+      "properties": {
+        "condition_key": "token.actions.githubusercontent.com:sub",
+        "ghostgates_enrichment": {
+          "branch": "main",
+          "enriched_at": "2026-10-09T05:05:22.667706+00:00",
+          "environment": null,
+          "findings_count": 2,
+          "findings_summary": [
+            {
+              "attacker_level": "repo-admin",
+              "name": "Admin bypass of required reviews (enforce_admins disabled)",
+              "rule_id": "GHOST-BP-001",
+              "severity": "HIGH"
+            },
+            {
+              "attacker_level": "repo-write",
+              "name": "Workflows can approve their own PRs",
+              "rule_id": "GHOST-BP-005",
+              "severity": "HIGH"
+            }
+          ],
+          "max_severity": "HIGH",
+          "repo": "AcmeFintech/payment-api",
+          "status": "bypasses_found"
+        },
+        "governance_confidence": "compromised",
+        "oidc_subject_pattern": "repo:AcmeFintech/payment-api:ref:refs/heads/main",
+        "policy_id": "oidc-payment-api",
+        "statement_id": "OIDCTrust"
+      },
+      "provider": "aws",
+      "region": "-",
+      "scope_id": "oidc-payment-api-main",
+      "scope_type": "edge",
+      "status": "ACTIVE",
+      "validation_status": "UNVALIDATED"
+    },
+    {
+      "confidence_q": 500,
+      "constraint_type": "TRUST_CONDITION",
+      "properties": {
+        "condition_key": "token.actions.githubusercontent.com:sub",
+        "ghostgates_enrichment": {
+          "branch": null,
+          "enriched_at": "2026-10-09T05:05:22.667706+00:00",
+          "environment": "production",
+          "findings_count": 1,
+          "findings_summary": [
+            {
+              "attacker_level": "repo-write",
+              "name": "Production environment with no required reviewers",
+              "rule_id": "GHOST-ENV-001",
+              "severity": "MEDIUM"
+            }
+          ],
+          "max_severity": "MEDIUM",
+          "repo": "AcmeFintech/db-migrations",
+          "status": "bypasses_found"
+        },
+        "governance_confidence": "compromised",
+        "oidc_subject_pattern": "repo:AcmeFintech/db-migrations:environment:production",
+        "policy_id": "oidc-db-migrations",
+        "statement_id": "OIDCTrust"
+      },
+      "provider": "aws",
+      "region": "-",
+      "scope_id": "oidc-db-migrations-prod",
+      "scope_type": "edge",
+      "status": "ACTIVE",
+      "validation_status": "UNVALIDATED"
+    },
+    {
+      "confidence_q": 300,
+      "constraint_type": "TRUST_CONDITION",
+      "properties": {
+        "condition_key": "token.actions.githubusercontent.com:sub",
+        "ghostgates_enrichment": {
+          "branch": "*",
+          "enriched_at": "2026-10-09T05:05:22.667706+00:00",
+          "environment": null,
+          "findings_count": 1,
+          "findings_summary": [
+            {
+              "attacker_level": "external",
+              "name": "pull_request_target + PR head checkout (supply chain attack)",
+              "rule_id": "GHOST-WF-001",
+              "severity": "CRITICAL"
+            }
+          ],
+          "max_severity": "CRITICAL",
+          "repo": "AcmeFintech/infra-terraform",
+          "status": "bypasses_found"
+        },
+        "governance_confidence": "compromised",
+        "oidc_subject_pattern": "repo:AcmeFintech/infra-terraform:ref:refs/heads/*",
+        "policy_id": "oidc-infra-terraform",
+        "statement_id": "OIDCTrust"
+      },
+      "provider": "aws",
+      "region": "-",
+      "scope_id": "oidc-infra-terraform",
+      "scope_type": "edge",
+      "status": "ACTIVE",
+      "validation_status": "UNVALIDATED"
+    }
+  ],
+  "edge_constraints": [
+    {
+      "constraint_ref": {
+        "constraint_type": "TRUST_CONDITION",
+        "properties": {
+          "condition_key": "token.actions.githubusercontent.com:sub",
+          "ghostgates_enrichment": {
+            "branch": "main",
+            "enriched_at": "2026-10-09T05:05:22.667706+00:00",
+            "environment": null,
+            "findings_count": 2,
+            "findings_summary": [
+              {
+                "attacker_level": "repo-admin",
+                "name": "Admin bypass of required reviews (enforce_admins disabled)",
+                "rule_id": "GHOST-BP-001",
+                "severity": "HIGH"
+              },
+              {
+                "attacker_level": "repo-write",
+                "name": "Workflows can approve their own PRs",
+                "rule_id": "GHOST-BP-005",
+                "severity": "HIGH"
+              }
+            ],
+            "max_severity": "HIGH",
+            "repo": "AcmeFintech/payment-api",
+            "status": "bypasses_found"
+          },
+          "governance_confidence": "compromised",
+          "oidc_subject_pattern": "repo:AcmeFintech/payment-api:ref:refs/heads/main",
+          "policy_id": "oidc-payment-api",
+          "statement_id": "OIDCTrust"
+        },
+        "provider": "aws",
+        "region": "-",
+        "scope_id": "oidc-payment-api-main",
+        "scope_type": "edge"
+      },
+      "edge_ref": {
+        "dst": {
+          "node_type": "IAMRole",
+          "provider": "aws",
+          "provider_id": "arn:aws:iam::222222222222:role/ProdDeployRole",
+          "region": "-"
+        },
+        "edge_type": "oidc:AssumeRole",
+        "region": "-",
+        "src": {
+          "node_type": "ActionsRunner",
+          "provider": "github",
+          "provider_id": "github:AcmeFintech/payment-api:actions",
+          "region": "-"
+        }
+      }
+    },
+    {
+      "constraint_ref": {
+        "constraint_type": "TRUST_CONDITION",
+        "properties": {
+          "condition_key": "token.actions.githubusercontent.com:sub",
+          "ghostgates_enrichment": {
+            "branch": null,
+            "enriched_at": "2026-10-09T05:05:22.667706+00:00",
+            "environment": "production",
+            "findings_count": 1,
+            "findings_summary": [
+              {
+                "attacker_level": "repo-write",
+                "name": "Production environment with no required reviewers",
+                "rule_id": "GHOST-ENV-001",
+                "severity": "MEDIUM"
+              }
+            ],
+            "max_severity": "MEDIUM",
+            "repo": "AcmeFintech/db-migrations",
+            "status": "bypasses_found"
+          },
+          "governance_confidence": "compromised",
+          "oidc_subject_pattern": "repo:AcmeFintech/db-migrations:environment:production",
+          "policy_id": "oidc-db-migrations",
+          "statement_id": "OIDCTrust"
+        },
+        "provider": "aws",
+        "region": "-",
+        "scope_id": "oidc-db-migrations-prod",
+        "scope_type": "edge"
+      },
+      "edge_ref": {
+        "dst": {
+          "node_type": "IAMRole",
+          "provider": "aws",
+          "provider_id": "arn:aws:iam::222222222222:role/ProdDBMigrationRole",
+          "region": "-"
+        },
+        "edge_type": "oidc:AssumeRole",
+        "region": "-",
+        "src": {
+          "node_type": "ActionsRunner",
+          "provider": "github",
+          "provider_id": "github:AcmeFintech/db-migrations:actions",
+          "region": "-"
+        }
+      }
+    },
+    {
+      "constraint_ref": {
+        "constraint_type": "TRUST_CONDITION",
+        "properties": {
+          "condition_key": "token.actions.githubusercontent.com:sub",
+          "ghostgates_enrichment": {
+            "branch": "*",
+            "enriched_at": "2026-10-09T05:05:22.667706+00:00",
+            "environment": null,
+            "findings_count": 1,
+            "findings_summary": [
+              {
+                "attacker_level": "external",
+                "name": "pull_request_target + PR head checkout (supply chain attack)",
+                "rule_id": "GHOST-WF-001",
+                "severity": "CRITICAL"
+              }
+            ],
+            "max_severity": "CRITICAL",
+            "repo": "AcmeFintech/infra-terraform",
+            "status": "bypasses_found"
+          },
+          "governance_confidence": "compromised",
+          "oidc_subject_pattern": "repo:AcmeFintech/infra-terraform:ref:refs/heads/*",
+          "policy_id": "oidc-infra-terraform",
+          "statement_id": "OIDCTrust"
+        },
+        "provider": "aws",
+        "region": "-",
+        "scope_id": "oidc-infra-terraform",
+        "scope_type": "edge"
+      },
+      "edge_ref": {
+        "dst": {
+          "node_type": "IAMRole",
+          "provider": "aws",
+          "provider_id": "arn:aws:iam::222222222222:role/InfraProvisionRole",
+          "region": "-"
+        },
+        "edge_type": "oidc:AssumeRole",
+        "region": "-",
+        "src": {
+          "node_type": "ActionsRunner",
+          "provider": "github",
+          "provider_id": "github:AcmeFintech/infra-terraform:actions",
+          "region": "-"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "alpha_i": 3,
+      "beta_i": 1,
+      "dst": {
+        "node_type": "ActionsRunner",
+        "provider": "github",
+        "provider_id": "github:AcmeFintech/payment-api:actions",
+        "region": "-"
+      },
+      "edge_type": "repo:Write",
+      "features": {
+        "cross_environment": true
+      },
+      "region": "-",
+      "src": {
+        "node_type": "IAMUser",
+        "provider": "aws",
+        "provider_id": "arn:aws:iam::111111111111:user/dev-engineer",
+        "region": "-"
+      }
+    },
+    {
+      "alpha_i": 3,
+      "beta_i": 1,
+      "dst": {
+        "node_type": "ActionsRunner",
+        "provider": "github",
+        "provider_id": "github:AcmeFintech/db-migrations:actions",
+        "region": "-"
+      },
+      "edge_type": "repo:Write",
+      "features": {
+        "cross_environment": true
+      },
+      "region": "-",
+      "src": {
+        "node_type": "IAMUser",
+        "provider": "aws",
+        "provider_id": "arn:aws:iam::111111111111:user/dev-engineer",
+        "region": "-"
+      }
+    },
+    {
+      "alpha_i": 3,
+      "beta_i": 1,
+      "dst": {
+        "node_type": "ActionsRunner",
+        "provider": "github",
+        "provider_id": "github:AcmeFintech/infra-terraform:actions",
+        "region": "-"
+      },
+      "edge_type": "repo:Write",
+      "features": {
+        "cross_environment": true
+      },
+      "region": "-",
+      "src": {
+        "node_type": "IAMUser",
+        "provider": "aws",
+        "provider_id": "arn:aws:iam::111111111111:user/dev-engineer",
+        "region": "-"
+      }
+    },
+    {
+      "alpha_i": 2,
+      "beta_i": 1,
+      "dst": {
+        "node_type": "IAMRole",
+        "provider": "aws",
+        "provider_id": "arn:aws:iam::222222222222:role/ProdDeployRole",
+        "region": "-"
+      },
+      "edge_type": "oidc:AssumeRole",
+      "features": {
+        "cross_environment": true,
+        "has_oidc_subject": true,
+        "oidc_subject_pattern": "repo:AcmeFintech/payment-api:ref:refs/heads/main",
+        "prior_adjusted_by_ghostgates": true,
+        "prior_before": {
+          "alpha": 1,
+          "beta": 2
+        },
+        "prior_reason": "OIDC gate compromised: HIGH bypass via GHOST-BP-001"
+      },
+      "region": "-",
+      "src": {
+        "node_type": "ActionsRunner",
+        "provider": "github",
+        "provider_id": "github:AcmeFintech/payment-api:actions",
+        "region": "-"
+      }
+    },
+    {
+      "alpha_i": 1,
+      "beta_i": 1,
+      "dst": {
+        "node_type": "IAMRole",
+        "provider": "aws",
+        "provider_id": "arn:aws:iam::222222222222:role/ProdDBMigrationRole",
+        "region": "-"
+      },
+      "edge_type": "oidc:AssumeRole",
+      "features": {
+        "cross_environment": true,
+        "has_oidc_subject": true,
+        "oidc_subject_pattern": "repo:AcmeFintech/db-migrations:environment:production",
+        "prior_adjusted_by_ghostgates": true,
+        "prior_before": {
+          "alpha": 1,
+          "beta": 2
+        },
+        "prior_reason": "OIDC gate compromised: MEDIUM bypass via GHOST-ENV-001"
+      },
+      "region": "-",
+      "src": {
+        "node_type": "ActionsRunner",
+        "provider": "github",
+        "provider_id": "github:AcmeFintech/db-migrations:actions",
+        "region": "-"
+      }
+    },
+    {
+      "alpha_i": 3,
+      "beta_i": 1,
+      "dst": {
+        "node_type": "IAMRole",
+        "provider": "aws",
+        "provider_id": "arn:aws:iam::222222222222:role/InfraProvisionRole",
+        "region": "-"
+      },
+      "edge_type": "oidc:AssumeRole",
+      "features": {
+        "cross_environment": true,
+        "has_oidc_subject": true,
+        "naked_trust": true,
+        "oidc_subject_pattern": "repo:AcmeFintech/infra-terraform:ref:refs/heads/*",
+        "prior_adjusted_by_ghostgates": true,
+        "prior_before": {
+          "alpha": 1,
+          "beta": 1
+        },
+        "prior_reason": "OIDC gate compromised: CRITICAL bypass via GHOST-WF-001"
+      },
+      "region": "-",
+      "src": {
+        "node_type": "ActionsRunner",
+        "provider": "github",
+        "provider_id": "github:AcmeFintech/infra-terraform:actions",
+        "region": "-"
+      }
+    },
+    {
+      "alpha_i": 2,
+      "beta_i": 1,
+      "dst": {
+        "node_type": "IAMRole",
+        "provider": "aws",
+        "provider_id": "arn:aws:iam::222222222222:role/ProdAdminRole",
+        "region": "-"
+      },
+      "edge_type": "sts:AssumeRole_permission",
+      "features": {},
+      "region": "-",
+      "src": {
+        "node_type": "IAMRole",
+        "provider": "aws",
+        "provider_id": "arn:aws:iam::222222222222:role/ProdDeployRole",
+        "region": "-"
+      }
+    },
+    {
+      "alpha_i": 2,
+      "beta_i": 1,
+      "dst": {
+        "node_type": "IAMRole",
+        "provider": "aws",
+        "provider_id": "arn:aws:iam::222222222222:role/ProdAdminRole",
+        "region": "-"
+      },
+      "edge_type": "sts:AssumeRole_permission",
+      "features": {},
+      "region": "-",
+      "src": {
+        "node_type": "IAMRole",
+        "provider": "aws",
+        "provider_id": "arn:aws:iam::222222222222:role/ProdDBMigrationRole",
+        "region": "-"
+      }
+    },
+    {
+      "alpha_i": 2,
+      "beta_i": 1,
+      "dst": {
+        "node_type": "IAMRole",
+        "provider": "aws",
+        "provider_id": "arn:aws:iam::222222222222:role/ProdAdminRole",
+        "region": "-"
+      },
+      "edge_type": "sts:AssumeRole_permission",
+      "features": {},
+      "region": "-",
+      "src": {
+        "node_type": "IAMRole",
+        "provider": "aws",
+        "provider_id": "arn:aws:iam::222222222222:role/InfraProvisionRole",
+        "region": "-"
+      }
+    }
+  ],
+  "metadata": {
+    "collection_timestamp": "2026-03-07T00:00:00Z",
+    "collector": "iamscope",
+    "collector_version": "0.2.0",
+    "ghostgates_enrichment": {
+      "compromised": 3,
+      "edges_prior_adjusted": 3,
+      "externally_validated": 0,
+      "ghostgates_findings_total": 4,
+      "ghostgates_org": "AcmeFintech",
+      "oidc_constraints_found": 3
+    },
+    "org_id": "o-synthdemo"
+  },
+  "nodes": [
+    {
+      "display_name": "dev-engineer",
+      "node_type": "IAMUser",
+      "properties": {
+        "account_id": "111111111111"
+      },
+      "provider": "aws",
+      "provider_id": "arn:aws:iam::111111111111:user/dev-engineer",
+      "region": "-"
+    },
+    {
+      "display_name": "GitHub Actions: payment-api",
+      "node_type": "ActionsRunner",
+      "properties": {
+        "org": "AcmeFintech",
+        "repo": "payment-api"
+      },
+      "provider": "github",
+      "provider_id": "github:AcmeFintech/payment-api:actions",
+      "region": "-"
+    },
+    {
+      "display_name": "GitHub Actions: db-migrations",
+      "node_type": "ActionsRunner",
+      "properties": {
+        "org": "AcmeFintech",
+        "repo": "db-migrations"
+      },
+      "provider": "github",
+      "provider_id": "github:AcmeFintech/db-migrations:actions",
+      "region": "-"
+    },
+    {
+      "display_name": "GitHub Actions: infra-terraform",
+      "node_type": "ActionsRunner",
+      "properties": {
+        "org": "AcmeFintech",
+        "repo": "infra-terraform"
+      },
+      "provider": "github",
+      "provider_id": "github:AcmeFintech/infra-terraform:actions",
+      "region": "-"
+    },
+    {
+      "display_name": "ProdDeployRole",
+      "node_type": "IAMRole",
+      "properties": {
+        "account_id": "222222222222"
+      },
+      "provider": "aws",
+      "provider_id": "arn:aws:iam::222222222222:role/ProdDeployRole",
+      "region": "-"
+    },
+    {
+      "display_name": "ProdDBMigrationRole",
+      "node_type": "IAMRole",
+      "properties": {
+        "account_id": "222222222222"
+      },
+      "provider": "aws",
+      "provider_id": "arn:aws:iam::222222222222:role/ProdDBMigrationRole",
+      "region": "-"
+    },
+    {
+      "display_name": "InfraProvisionRole",
+      "node_type": "IAMRole",
+      "properties": {
+        "account_id": "222222222222"
+      },
+      "provider": "aws",
+      "provider_id": "arn:aws:iam::222222222222:role/InfraProvisionRole",
+      "region": "-"
+    },
+    {
+      "display_name": "ProdAdminRole (TARGET)",
+      "node_type": "IAMRole",
+      "properties": {
+        "account_id": "222222222222"
+      },
+      "provider": "aws",
+      "provider_id": "arn:aws:iam::222222222222:role/ProdAdminRole",
+      "region": "-"
+    }
+  ],
+  "objectives": [
+    {
+      "k": 10,
+      "max_depth": 6,
+      "objective_type": "reachability",
+      "start_nodes": [
+        {
+          "node_type": "IAMUser",
+          "provider": "aws",
+          "provider_id": "arn:aws:iam::111111111111:user/dev-engineer",
+          "region": "-"
+        }
+      ],
+      "target_nodes": [
+        {
+          "node_type": "IAMRole",
+          "provider": "aws",
+          "provider_id": "arn:aws:iam::222222222222:role/ProdAdminRole",
+          "region": "-"
+        }
+      ]
+    }
+  ],
+  "observations": []
+}

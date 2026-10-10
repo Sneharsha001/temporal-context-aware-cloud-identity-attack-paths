@@ -1,0 +1,202 @@
+{
+  "artifact_counts_static": {
+    "golden_test_files": 16,
+    "note": "Run `python -m pytest --collect-only -q` for exact collected test count in target environment.",
+    "stress_test_files": 2,
+    "unit_test_files": 22
+  },
+  "complex_fixture": {
+    "after_deny_probe": {
+      "edge_id": "01b146d4aaf8fd108d54a0022f0bd995589baa9d153ab4fe4939a1f5db880b6a",
+      "h_after": 1.0921633328602482,
+      "h_before": 2.700771686407054,
+      "paper_claim_h_after": 0.64,
+      "paper_claim_reduction_pct": 76.0,
+      "paper_match_status": "current_recovered_run_differs_from_camera_ready_table_iv",
+      "paths_after": 15,
+      "paths_before": 15,
+      "reduction_pct": 59.56106403376891,
+      "rig": 1.6086083535468056
+    },
+    "artifact_source": "tests/fixtures/complex_scenario.json",
+    "baseline": {
+      "canonical_run_hash": "2d4871f75d177c053a712fdbe73058a229a32330138232fd56699a43cb7a029d",
+      "entropy": 2.700771686407054,
+      "paths": 15
+    },
+    "planner": {
+      "stats": {
+        "candidate_edges": 24,
+        "forks_executed": 48,
+        "runtime_ms": 156.0,
+        "total_edges": 33
+      },
+      "top_component": {
+        "best_eig": 1.0724055690312038,
+        "best_probe_edge": "01b146d4aaf8fd108d54a0022f0bd995589baa9d153ab4fe4939a1f5db880b6a",
+        "component_label": "Correlated (SCP)",
+        "component_sig": "[[\"SCP\",\"cccfb42e200d8efc27cfe8cf79c3f46201da10dbf8aebd01f77081e60a981fb4\"]]",
+        "edge_count": 10
+      },
+      "top_edge_id": "01b146d4aaf8fd108d54a0022f0bd995589baa9d153ab4fe4939a1f5db880b6a",
+      "top_eig": 1.0724055690312038,
+      "top_reasons": [
+        "in SCP correlation component",
+        "current correlation group representative",
+        "high uncertainty (p=0.33, \u03b1\u2248\u03b2)",
+        "never directly probed"
+      ]
+    },
+    "summary": {
+      "constraints": 6,
+      "edges": 33,
+      "nodes": 24,
+      "objectives": 1,
+      "observations": 0
+    }
+  },
+  "diamond_collapse": {
+    "artifact_source": "tests/fixtures/diamond_scenario.json",
+    "canonical_run_hash": "dce797ca6e26ebcf843d8fdecd0a2e71fece4ec4863844c426639ca773481209",
+    "collapse_ratio": 45.779170199105096,
+    "correlated_viability": 0.01205494,
+    "matches_fixture_top_path": true,
+    "naive_viability": 0.55186515
+  },
+  "known_limits": [
+    "Complex Table IV: fork-replay hardening corrected complex fixture values. The corrected complex top EIG \u2248 1.072, the complex top SCP component remains the dominant recommendation, and the corrected after-DENY reduction is about 60% after preserving non-uniform fixture priors during fork replay. Camera-ready text reports rounded 0.64 / 76%; do not present v1.2 as reproducing that value. See README Reconciliation section for analysis. Legacy truncation/uniform-prior exploration remains diagnostic only.",
+    "250k-edge runtime: 250k runtime remains hardware/topology-dependent and does not reproduce the camera-ready 40ms / <2s claim. Current post-fix measurements on the generated 250k medium fixture are about 31.7 s analyze and about 290 s planner internal time / 352 s wall time over 18 candidates and 36 forks. Table II 100/1k/10k scaling snapshot is part of the core reproduced results.",
+    "Independent-control \u00a7VII-E supports uncertainty-like behavior: with uniform priors and no observations, EIG/uncertainty = 1.11x at step 5, near the paper's equality claim but not an exact-equality reproduction (small residual from EIG path-aware lookahead).",
+    "Primary Table I reproduction uses the canonical fixture builder from tests/golden/test_eval.py to avoid divergent fixture copies.",
+    "\u00a7VII-A canonical_run_hash differs from camera-ready (448661e2... vs 638b76cd...) due to non-pinnable serialization details; core reported quantitative metrics match."
+  ],
+  "oidc_enrichment": {
+    "artifact_sources": [
+      "scripts/enrich.py",
+      "tests/fixtures/oidc/scenario_base.json",
+      "tests/fixtures/oidc/ghostgates_report.json",
+      "tests/fixtures/oidc/scenario_enriched.json"
+    ],
+    "canonical_run_hash": "5459c2e25b408a936688589e4cb1f1775c971da0d4551091b279f7a6e30f734a",
+    "entropy_after_enrichment": 1.2130076335956181,
+    "path_probabilities_after_enrichment": [
+      0.37499999,
+      0.33333332,
+      0.24999999
+    ],
+    "regenerated_metadata": {
+      "compromised": 3,
+      "edges_prior_adjusted": 3,
+      "externally_validated": 0,
+      "ghostgates_findings_total": 4,
+      "ghostgates_org": "AcmeFintech",
+      "oidc_constraints_found": 3
+    },
+    "stored_metadata": {
+      "compromised": 3,
+      "edges_prior_adjusted": 3,
+      "externally_validated": 0,
+      "ghostgates_findings_total": 4,
+      "ghostgates_org": "AcmeFintech",
+      "oidc_constraints_found": 3
+    },
+    "summary": {
+      "constraints": 3,
+      "edges": 9,
+      "nodes": 8,
+      "objectives": 1,
+      "observations": 0
+    }
+  },
+  "primary_table_i": {
+    "artifact_source": "tests/golden/test_eval.py::_build_baseline",
+    "base_seed": 1337,
+    "canonical_run_hash": "638b76cd453f2a04565cc40d4181adbd44a077102866cc1a209bcd21ea381d6b",
+    "eig_vs_random_at_5": 19.84450583659144,
+    "eig_vs_uncertainty_at_5": 17.6297440604402,
+    "episodes": 10,
+    "median_cumrig": {
+      "centrality": {
+        "1": -0.0020328740226341346,
+        "2": -0.0025340336121660867,
+        "3": -0.0029118827666475555,
+        "5": -0.0033266721651590836
+      },
+      "eig": {
+        "1": 0.1336186510334257,
+        "2": 0.1826878564702798,
+        "3": 0.20866251226280214,
+        "5": 0.23605047186199268
+      },
+      "random": {
+        "1": -0.00037418577022202415,
+        "2": 0.012784895104391542,
+        "3": 0.01228669024635079,
+        "5": 0.011895003776145302
+      },
+      "uncertainty": {
+        "1": 0.01338933061380465,
+        "2": 0.01338933061380465,
+        "3": 0.01338933061380465,
+        "5": 0.01338933061380465
+      }
+    },
+    "policies": [
+      "eig",
+      "centrality",
+      "uncertainty",
+      "random"
+    ],
+    "steps": 5,
+    "truth_mode": "scripted"
+  },
+  "synthetic_scaling": {
+    "artifact_source": "tests/fixtures/scaling/scaling_results.json",
+    "row_count": 6,
+    "rows": [
+      {
+        "actual_edges": 100,
+        "config": "A1: 100e, no corr",
+        "plan_runtime_ms": 87.1,
+        "top_eig": 0.547374,
+        "uncertainty_eig": 0.022058
+      },
+      {
+        "actual_edges": 1000,
+        "config": "A2: 1Ke, no corr",
+        "plan_runtime_ms": 430.9,
+        "top_eig": -0.040085,
+        "uncertainty_eig": -0.078603
+      },
+      {
+        "actual_edges": 10000,
+        "config": "A3: 10Ke, no corr",
+        "plan_runtime_ms": 6313.5,
+        "top_eig": 0.474605,
+        "uncertainty_eig": 0.032529
+      },
+      {
+        "actual_edges": 100,
+        "config": "B1: 100e, 10-edge SCP",
+        "plan_runtime_ms": 147.4,
+        "top_eig": 0.172795,
+        "uncertainty_eig": 0.010972
+      },
+      {
+        "actual_edges": 1000,
+        "config": "B2: 1Ke, 10-edge SCP",
+        "plan_runtime_ms": 417.8,
+        "top_eig": 0.176539,
+        "uncertainty_eig": -0.246937
+      },
+      {
+        "actual_edges": 10000,
+        "config": "B3: 10Ke, 10-edge SCP",
+        "plan_runtime_ms": 6449.2,
+        "top_eig": 0.356552,
+        "uncertainty_eig": 0.141664
+      }
+    ],
+    "status": "snapshot_recovered_not_rebenchmarked_by_this_driver"
+  }
+}
