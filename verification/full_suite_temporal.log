@@ -1,0 +1,50 @@
+COMMAND: C:\SNEHARSHA\ANTIGRAVITY\ARF-RT-TEMPORAL\.venv\Scripts\python.exe -m pytest -q
+CWD: C:\SNEHARSHA\ANTIGRAVITY\ARF-RT-TEMPORAL
+PYTHON: C:\SNEHARSHA\ANTIGRAVITY\ARF-RT-TEMPORAL\.venv\Scripts\python.exe
+START_UTC: 2026-10-11T15:28:14.032393+00:00
+END_UTC: 2026-10-11T15:33:59.836623+00:00
+ELAPSED_SEC: 345.80
+EXIT_CODE: 1
+TIMED_OUT: False
+
+=== STDOUT ===
+........................................................................ [  7%]
+........................................................................ [ 15%]
+........................................................................ [ 23%]
+............................................F........................... [ 31%]
+........................................................................ [ 39%]
+........................................................................ [ 47%]
+........................................................................ [ 55%]
+........................................................................ [ 63%]
+........................................................................ [ 71%]
+........................................................................ [ 78%]
+........................................................................ [ 86%]
+........................................................................ [ 94%]
+................................................                         [100%]
+================================== FAILURES ===================================
+________________ TestStage1Planner.test_runtime_under_1_second ________________
+
+self = <tests.stress.test_stage1.TestStage1Planner object at 0x00000294CD87D670>
+stage1_plan = {'baseline_entropy': 3.063569366018728, 'candidates': [{'edge_id': 'b0d616f9566f564558a4d685c35e025bcb01d1694a519b2d05...edge_count': 1, 'best_probe_edge': '2ea71bf85b864a046e548c903fcb6989e404dce2b9fa1f1f6190d0cdd02952b8', ...}, ...], ...}
+
+    def test_runtime_under_1_second(self, stage1_plan) -> None:
+>       assert stage1_plan["stats"]["runtime_ms"] < 1000
+E       assert 1562.0 < 1000
+
+tests\stress\test_stage1.py:101: AssertionError
+============================== warnings summary ===============================
+tests/stress/test_stage1.py::TestStage1Eval::test_eig_beats_random
+tests/stress/test_stage1b.py::TestStage1bEval::test_eig_beats_random
+  C:\SNEHARSHA\ANTIGRAVITY\ARF-RT-TEMPORAL\.venv\Lib\site-packages\_pytest\fixtures.py:1313: PytestRemovedIn10Warning: Class-scoped fixture defined as instance method is deprecated.
+  Instance attributes set in this fixture will NOT be visible to test methods,
+  as each test gets a new instance while the fixture runs only once per class.
+  Use @classmethod decorator and set attributes on cls instead.
+  See https://docs.pytest.org/en/stable/deprecations.html#class-scoped-fixture-as-instance-method
+    fixturefunc = resolve_fixture_function(fixturedef, request)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/stress/test_stage1.py::TestStage1Planner::test_runtime_under_1_second
+1 failed, 911 passed, 2 warnings in 344.05s (0:05:44)
+
+=== STDERR ===
