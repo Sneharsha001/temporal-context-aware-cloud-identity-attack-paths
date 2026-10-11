@@ -1,0 +1,151 @@
+==================================================
+REPOSITORY: BASELINE (C:\SNEHARSHA\ANTIGRAVITY\Artifact\ARF-RT-BASELINE)
+==================================================
+
+[repo_root]
+stdout:
+C:/SNEHARSHA/ANTIGRAVITY/Artifact/ARF-RT-BASELINE
+stderr:
+
+exit_code: 0
+
+[remote_url]
+stdout:
+https://github.com/Sneharsha001/temporal-context-aware-cloud-identity-attack-paths.git
+stderr:
+
+exit_code: 0
+
+[status_short_branch]
+stdout:
+## temporal-context-dev...origin/temporal-context-dev
+stderr:
+
+exit_code: 0
+
+[rev_parse_head]
+stdout:
+04d2bae12f600ff48b6054aa513878ea5dc72b16
+stderr:
+
+exit_code: 0
+
+[branch_show_current]
+stdout:
+temporal-context-dev
+stderr:
+
+exit_code: 0
+
+[log_1_oneline]
+stdout:
+04d2bae Initialize original ARF-RT v1.2 baseline
+stderr:
+
+exit_code: 0
+
+[diff_name_only]
+stdout:
+
+stderr:
+
+exit_code: 0
+
+[diff_cached_name_only]
+stdout:
+
+stderr:
+
+exit_code: 0
+
+[diff_stat]
+stdout:
+
+stderr:
+
+exit_code: 0
+
+[tag_list]
+stdout:
+arf-rt-v1.2-baseline
+stderr:
+
+exit_code: 0
+
+==================================================
+REPOSITORY: RESEARCH_TEMPORAL (C:\SNEHARSHA\ANTIGRAVITY\ARF-RT-TEMPORAL)
+==================================================
+
+[repo_root]
+stdout:
+C:/SNEHARSHA/ANTIGRAVITY/ARF-RT-TEMPORAL
+stderr:
+
+exit_code: 0
+
+[remote_url]
+stdout:
+https://github.com/Sneharsha001/temporal-context-aware-cloud-identity-attack-paths.git
+stderr:
+
+exit_code: 0
+
+[status_short_branch]
+stdout:
+## temporal-context-dev...origin/temporal-context-dev
+ M docs/PHASE17_RELATED_WORK_NOVELTY_ASSESSMENT.md
+?? docs/CCPF_FORMAL_DESIGN_GATE.md
+?? docs/MASTER_RESEARCH_SETUP_AUDIT.md
+stderr:
+
+exit_code: 0
+
+[rev_parse_head]
+stdout:
+45ec211e3ca1f284e27e22d5bf4981166bf5880b
+stderr:
+
+exit_code: 0
+
+[branch_show_current]
+stdout:
+temporal-context-dev
+stderr:
+
+exit_code: 0
+
+[log_1_oneline]
+stdout:
+45ec211 research: add pre-contribution baseline reproduction artifacts
+stderr:
+
+exit_code: 0
+
+[diff_name_only]
+stdout:
+docs/PHASE17_RELATED_WORK_NOVELTY_ASSESSMENT.md
+stderr:
+
+exit_code: 0
+
+[diff_cached_name_only]
+stdout:
+
+stderr:
+
+exit_code: 0
+
+[diff_stat]
+stdout:
+docs/PHASE17_RELATED_WORK_NOVELTY_ASSESSMENT.md | 673 ++++++++++++++++++++++--
+ 1 file changed, 640 insertions(+), 33 deletions(-)
+stderr:
+
+exit_code: 0
+
+[tag_list]
+stdout:
+arf-rt-v1.2-baseline
+stderr:
+
+exit_code: 0
