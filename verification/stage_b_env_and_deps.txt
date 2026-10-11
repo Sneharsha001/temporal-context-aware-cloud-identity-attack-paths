@@ -1,0 +1,121 @@
+==================================================
+ENVIRONMENT: BASELINE
+REPO: C:\SNEHARSHA\ANTIGRAVITY\Artifact\ARF-RT-BASELINE
+PYTHON: C:\SNEHARSHA\ANTIGRAVITY\Artifact\ARF-RT-BASELINE\.venv\Scripts\python.exe
+==================================================
+
+Python exists: True
+
+Python version: Python 3.12.10 
+
+pip list:
+Package           Version Editable project location
+----------------- ------- -------------------------------------------------
+annotated-types   0.8.0
+arf-rt            1.0.0   C:\SNEHARSHA\ANTIGRAVITY\Artifact\ARF-RT-BASELINE
+colorama          0.4.6
+iniconfig         2.3.1
+packaging         26.3
+pip               25.0.1
+pluggy            1.6.0
+pydantic          2.14.0
+pydantic_core     2.50.0
+Pygments          2.21.0
+pytest            9.1.1
+typing_extensions 4.16.0
+typing-inspection 0.4.4
+
+Import verification (cwd=C:\SNEHARSHA\ANTIGRAVITY\Artifact\ARF-RT-BASELINE):
+stdout:
+arf_rt file: C:\SNEHARSHA\ANTIGRAVITY\Artifact\ARF-RT-BASELINE\arf_rt\__init__.py
+pytest ver: 9.1.1
+pydantic ver: 2.14.0
+sys.path: ['', 'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python312\\python312.zip', 'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python312\\DLLs', 'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python312\\Lib', 'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python312']
+stderr:
+
+
+pyproject.toml:
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "arf-rt"
+version = "1.0.0"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = ["pydantic>=2.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[project.scripts]
+arf-rt = "arf_rt.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["arf_rt*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+
+==================================================
+ENVIRONMENT: RESEARCH_TEMPORAL
+REPO: C:\SNEHARSHA\ANTIGRAVITY\ARF-RT-TEMPORAL
+PYTHON: C:\SNEHARSHA\ANTIGRAVITY\ARF-RT-TEMPORAL\.venv\Scripts\python.exe
+==================================================
+
+Python exists: True
+
+Python version: Python 3.12.10 
+
+pip list:
+Package           Version Editable project location
+----------------- ------- ----------------------------------------
+annotated-types   0.8.0
+arf-rt            1.0.0   C:\SNEHARSHA\ANTIGRAVITY\ARF-RT-TEMPORAL
+colorama          0.4.6
+iniconfig         2.3.1
+packaging         26.3
+pip               25.0.1
+pluggy            1.6.0
+pydantic          2.14.0
+pydantic_core     2.50.0
+Pygments          2.21.0
+pytest            9.1.1
+typing_extensions 4.16.0
+typing-inspection 0.4.4
+
+Import verification (cwd=C:\SNEHARSHA\ANTIGRAVITY\ARF-RT-TEMPORAL):
+stdout:
+arf_rt file: C:\SNEHARSHA\ANTIGRAVITY\ARF-RT-TEMPORAL\arf_rt\__init__.py
+pytest ver: 9.1.1
+pydantic ver: 2.14.0
+sys.path: ['', 'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python312\\python312.zip', 'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python312\\DLLs', 'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python312\\Lib', 'C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python312']
+stderr:
+
+
+pyproject.toml:
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "arf-rt"
+version = "1.0.0"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = ["pydantic>=2.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[project.scripts]
+arf-rt = "arf_rt.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["arf_rt*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
