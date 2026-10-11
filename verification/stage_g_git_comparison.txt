@@ -1,0 +1,81 @@
+==================================================
+REPOSITORY: BASELINE (C:\SNEHARSHA\ANTIGRAVITY\Artifact\ARF-RT-BASELINE)
+==================================================
+
+[status_short_branch]
+stdout:
+## temporal-context-dev...origin/temporal-context-dev
+stderr:
+
+exit_code: 0
+
+[rev_parse_head]
+stdout:
+04d2bae12f600ff48b6054aa513878ea5dc72b16
+stderr:
+
+exit_code: 0
+
+[diff_name_only]
+stdout:
+
+stderr:
+
+exit_code: 0
+
+[diff_cached_name_only]
+stdout:
+
+stderr:
+
+exit_code: 0
+
+[diff_stat]
+stdout:
+
+stderr:
+
+exit_code: 0
+
+==================================================
+REPOSITORY: RESEARCH_TEMPORAL (C:\SNEHARSHA\ANTIGRAVITY\ARF-RT-TEMPORAL)
+==================================================
+
+[status_short_branch]
+stdout:
+## temporal-context-dev...origin/temporal-context-dev
+ M docs/PHASE17_RELATED_WORK_NOVELTY_ASSESSMENT.md
+?? docs/CCPF_FORMAL_DESIGN_GATE.md
+?? docs/MASTER_RESEARCH_SETUP_AUDIT.md
+stderr:
+
+exit_code: 0
+
+[rev_parse_head]
+stdout:
+45ec211e3ca1f284e27e22d5bf4981166bf5880b
+stderr:
+
+exit_code: 0
+
+[diff_name_only]
+stdout:
+docs/PHASE17_RELATED_WORK_NOVELTY_ASSESSMENT.md
+stderr:
+
+exit_code: 0
+
+[diff_cached_name_only]
+stdout:
+
+stderr:
+
+exit_code: 0
+
+[diff_stat]
+stdout:
+docs/PHASE17_RELATED_WORK_NOVELTY_ASSESSMENT.md | 673 ++++++++++++++++++++++--
+ 1 file changed, 640 insertions(+), 33 deletions(-)
+stderr:
+
+exit_code: 0
