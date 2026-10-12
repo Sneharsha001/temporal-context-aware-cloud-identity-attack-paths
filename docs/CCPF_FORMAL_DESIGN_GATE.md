@@ -318,7 +318,7 @@ The counterexample fixture suite in `tests/fixtures/research_context_feasibility
 - **Formula:** $\Phi(\text{CE1}) \equiv (IP_{\text{origin}} \in 10.0.0.0/8) \land (IP_{\text{origin}} \in 10.1.0.0/16)$
 - **Intersection:** $10.0.0.0/8 \cap 10.1.0.0/16 = 10.1.0.0/16 \ne \emptyset$.
 - **Expected Outcome:** **SAT**
-- **Score Effect:** Multiplier = 1.0 (Probability PRESERVED).
+- **Score Effect (Superseded Multiplier Notation):** Multiplier = 1.0 (Preserved for provenance; finalized evaluator interface returns purely logical status without probability multipliers; see docs/CCPF_EVALUATOR_CONTRACT.md).
 - **Required Solver Capability:** IPv4 CIDR intersection non-emptiness check.
 
 ### 9.2 CE2: Contradictory Persistent Context
@@ -330,7 +330,7 @@ The counterexample fixture suite in `tests/fixtures/research_context_feasibility
 - **Formula:** $\Phi(\text{CE2}) \equiv (IP_{\text{origin}} \in 10.0.0.0/8) \land (IP_{\text{origin}} \in 192.168.0.0/16)$
 - **Intersection:** $10.0.0.0/8 \cap 192.168.0.0/16 = \emptyset \implies \bot$.
 - **Expected Outcome:** **UNSAT**
-- **Score Effect:** Multiplier = 0.0 (Path ELIMINATED / Pruned).
+- **Score Effect (Superseded Multiplier Notation):** Multiplier = 0.0 (Preserved for provenance; finalized evaluator interface returns purely logical status without probability multipliers; see docs/CCPF_EVALUATOR_CONTRACT.md).
 - **Required Solver Capability:** IPv4 CIDR disjointness detection.
 
 ### 9.3 CE3: Context-Changing Transition Permitted
@@ -342,7 +342,7 @@ The counterexample fixture suite in `tests/fixtures/research_context_feasibility
 - **Formula:** $\Phi(\text{CE3}) \equiv (IP_{\text{attacker}} \in 203.0.113.0/24) \land (IP_{\text{bastion}} = 10.0.1.50) \land (IP_{\text{bastion}} \in 10.0.0.0/16)$.
 - **Analysis:** Because the transition models network transformation ($\mathcal{R}_2 \ne \mathcal{R}_1$), there is no contradiction between external attacker IP and internal VPC IP.
 - **Expected Outcome:** **SAT**
-- **Score Effect:** Multiplier = 1.0 (Probability PRESERVED).
+- **Score Effect (Superseded Multiplier Notation):** Multiplier = 1.0 (Preserved for provenance; finalized evaluator interface returns purely logical status without probability multipliers; see docs/CCPF_EVALUATOR_CONTRACT.md).
 - **Required Solver Capability:** Variable scoping and network pivot transformation mapping.
 
 ### 9.4 CE4: Missing or Unsupported Context Metadata
@@ -351,7 +351,7 @@ The counterexample fixture suite in `tests/fixtures/research_context_feasibility
 - **Formula:** $\Phi(\text{CE4}) \equiv \text{Req}(e_1) \land \text{Unsupported}(e_2)$.
 - **Analysis:** The evaluator cannot prove SAT (cannot verify unsupported operator) and cannot soundly prove UNSAT (lack of contradiction).
 - **Expected Outcome:** **UNKNOWN**
-- **Score Effect:** Multiplier = 1.0 (Fallback to Baseline; PRESERVED).
+- **Score Effect (Superseded Multiplier Notation):** Multiplier = 1.0 (Preserved for provenance; finalized evaluator interface returns purely logical status without probability multipliers; see docs/CCPF_EVALUATOR_CONTRACT.md).
 - **Required Solver Capability:** Graceful exception trap yielding `UNKNOWN` without exception or falsification.
 
 ### 9.5 CE5: Baseline Compatibility (Non-Perturbation)
@@ -374,7 +374,7 @@ The counterexample fixture suite in `tests/fixtures/research_context_feasibility
 - **Transition Rule:** AssumeRole resets principal scope. In the absence of session tag assertion, $\mathcal{P}_2(\text{Department}) = \text{Tags}(\text{AppDevRole})[\text{"Department"}] = \text{"ApplicationDevelopment"}$.
 - **Formula:** $\Phi(\text{CE6}) \equiv (\mathcal{P}_2(\text{Department}) = \text{"ApplicationDevelopment"}) \land (\mathcal{P}_2(\text{Department}) = \text{"SecurityOperations"}) \implies \bot$.
 - **Expected Outcome:** **UNSAT**
-- **Score Effect:** Multiplier = 0.0 (Path ELIMINATED / Pruned).
+- **Score Effect (Superseded Multiplier Notation):** Multiplier = 0.0 (Preserved for provenance; finalized evaluator interface returns purely logical status without probability multipliers; see docs/CCPF_EVALUATOR_CONTRACT.md).
 - **Critical Dependency on Explicit Assumptions [VERIFIED LIMITATION]:**
   The UNSAT outcome of CE6 is **not** an unconditional law of AWS IAM role assumption. It strictly depends on four explicit, scenario-specific constraints:
   1. The caller (`DevUser`) is denied or lacks `sts:TagSession` authorization.

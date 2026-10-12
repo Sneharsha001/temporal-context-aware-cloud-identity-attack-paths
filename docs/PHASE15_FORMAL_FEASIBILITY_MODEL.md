@@ -38,6 +38,10 @@ The CSP formulation. As a path extends, it accumulates constraints governing the
 
 ## 2. Feasibility Evaluation
 
+> [!NOTE] Superseded Multiplier Notation (Prompt 2A)
+> Early Phase 15 design drafts below associated feasibility outcomes directly with a binary probability multiplier (1.0 or 0.0). As formalized in `docs/CCPF_EVALUATOR_CONTRACT.md` (Prompt 2A), the evaluator interface is **strictly logical** (returning status SAT, UNSAT, or UNKNOWN with diagnostic evidence) and contains no probability multiplier. Downstream pruning of UNSAT paths is an engine search policy decision, not an evaluator probability calculation. Historical mentions of multipliers below are preserved for provenance with this clarification.
+
+
 Path feasibility is evaluated by querying the `PathConstraintStore` for satisfiability. Arbitrary fractional probability penalties are strictly forbidden.
 
 - **SAT:** The constraints are satisfiable under the stated assumptions. A sequence of environments and actions exists that satisfies all requirements.

@@ -54,6 +54,10 @@ To avoid claiming the baseline parser supports unimplemented fields, the suite u
 
 ## 3. Fixture Manifest Overview
 
+> [!NOTE] Superseded Multiplier Notation (Prompt 2A)
+> The fixture descriptions and summary tables below reference a hand-derived "Feasibility Multiplier" ($F = 1.0$ or $0.0$) from the Phase 15/16 design stage. As formalized in `docs/CCPF_EVALUATOR_CONTRACT.md` (Prompt 2A), the evaluator interface is **strictly logical** (returning status SAT, UNSAT, or UNKNOWN with diagnostic evidence) and contains no probability multiplier. Historical mentions of multipliers below are preserved for provenance, but the evaluator contract and implementation acceptance tests assert purely logical status.
+
+
 The suite is located in `tests/fixtures/research_context_feasibility/`:
 
 | Fixture ID | Fixture Name | Scenario File | Sidecar File | Expected CSP Outcome | Feasibility Multiplier | Expected Path Effect |
