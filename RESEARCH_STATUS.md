@@ -103,8 +103,42 @@ Identity Attack-Path Analysis (CCPF)
   - Baseline test suite passes (910 passed, 2 non-functional timing/stress timeouts expected under Windows load).
   - Production baseline mirror in `C:\SNEHARSHA\ANTIGRAVITY\Artifact\ARF-RT-BASELINE` untouched.
 
-### Next Authorized Step (Prompt 4)
-Perform comprehensive semantic validation across CE1–CE6 and comparative evaluation against baseline ARF-RT v1.2 behavior.
+##### Prompt 4 Completion - Semantic Validation and Counterexample Testing (COMPLETED)
+
+- **Test File:** tests/research/test_semantic_validation.py (60 tests: Stage B + Stage C + Stage D).
+- **Stage B - Independent Semantic Validation (CE1-CE6):**
+  - All expected classifications derived independently from docs/CCPF_EVALUATOR_CONTRACT.md v1.1.0.
+    No evaluator output used as its own expected-value source.
+
+  | Fixture | Expected | Actual | Key Evidence |
+  |---------|----------|--------|-------------|
+  | CE1 | SAT | **SAT** | Witness aws:SourceIp=10.1.0.1 (10.1.0.0/16 subset of 10.0.0.0/8); solver_ms=0.257 |
+  | CE2 | UNSAT | **UNSAT** | Contradiction: 10.0.0.0/8 and 192.168.0.0/16 disjoint under static_origin; solver_ms=0.172 |
+  | CE3 | SAT | **SAT** | Pivot rebind: hop_1_SourceIp=198.51.100.1, hop_2_SourceIp=10.0.1.100; solver_ms=0.212 |
+  | CE4 | UNKNOWN | **UNKNOWN** | Rationale: UNSUPPORTED_OR_UNKNOWN_SCOPE: vendor:ProprietaryBiometricToken; solver_ms=0.089 |
+  | CE5 | UNKNOWN | **UNKNOWN** | Rationale: NO_CONTEXT_CONSTRAINTS_DEFINED; evaluated_hops=0; solver_ms=0.003 |
+  | CE6 | UNSAT | **UNSAT** | Contradiction: PrincipalTag/Department ApplicationDevelopment vs SecurityOperations; solver_ms=0.041 |
+
+- **Stage C - Counterexample / Negative Tests (10 Failure Modes, 40 tests):**
+  - FM1 (Disjoint CIDRs require explicit coupling): 2 tests - PASS
+  - FM2 (Compatible CIDR witness validity): 2 tests - PASS
+  - FM3 (Pivot no pre-pivot IP carry): 2 tests - PASS
+  - FM4 (Unsupported operators yield UNKNOWN): 9 tests (6 parametrized) - PASS
+  - FM5 (Scope resets only explicit): 2 tests - PASS
+  - FM6 (Multi-value combined predicates): 3 tests - PASS
+  - FM7 (Null/presence constraints): 2 tests - PASS
+  - FM8 (Q8 underflow decoupled): 3 tests - PASS
+  - FM9 (Exceptions never UNSAT): 3 tests - PASS
+  - FM10 (Determinism): 7 tests - PASS
+- **Stage D - CE5 Isolated UNKNOWN / No False UNSAT:** 5 tests - PASS
+  - CE5 isolated UNKNOWN confirmed; scope boundary documented (NOT integrated Top-K equivalence).
+- **Combined Research Suite:** 106 passed (46 A1-A8 + 60 Prompt 4) in 0.40s (100%).
+- **No Soundness Defects Found:** All 10 failure modes confirmed sound in RDCE implementation.
+- **Baseline Production Suite:** Unchanged (910 passed, 2 pre-existing stress timeouts).
+- **Architectural Isolation:** Zero edits to arf_rt/, paths.py, correlation.py, or baseline mirror.
+
+### Next Authorized Step (Prompt 5)
+Integrate CCPF/RDCE into production Top-K search and perform comparative baseline experiments.
 
 ---
 
