@@ -303,6 +303,10 @@ Because ARF-RT performs integer division (`//`), precision underflow can occur:
 
 ## 9. CE1–CE6 Formula-Level Analysis
 
+
+> [!NOTE] Architectural Clarification & Superseded Multiplier Notation (Prompt 2A)
+> In early research drafts below, the anticipated effect of feasibility was sketched as a binary probability multiplier (`Multiplier = 1.0` for SAT/UNKNOWN, `Multiplier = 0.0` for UNSAT). As formally specified in `docs/CCPF_EVALUATOR_CONTRACT.md` (Prompt 2A), the evaluator interface is **strictly logical** and returns no probability multiplier. Downstream pruning of UNSAT paths is an engine search policy decision, not an evaluator probability calculation. Historical mentions of multipliers below are preserved for provenance with this clarification.
+
 The counterexample fixture suite in `tests/fixtures/research_context_feasibility/` defines six fundamental research scenarios. Here we present the complete mathematical formalization for each scenario.
 
 ### 9.1 CE1: Compatible Persistent Context
@@ -356,7 +360,7 @@ The counterexample fixture suite in `tests/fixtures/research_context_feasibility
 - **Formula:** $\Phi(\text{CE5}) = \emptyset$ (no context constraints).
 - **Analysis:** All edges evaluate to `UNKNOWN` context constraints.
 - **Expected Outcome:** **UNKNOWN** universally.
-- **Score Effect:** Multiplier = 1.0 (STRICT IDENTITY with baseline top-$K$ rankings and exact Q8 scores).
+- **Score Effect (Clarified in Prompt 2A):** Isolated evaluator returns `UNKNOWN` (fallback). Note: Proving strict identity with baseline Top-$K$ rankings is a property of the future integrated search engine, requiring empirical comparison against the baseline mirror once integration is authorized.
 - **Required Solver Capability:** Baseline pass-through mode.
 
 ### 9.6 CE6: Principal Scope Boundary Across AssumeRole

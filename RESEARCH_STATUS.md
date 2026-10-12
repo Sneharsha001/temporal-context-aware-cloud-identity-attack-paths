@@ -15,7 +15,7 @@ Identity Attack-Path Analysis (CCPF)
 
 ## Phase Completion Status
 
-| Phase | Title | Status |
+| Stage / Phase | Title | Status |
 |---|---|---|
 | Phase 14 | Temporal Context Research Design and State Model | COMPLETE |
 | Phase 15 | Formal Context-Conditioned Path Feasibility Model | COMPLETE |
@@ -23,6 +23,8 @@ Identity Attack-Path Analysis (CCPF)
 | Phase 17 | Related-Work Survey and Novelty Assessment | COMPLETE |
 | Phase B.1 | CCPF Formal Correctness and Evidence Audit | COMPLETE |
 | Baseline Verification | Pre-Contribution Reproducibility Audit | COMPLETE |
+| Prompt 1 | CCPF Scope Confirmation & Research Checkpoint | COMPLETE |
+| Prompt 2 / 2A | Formal CCPF Evaluator Contract Specification | COMPLETE (Corrections Applied) |
 
 ---
 
@@ -38,12 +40,43 @@ Identity Attack-Path Analysis (CCPF)
 
 ---
 
-## Next Phase (GATED)
+## Next Phase: Isolated Evaluator Implementation (Prompt 3 - GATED)
 
-**CCPF Implementation** — awaiting explicit researcher authorization.
+**Current Status:** Prompt 2 / 2A Formal Evaluator Contract Complete.  
+**Research Track:** Context-Conditioned Path Feasibility (CCPF) for probabilistic cloud identity attack paths.  
+**Detailed Specification:** [docs/CCPF_EVALUATOR_CONTRACT.md](docs/CCPF_EVALUATOR_CONTRACT.md)  
 
-No CCPF evaluator code, solver integration, new test files, or production source
-modifications have been created. The contribution phase has not begun.
+### Research Stage Sequence
+- **Prompt 1:** Scope confirmation & baseline checkpoint — **COMPLETE**.
+- **Prompt 2 / 2A:** Formal contract & safe fragment formalization — **COMPLETE**.
+- **Prompt 3:** Isolated evaluator implementation (RDCE) — **NEXT (Gated, subject to researcher review)**.
+- **Prompt 4:** Semantic validation across CE1–CE6 — **AFTER IMPLEMENTATION**.
+
+### Evaluator Contract Summary (RDCE)
+- **Interface:** Strictly logical tri-state decision (`SAT`, `UNSAT`, `UNKNOWN`), witness assignment (if SAT), contradiction rationale (if UNSAT), unknown rationale (if UNKNOWN), and diagnostic metadata. **Contains no probability multiplier.**
+- **Scope Model:**
+  - **Request Scope ($\mathcal{R}$):** Per-API-call origin (e.g., `aws:SourceIp`), persistent only under explicit scenario `static_origin_assumption = True` or re-bound via network pivot.
+  - **Session Scope ($\mathcal{S}$):** STS credential attributes (e.g., `aws:MultiFactorAuthPresent`), reset upon identity pivots (`sts:AssumeRole`).
+  - **Principal Scope ($\mathcal{P}$):** Active identity attributes (e.g., `aws:PrincipalTag/<key>`), reset to target role tags upon AssumeRole boundary when session tagging is prohibited (`Null(RequestTag) == true`).
+  - **Configuration Scope ($\mathcal{C}$):** Hop-local request parameters (e.g., `sts:ExternalId`), non-interfering across distinct roles.
+- **Supported Safe Fragment:**
+  - IPv4/IPv6 CIDR inclusion and disjointness (`IpAddress`, `NotIpAddress`) via `ipaddress`. Multi-value disjunction (OR) for `IpAddress`; conjunctive negation (AND NOT) for `NotIpAddress`.
+  - Exact literal string equality and clash (`StringEquals`, `StringLike` without wildcards).
+  - Boolean identity and clash (`Bool` on `aws:MultiFactorAuthPresent`).
+  - Presence checks (`Null` operator).
+- **Tri-State Semantics:**
+  - **SAT:** Sound constructive witness exists satisfying all accumulated constraints.
+  - **UNSAT:** Sound proof of logical contradiction ($\Phi \vdash \bot$) within the Safe Fragment under explicit assumptions.
+  - **UNKNOWN:** Incompleteness / unsupported operator or key / missing metadata / solver error. Conservative fallback.
+- **Independence & Decoupling Guarantees:**
+  - Q8 fixed-point integer underflow ($p_{\text{worst\_q8}} = 0$) is decoupled and never treated as an UNSAT signal.
+  - Union-Find correlation grouping (`correlation.py`) is decoupled and untouched.
+  - No fractional probability penalties or heuristics are applied.
+- **Distinction on CE5:** Isolated evaluator returning `UNKNOWN` on absent context metadata is distinguished from integrated Top-$K$ non-perturbation, which requires separate empirical testing against the `ARF-RT-BASELINE` mirror once integration is authorized.
+- **Acceptance Criteria (Tests A1–A8):** Defined over status, witness, and contradiction rationale without probability multipliers.
+
+### Next Authorized Step (Prompt 3)
+Implement the standalone RDCE prototype in isolated test/research space (`tests/research/test_rdce.py`) according to the Prompt 2A contract without modifying production engine files or the baseline mirror.
 
 ---
 
@@ -52,6 +85,7 @@ modifications have been created. The contribution phase has not begun.
 | Document | Location |
 |---|---|
 | CCPF Formal Design Gate | docs/CCPF_FORMAL_DESIGN_GATE.md |
+| CCPF Evaluator Contract | docs/CCPF_EVALUATOR_CONTRACT.md |
 | Master Research Setup Audit | docs/MASTER_RESEARCH_SETUP_AUDIT.md |
 | Phase 17 Novelty Assessment | docs/PHASE17_RELATED_WORK_NOVELTY_ASSESSMENT.md |
 | Final Baseline Verification Report | verification/FINAL_BASELINE_VERIFICATION_REPORT.md |

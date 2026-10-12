@@ -5,6 +5,20 @@ A Bayesian reasoning engine for cloud identity attack path analysis. ARF-RT inge
 **SEMANTICS_VERSION:** 1.0.0  
 **Scope:** Replay-only. No live cloud SDK calls.
 
+---
+
+## Active Research Track: Context-Conditioned Path Feasibility (CCPF)
+
+This repository hosts active research extending ARF-RT with **Context-Conditioned Path Feasibility (CCPF)** on branch `temporal-context-dev`.
+
+- **Objective:** Evaluate operational context (network origin CIDRs, MFA presence, principal tags) as a formal Constraint-Satisfaction Problem (CSP) to filter logically impossible identity paths without perturbing Bayesian probability scores.
+- **Current Stage:** Prompt 2 / 2A Formal Evaluator Contract complete; isolated evaluator implementation gated for Prompt 3.
+- **Research Status & Gate Summary:** [RESEARCH_STATUS.md](RESEARCH_STATUS.md)
+- **Evaluator Interface Contract:** [docs/CCPF_EVALUATOR_CONTRACT.md](docs/CCPF_EVALUATOR_CONTRACT.md)
+- **Formal Design Gate:** [docs/CCPF_FORMAL_DESIGN_GATE.md](docs/CCPF_FORMAL_DESIGN_GATE.md)
+
+---
+
 ## The Problem
 
 Static graph tools find attack paths but ignore policy constraints. This produces false positives — paths that look viable but are blocked by SCPs, trust conditions, or permission boundaries. When multiple edges share the same constraint, their failures are correlated, but naive analysis treats them as independent.
