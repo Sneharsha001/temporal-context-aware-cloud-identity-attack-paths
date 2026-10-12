@@ -25,6 +25,9 @@ Identity Attack-Path Analysis (CCPF)
 | Baseline Verification | Pre-Contribution Reproducibility Audit | COMPLETE |
 | Prompt 1 | CCPF Scope Confirmation & Research Checkpoint | COMPLETE |
 | Prompt 2 / 2A | Formal CCPF Evaluator Contract Specification | COMPLETE (Corrections Applied) |
+| Prompt 3 | Isolated Evaluator Implementation (RDCE) | COMPLETE (Subject to evidence) |
+| Prompt 4 | Semantic Validation & Counterexample Suite (CE1–CE6, FM1–FM10) | COMPLETE (Subject to evidence) |
+| Prompt 4A | Final Report Reconciliation & Stage Sequence Alignment | COMPLETE |
 
 ---
 
@@ -34,9 +37,13 @@ Identity Attack-Path Analysis (CCPF)
 
 **Baseline Commit:** 04d2bae12f600ff48b6054aa513878ea5dc72b16
 **Research HEAD:** 45ec211e3ca1f284e27e22d5bf4981166bf5880b
-**Test Parity:** 911/912 in both workspaces (symmetric baseline-shared failure only)
-**Unit Tests:** 625/625 pass in both workspaces
-**Golden Tests:** 250/250 pass in both workspaces
+**Pre-Contribution Baseline Suite Scope & Evidence:** Full baseline verification run (`python -m pytest tests/` documented in [verification/FINAL_BASELINE_VERIFICATION_REPORT.md](verification/FINAL_BASELINE_VERIFICATION_REPORT.md)):
+- Total baseline tests collected: 912 tests (625 unit, 250 golden, 37 stress).
+- Unit Tests: 625/625 pass in both workspaces (100%).
+- Golden Tests: 250/250 pass in both workspaces (100%).
+- Stress Tests: 35/37 pass (2 non-functional timing/stress threshold failures under Windows OS load: `test_stage1.py` runtime under 1s failed at 173.7s file time, `test_stage1b.py` runtime under 500ms failed at 641ms in research workspace while passing in 470ms in mirror; zero functional logic defects).
+- Pre-contribution baseline outcome: 910 passed, 2 non-functional timing failures.
+- Focused Test Suite (`tests/unit/test_paths.py`, `tests/unit/test_belief.py`): 175/175 pass (100% bitwise parity).
 
 ---
 
@@ -47,10 +54,13 @@ Identity Attack-Path Analysis (CCPF)
 **Detailed Specification:** [docs/CCPF_EVALUATOR_CONTRACT.md](docs/CCPF_EVALUATOR_CONTRACT.md)  
 
 ### Research Stage Sequence
-- **Prompt 1:** Scope confirmation & baseline checkpoint — **COMPLETE**.
-- **Prompt 2 / 2A:** Formal contract & safe fragment formalization — **COMPLETE**.
-- **Prompt 3:** Isolated evaluator implementation (RDCE) — **NEXT (Gated, subject to researcher review)**.
-- **Prompt 4:** Semantic validation across CE1–CE6 — **AFTER IMPLEMENTATION**.
+- **Prompt 3:** Isolated evaluator implementation — complete, subject to evidence.
+- **Prompt 4:** Semantic validation — complete, subject to evidence.
+- **Prompt 5:** Independent code review.
+- **Prompt 6:** Integration design.
+- **Prompt 7:** Production integration after explicit authorization.
+- **Prompt 8:** Baseline-versus-CCPF experimental evaluation.
+- **Prompt 9:** Conference-paper evidence and readiness.
 
 ### Evaluator Contract Summary (RDCE)
 - **Interface:** Strictly logical tri-state decision (`SAT`, `UNSAT`, `UNKNOWN`), witness assignment (if SAT), contradiction rationale (if UNSAT), unknown rationale (if UNKNOWN), and diagnostic metadata. **Contains no probability multiplier.**
@@ -119,7 +129,8 @@ Identity Attack-Path Analysis (CCPF)
   | CE5 | UNKNOWN | **UNKNOWN** | Rationale: NO_CONTEXT_CONSTRAINTS_DEFINED; evaluated_hops=0; solver_ms=0.003 |
   | CE6 | UNSAT | **UNSAT** | Contradiction: PrincipalTag/Department ApplicationDevelopment vs SecurityOperations; solver_ms=0.041 |
 
-- **Stage C - Counterexample / Negative Tests (10 Failure Modes, 40 tests):**
+- **Stage C - Counterexample / Negative Tests (10 Failure Modes, 35 tests):**
+  *(Reconciliation: An earlier report noted 40 tests by subtracting Stage B [20] from the file total [60] without separating Stage D [5]. The ten failure-mode rows FM1–FM10 strictly sum to 35 tests: 2 + 2 + 2 + 9 + 2 + 3 + 2 + 3 + 3 + 7 = 35).*
   - FM1 (Disjoint CIDRs require explicit coupling): 2 tests - PASS
   - FM2 (Compatible CIDR witness validity): 2 tests - PASS
   - FM3 (Pivot no pre-pivot IP carry): 2 tests - PASS
@@ -130,15 +141,16 @@ Identity Attack-Path Analysis (CCPF)
   - FM8 (Q8 underflow decoupled): 3 tests - PASS
   - FM9 (Exceptions never UNSAT): 3 tests - PASS
   - FM10 (Determinism): 7 tests - PASS
-- **Stage D - CE5 Isolated UNKNOWN / No False UNSAT:** 5 tests - PASS
-  - CE5 isolated UNKNOWN confirmed; scope boundary documented (NOT integrated Top-K equivalence).
+- **Stage D - CE5 Isolated UNKNOWN / No False UNSAT (5 tests):** PASS
+  - The isolated evaluator returns UNKNOWN when context metadata is missing and does not report false UNSAT for that isolated input.
+  - *(Note: CCPF has not been integrated into production Top-K search; integrated Top-K non-perturbation, search completeness, and baseline identity behavior have not been evaluated and are not claimed here).*
 - **Combined Research Suite:** 106 passed (46 A1-A8 + 60 Prompt 4) in 0.40s (100%).
 - **No Soundness Defects Found:** All 10 failure modes confirmed sound in RDCE implementation.
 - **Baseline Production Suite:** Unchanged (910 passed, 2 pre-existing stress timeouts).
 - **Architectural Isolation:** Zero edits to arf_rt/, paths.py, correlation.py, or baseline mirror.
 
 ### Next Authorized Step (Prompt 5)
-Integrate CCPF/RDCE into production Top-K search and perform comparative baseline experiments.
+Independent code review of the isolated RDCE evaluator and research test suites.
 
 ---
 

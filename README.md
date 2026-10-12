@@ -12,10 +12,17 @@ A Bayesian reasoning engine for cloud identity attack path analysis. ARF-RT inge
 This repository hosts active research extending ARF-RT with **Context-Conditioned Path Feasibility (CCPF)** on branch `temporal-context-dev`.
 
 - **Objective:** Evaluate operational context (network origin CIDRs, MFA presence, principal tags) as a formal Constraint-Satisfaction Problem (CSP) to filter logically impossible identity paths without perturbing Bayesian probability scores.
-- **Current Stage:** Prompt 3 (Isolated RDCE Evaluator) & Prompt 4 (Semantic Validation & Counterexample Testing) complete.
-  - **Prompt 3:** Implemented deterministic RDCE solver (research/ccpf/rdce.py) with 46 acceptance tests (A1-A8).
-  - **Prompt 4:** Validated CE1-CE6 against formal semantics and executed 10 counterexample failure modes (60 tests, 106 total research tests passing).
-  - **Next Stage:** Prompt 5 - Top-K search integration and comparative baseline evaluation.
+- **Current Status:**
+  - **Prompt 3: Isolated evaluator implementation** — complete, subject to evidence (`research/ccpf/rdce.py`, 46 acceptance tests in `tests/research/test_rdce.py`).
+  - **Prompt 4: Semantic validation** — complete, subject to evidence (`tests/research/test_semantic_validation.py`, 60 tests: Stage B [20 tests], Stage C 10 failure modes [35 tests], Stage D CE5 isolated fallback [5 tests]; 106 total research tests passing).
+- **Research Stage Sequence:**
+  - Prompt 3: Isolated evaluator implementation — complete, subject to evidence.
+  - Prompt 4: Semantic validation — complete, subject to evidence.
+  - Prompt 5: Independent code review.
+  - Prompt 6: Integration design.
+  - Prompt 7: Production integration after explicit authorization.
+  - Prompt 8: Baseline-versus-CCPF experimental evaluation.
+  - Prompt 9: Conference-paper evidence and readiness.
 - **Research Status & Gate Summary:** [RESEARCH_STATUS.md](RESEARCH_STATUS.md)
 - **Evaluator Interface Contract:** [docs/CCPF_EVALUATOR_CONTRACT.md](docs/CCPF_EVALUATOR_CONTRACT.md)
 - **Formal Design Gate:** [docs/CCPF_FORMAL_DESIGN_GATE.md](docs/CCPF_FORMAL_DESIGN_GATE.md)
