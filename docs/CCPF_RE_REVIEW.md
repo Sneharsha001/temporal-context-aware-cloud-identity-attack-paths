@@ -217,3 +217,90 @@ Following the identification of Defect F1.1 and Gap F3.1 during Prompt 5B, targe
 - Total research suite: **141 passed / 141 total** in 0.81s (46 unit + 95 semantic).
 - Fixture validation: 6/6 research fixtures (CE1–CE6) deterministic validation verified.
 - **Revised Posture:** All identified defects from the Prompt 5 and Prompt 5B reviews are resolved.
+
+
+---
+
+## 7. Prompt 5D Independent Final Re-Review & Final Verdict
+
+**Evaluation Date:** 2026-10-14  
+**Reviewed HEAD Commit:** `5a7f8fadf538cb683e9b838d2d09de4ed386424f`  
+**Branch:** `temporal-context-dev`  
+**Reviewer Role:** Independent Formal-Constraint & Cloud Security Reviewer  
+
+### 7.1 Authoritative Verification Suite Execution
+
+All four standard suites were executed and verified on the clean working tree:
+
+| Suite | Command | Exit Code | Result | Duration |
+|---|---|:---:|:---:|:---:|
+| **Evaluator Unit** | `python -m pytest tests/research/test_rdce.py -q` | `0` | **46 passed** | 0.23s |
+| **Semantic Validation** | `python -m pytest tests/research/test_semantic_validation.py -q` | `0` | **95 passed** | 0.45s |
+| **Combined Research Suite** | `python -m pytest tests/research/ -q` | `0` | **141 passed** | 0.44s |
+| **Fixture Topology Validation** | `python tests/fixtures/research_context_feasibility/validate_research_fixtures.py` | `0` | **6/6 passed** | Deterministic Pydantic / Graph Topology OK |
+
+*Discrepancy Check:* The research suite count of 141 (46 unit + 95 semantic) matches the expected total from Prompt 5C with zero failures or skips.
+
+---
+
+### 7.2 Independent Verification of Finding F1.1 (Single-Host IP Witnesses)
+
+The implementation of `select_witness_ip` in `research/ccpf/rdce.py` (lines 210–225) and its invocation across static-origin (line 998) and per-hop (line 1010) witness construction were independently verified:
+- `10.0.0.1/32` allowed: Evaluates to `SAT` with witness `aws:SourceIp == "10.0.0.1"`, strictly belonging to `10.0.0.1/32`.
+- `2001:db8::1/128` allowed: Evaluates to `SAT` with witness `aws:SourceIp == "2001:db8::1"`, strictly belonging to `2001:db8::1/128`.
+- `192.168.1.0/31` minus `192.168.1.0/32`: Evaluates to `SAT` with witness `aws:SourceIp == "192.168.1.1"`, inside `/31` and strictly outside `/32`.
+- Exact `/32` denial (`10.0.0.1/32` allowed and denied): Evaluates to `UNSAT` with null witness and clash proof.
+- Covering denied subnets (`172.16.0.0/23` denied by `172.16.0.0/24` and `172.16.1.0/24`): Evaluates to `UNSAT`.
+- Partially excluded allowed range (`192.168.0.0/23` minus `192.168.0.0/24`): Evaluates to `SAT` with witness in `192.168.0.0/23` and outside `192.168.0.0/24`.
+
+*Determination:* Finding F1.1 is **COMPLETELY RESOLVED**. Witness extraction is sound and deterministic across IPv4 and IPv6.
+
+---
+
+### 7.3 Independent Verification of Finding F3.1 (Null Value Validation)
+
+The `Null` operator handling in `research/ccpf/rdce.py` (lines 650–675) was independently verified:
+- Single-value `values=["true"]`: Accepted; evaluated to `SAT`; key strictly excluded from witness.
+- Single-value `values=["false"]`: Accepted; evaluated to `SAT` with witness confirming key presence.
+- Empty list `values=[]`: Returns `UNKNOWN` with `INVALID_NULL_VALUES_COUNT` rationale.
+- Multi-value list `values=["true", "false"]`: Returns `UNKNOWN` with `INVALID_NULL_VALUES_COUNT` rationale (no silent truncation to index 0).
+- Three-value list `values=["true", "false", "true"]`: Returns `UNKNOWN` with `INVALID_NULL_VALUES_COUNT`.
+- Unrecognized string `values=["maybe"]`: Returns `UNKNOWN` with `UNPARSEABLE_NULL_VALUE`.
+- Order-invariance: Permutations `[StringEquals, Null(["true", "false"])]` and `[Null(["true", "false"]), StringEquals]` both evaluate to `UNKNOWN` with identical diagnostic rationales.
+
+*Determination:* Finding F3.1 is **COMPLETELY RESOLVED**.
+
+---
+
+### 7.4 Residual Correctness and Model Audit
+
+An end-to-end inspection of `research/ccpf/rdce.py` against `docs/CCPF_EVALUATOR_CONTRACT.md` confirmed:
+1. **No False SAT / False UNSAT:** Operator intersections and subtractions enforce conservative semantics; unmapped operators or syntax consistently return `UNKNOWN`.
+2. **Scope Isolation:** `PRINCIPAL`, `SESSION`, `CONFIG`, and `REQUEST` scopes are strictly isolated. No cross-scope variable collision occurs.
+3. **AssumeRole Transition Lifecycle:** Caller principal and session states do not leak across `sts:AssumeRole` boundaries.
+4. **Mixed IP Versions:** Dual-stack mixed IPv4/IPv6 conditions consistently return `UNKNOWN` with `UNSUPPORTED_MIXED_IP_VERSIONS`.
+5. **Decoupling from Probability Engine:** RDCE contains zero imports or dependencies on `arf_rt/`, Bayesian Q8 scoring, belief updates, or probability multipliers.
+
+---
+
+### 7.5 Documentation and Architectural Scope Audit
+
+1. **Clarification on Superseded Multiplier Notation:**
+   Early research drafting (Phases 15–16) utilized the concept of a binary multiplier ($1.0$ vs $0.0$) to analytically describe feasibility impact. As formalized in `docs/CCPF_EVALUATOR_CONTRACT.md`, the RDCE evaluator is **purely logical** ($	ext{SAT}, 	ext{UNSAT}, 	ext{UNKNOWN}$) and outputs **no probability multiplier**. Downstream pruning in search is an engine architectural decision, not an evaluator arithmetic operation.
+2. **Fixture Validation vs Semantic Verification:**
+   The structural validator (`validate_research_fixtures.py`) validates Pydantic schema and graph connectivity only. Algorithmic semantic correctness is verified strictly by the 141 pytest tests in `tests/research/`.
+3. **Bounded Claims:**
+   All research documentation strictly restricts claims to the domain-restricted supported fragment. No claims of full AWS IAM semantics, temporal TTL expiry, or production Top-K completeness are asserted.
+
+---
+
+### 7.6 Final Review Verdict
+
+### **FINAL VERDICT: READY FOR INTEGRATION DESIGN**
+
+- **Meaning of Verdict:** The isolated Restricted Deterministic Constraint Evaluator (`research/ccpf/rdce.py`) and its formal contract have resolved all confirmed correctness defects (F1–F7, F1.1, F3.1). The evaluator is sound within its declared domain-restricted scope.
+- **Strict Limitation:** This verdict authorizes **Prompt 6 (Integration Design) only**. It does **NOT** authorize production code modification (`arf_rt/`), probability score alteration, Top-K search pruning implementation, or broader feature work without subsequent explicit authorization.
+
+---
+
+*Report certified on branch `temporal-context-dev`. Awaiting researcher instruction to begin Prompt 6.*
