@@ -1295,3 +1295,266 @@ class TestRemediationF6_StringScopesHandling:
         r = ev.evaluate(PathEvaluationInput(path_id="F6-CONFIG-HOP-LOCAL-SAT", hops=[hop1, hop2]))
         assert r.status == FeasibilityStatus.SAT
         assert r.witness is not None
+
+
+
+# ===========================================================================
+# STAGE F: PROMPT 5C REMEDIATION REGRESSION TESTS (F1.1 & F3.1)
+# ===========================================================================
+
+class TestRemediationF1_1_SingleHostWitnessSynthesis:
+    """F1.1: Single-host IPv4 /32 and IPv6 /128 witness synthesis and subnet arithmetic."""
+
+    def test_f1_1_ipv4_slash_32_allowed_is_sat(self, ev):
+        """Allowed /32 host subnet must evaluate to SAT with concrete host witness."""
+        hop = HopContextSpec(
+            hop=1, edge_type="s3:GetObject", src_node_id="Client", dst_node_id="Bucket",
+            required_context=[
+                ContextPredicate(
+                    key="aws:SourceIp", operator="IpAddress",
+                    values=["10.0.0.1/32"], scope=ContextScope.REQUEST,
+                )
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F1_1-IPV4-32-SAT", hops=[hop]))
+        assert r.status == FeasibilityStatus.SAT, (
+            f"F1.1: IPv4 /32 must be SAT; got {r.status} (rationale: {r.unknown_rationale})"
+        )
+        assert r.witness and "aws:SourceIp" in r.witness
+        assert r.witness["aws:SourceIp"] == "10.0.0.1"
+        assert ipaddress.ip_address(r.witness["aws:SourceIp"]) in ipaddress.ip_network("10.0.0.1/32")
+
+    def test_f1_1_ipv6_slash_128_allowed_is_sat(self, ev):
+        """Allowed /128 IPv6 host subnet must evaluate to SAT with concrete host witness."""
+        hop = HopContextSpec(
+            hop=1, edge_type="s3:GetObject", src_node_id="Client", dst_node_id="Bucket",
+            required_context=[
+                ContextPredicate(
+                    key="aws:SourceIp", operator="IpAddress",
+                    values=["2001:db8::1/128"], scope=ContextScope.REQUEST,
+                )
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F1_1-IPV6-128-SAT", hops=[hop]))
+        assert r.status == FeasibilityStatus.SAT, (
+            f"F1.1: IPv6 /128 must be SAT; got {r.status} (rationale: {r.unknown_rationale})"
+        )
+        assert r.witness and "aws:SourceIp" in r.witness
+        assert r.witness["aws:SourceIp"] == "2001:db8::1"
+        assert ipaddress.ip_address(r.witness["aws:SourceIp"]) in ipaddress.ip_network("2001:db8::1/128")
+
+    def test_f1_1_slash_31_minus_slash_32_is_sat(self, ev):
+        """Allowed /31 minus denied /32 leaves the single remaining /32 host address."""
+        hop = HopContextSpec(
+            hop=1, edge_type="s3:GetObject", src_node_id="Client", dst_node_id="Bucket",
+            required_context=[
+                ContextPredicate(
+                    key="aws:SourceIp", operator="IpAddress",
+                    values=["192.168.1.0/31"], scope=ContextScope.REQUEST,
+                ),
+                ContextPredicate(
+                    key="aws:SourceIp", operator="NotIpAddress",
+                    values=["192.168.1.0/32"], scope=ContextScope.REQUEST,
+                ),
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F1_1-31-MINUS-32-SAT", hops=[hop]))
+        assert r.status == FeasibilityStatus.SAT, (
+            f"F1.1: /31 minus /32 must be SAT; got {r.status} (rationale: {r.unknown_rationale})"
+        )
+        assert r.witness and "aws:SourceIp" in r.witness
+        assert r.witness["aws:SourceIp"] == "192.168.1.1"
+        assert ipaddress.ip_address(r.witness["aws:SourceIp"]) in ipaddress.ip_network("192.168.1.0/31")
+        assert ipaddress.ip_address(r.witness["aws:SourceIp"]) not in ipaddress.ip_network("192.168.1.0/32")
+
+    def test_f1_1_exact_slash_32_denial_is_unsat(self, ev):
+        """Allowed /32 host exactly denied by /32 must evaluate to UNSAT."""
+        hop = HopContextSpec(
+            hop=1, edge_type="s3:GetObject", src_node_id="Client", dst_node_id="Bucket",
+            required_context=[
+                ContextPredicate(
+                    key="aws:SourceIp", operator="IpAddress",
+                    values=["10.0.0.1/32"], scope=ContextScope.REQUEST,
+                ),
+                ContextPredicate(
+                    key="aws:SourceIp", operator="NotIpAddress",
+                    values=["10.0.0.1/32"], scope=ContextScope.REQUEST,
+                ),
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F1_1-EXACT-32-DENIED-UNSAT", hops=[hop]))
+        assert r.status == FeasibilityStatus.UNSAT
+        assert r.witness is None
+        assert r.contradiction_rationale and "denied" in r.contradiction_rationale.lower()
+
+    def test_f1_1_multiple_denied_cover_allowed_range_unsat(self, ev):
+        """Allowed /23 covered by two /24 denied subnets must evaluate to UNSAT."""
+        hop = HopContextSpec(
+            hop=1, edge_type="s3:GetObject", src_node_id="Client", dst_node_id="Bucket",
+            required_context=[
+                ContextPredicate(
+                    key="aws:SourceIp", operator="IpAddress",
+                    values=["172.16.0.0/23"], scope=ContextScope.REQUEST,
+                ),
+                ContextPredicate(
+                    key="aws:SourceIp", operator="NotIpAddress",
+                    values=["172.16.0.0/24", "172.16.1.0/24"], scope=ContextScope.REQUEST,
+                ),
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F1_1-PARTITION-23-UNSAT", hops=[hop]))
+        assert r.status == FeasibilityStatus.UNSAT
+        assert r.witness is None
+        assert r.contradiction_rationale and "denied" in r.contradiction_rationale.lower()
+
+    def test_f1_1_partially_excluded_range_witness_verified(self, ev):
+        """Allowed /23 partially excluded by /24 yields SAT with witness outside denied."""
+        hop = HopContextSpec(
+            hop=1, edge_type="s3:GetObject", src_node_id="Client", dst_node_id="Bucket",
+            required_context=[
+                ContextPredicate(
+                    key="aws:SourceIp", operator="IpAddress",
+                    values=["192.168.0.0/23"], scope=ContextScope.REQUEST,
+                ),
+                ContextPredicate(
+                    key="aws:SourceIp", operator="NotIpAddress",
+                    values=["192.168.0.0/24"], scope=ContextScope.REQUEST,
+                ),
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F1_1-PARTIAL-23-SAT", hops=[hop]))
+        assert r.status == FeasibilityStatus.SAT
+        assert r.witness and "aws:SourceIp" in r.witness
+        w_ip = ipaddress.ip_address(r.witness["aws:SourceIp"])
+        assert w_ip in ipaddress.ip_network("192.168.0.0/23")
+        assert w_ip not in ipaddress.ip_network("192.168.0.0/24")
+
+
+class TestRemediationF3_1_NullValuesValidation:
+    """F3.1: Strict validation of Null condition values (exactly 1 boolean argument)."""
+
+    def test_f3_1_multi_value_null_list_is_unknown(self, ev):
+        """Null with multiple values ['true', 'false'] must return UNKNOWN, not silent truncation."""
+        hop = HopContextSpec(
+            hop=1, edge_type="s3:GetObject", src_node_id="Client", dst_node_id="Bucket",
+            required_context=[
+                ContextPredicate(
+                    key="aws:PrincipalTag/role", operator="Null",
+                    values=["true", "false"], scope=ContextScope.PRINCIPAL,
+                )
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F3_1-MULTI-NULL-UNKNOWN", hops=[hop]))
+        assert r.status == FeasibilityStatus.UNKNOWN, (
+            f"F3.1: Multi-value Null must return UNKNOWN; got {r.status}"
+        )
+        assert r.status != FeasibilityStatus.SAT
+        assert r.status != FeasibilityStatus.UNSAT
+        assert r.unknown_rationale and "INVALID_NULL_VALUES_COUNT" in r.unknown_rationale
+
+    def test_f3_1_three_value_null_list_is_unknown(self, ev):
+        """Null with 3 values must return UNKNOWN."""
+        hop = HopContextSpec(
+            hop=1, edge_type="s3:GetObject", src_node_id="Client", dst_node_id="Bucket",
+            required_context=[
+                ContextPredicate(
+                    key="aws:PrincipalTag/env", operator="Null",
+                    values=["true", "false", "true"], scope=ContextScope.PRINCIPAL,
+                )
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F3_1-THREE-NULL-UNKNOWN", hops=[hop]))
+        assert r.status == FeasibilityStatus.UNKNOWN
+        assert r.unknown_rationale and "INVALID_NULL_VALUES_COUNT" in r.unknown_rationale
+
+    def test_f3_1_empty_null_values_list_is_unknown(self, ev):
+        """Null with empty values list [] must return UNKNOWN."""
+        hop = HopContextSpec(
+            hop=1, edge_type="s3:GetObject", src_node_id="Client", dst_node_id="Bucket",
+            required_context=[
+                ContextPredicate(
+                    key="aws:PrincipalTag/env", operator="Null",
+                    values=[], scope=ContextScope.PRINCIPAL,
+                )
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F3_1-EMPTY-NULL-UNKNOWN", hops=[hop]))
+        assert r.status == FeasibilityStatus.UNKNOWN
+        assert r.unknown_rationale and "INVALID_NULL_VALUES_COUNT" in r.unknown_rationale
+
+    def test_f3_1_unrecognized_null_value_is_unknown(self, ev):
+        """Null with unrecognized value representation must return UNKNOWN."""
+        hop = HopContextSpec(
+            hop=1, edge_type="s3:GetObject", src_node_id="Client", dst_node_id="Bucket",
+            required_context=[
+                ContextPredicate(
+                    key="aws:PrincipalTag/env", operator="Null",
+                    values=["maybe"], scope=ContextScope.PRINCIPAL,
+                )
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F3_1-UNRECOGNIZED-NULL-UNKNOWN", hops=[hop]))
+        assert r.status == FeasibilityStatus.UNKNOWN
+        assert r.unknown_rationale and "UNPARSEABLE_NULL_VALUE" in r.unknown_rationale
+
+    def test_f3_1_valid_single_value_null_true_remains_sat(self, ev):
+        """Single-value Null: ['true'] remains valid SAT and excludes key from witness."""
+        hop = HopContextSpec(
+            hop=1, edge_type="s3:GetObject", src_node_id="Client", dst_node_id="Bucket",
+            required_context=[
+                ContextPredicate(
+                    key="aws:PrincipalTag/temp", operator="Null",
+                    values=["true"], scope=ContextScope.PRINCIPAL,
+                )
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F3_1-VALID-NULL-TRUE", hops=[hop]))
+        assert r.status == FeasibilityStatus.SAT
+        assert "aws:PrincipalTag/temp" not in r.witness
+
+    def test_f3_1_valid_single_value_null_false_remains_sat(self, ev):
+        """Single-value Null: ['false'] with StringEquals remains valid SAT with witness."""
+        hop = HopContextSpec(
+            hop=1, edge_type="s3:GetObject", src_node_id="Client", dst_node_id="Bucket",
+            required_context=[
+                ContextPredicate(
+                    key="aws:PrincipalTag/role", operator="Null",
+                    values=["false"], scope=ContextScope.PRINCIPAL,
+                ),
+                ContextPredicate(
+                    key="aws:PrincipalTag/role", operator="StringEquals",
+                    values=["Admin"], scope=ContextScope.PRINCIPAL,
+                ),
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F3_1-VALID-NULL-FALSE", hops=[hop]))
+        assert r.status == FeasibilityStatus.SAT
+        assert r.witness and r.witness.get("aws:PrincipalTag/role") == "Admin"
+
+    def test_f3_1_order_invariance_with_invalid_null(self, ev):
+        """Predicate permutations of [StringEquals, InvalidNull] both yield UNKNOWN."""
+        p_str = ContextPredicate(
+            key="aws:PrincipalTag/team", operator="StringEquals",
+            values=["SecOps"], scope=ContextScope.PRINCIPAL,
+        )
+        p_null_inv = ContextPredicate(
+            key="aws:PrincipalTag/team", operator="Null",
+            values=["true", "false"], scope=ContextScope.PRINCIPAL,
+        )
+
+        hop_a = HopContextSpec(
+            hop=1, edge_type="s3:GetObject", src_node_id="C", dst_node_id="B",
+            required_context=[p_str, p_null_inv],
+        )
+        hop_b = HopContextSpec(
+            hop=1, edge_type="s3:GetObject", src_node_id="C", dst_node_id="B",
+            required_context=[p_null_inv, p_str],
+        )
+
+        ra = ev.evaluate(PathEvaluationInput(path_id="ORDER-INV-A", hops=[hop_a]))
+        rb = ev.evaluate(PathEvaluationInput(path_id="ORDER-INV-B", hops=[hop_b]))
+
+        assert ra.status == FeasibilityStatus.UNKNOWN
+        assert rb.status == FeasibilityStatus.UNKNOWN
+        assert "INVALID_NULL_VALUES_COUNT" in ra.unknown_rationale
+        assert "INVALID_NULL_VALUES_COUNT" in rb.unknown_rationale

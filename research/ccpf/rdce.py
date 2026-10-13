@@ -212,6 +212,24 @@ def subtract_cidr_lists(
     return current_subnets, None
 
 
+def select_witness_ip(subnet: Union[ipaddress.IPv4Network, ipaddress.IPv6Network]) -> str:
+    """Safely extract a representative host IP address from a CIDR network block.
+
+    Handles both iterator and list returns from .hosts() across prefix lengths
+    (/32 in IPv4, /128 in IPv6, and arbitrary CIDR blocks). Falls back to
+    subnet.network_address if no dedicated host address is available.
+    """
+    hosts_seq = subnet.hosts()
+    if isinstance(hosts_seq, list):
+        if hosts_seq:
+            return str(hosts_seq[0])
+        return str(subnet.network_address)
+    try:
+        return str(next(iter(hosts_seq)))
+    except StopIteration:
+        return str(subnet.network_address)
+
+
 class RestrictedDeterministicConstraintEvaluator:
     """Domain-restricted deterministic constraint evaluator for CCPF."""
 
@@ -648,12 +666,15 @@ class RestrictedDeterministicConstraintEvaluator:
 
                     # 3.5 Operator: Null (Commutative conjunction)
                     elif op == "Null":
-                        if not pred.values:
+                        if len(pred.values) != 1:
                             elapsed_ms = (time.perf_counter() - start_time) * 1000.0
                             return PathEvaluationResult(
                                 path_id=input_data.path_id,
                                 status=FeasibilityStatus.UNKNOWN,
-                                unknown_rationale=f"MALFORMED_NULL_VALUE: Empty values list for '{pred.key}'",
+                                unknown_rationale=(
+                                    f"INVALID_NULL_VALUES_COUNT: Expected exactly 1 value for Null condition '{pred.key}', "
+                                    f"got {len(pred.values)}: {pred.values}"
+                                ),
                                 evaluated_hops=hop_idx,
                                 solver_duration_ms=elapsed_ms,
                                 diagnostic_metadata=diag,
@@ -983,10 +1004,7 @@ class RestrictedDeterministicConstraintEvaluator:
             # Construct IP witness
             if accumulated_static_subnets:
                 chosen_subnet = accumulated_static_subnets[0]
-                try:
-                    static_ip = str(next(chosen_subnet.hosts()))
-                except StopIteration:
-                    static_ip = str(chosen_subnet.network_address)
+                static_ip = select_witness_ip(chosen_subnet)
                 witness["aws:SourceIp"] = static_ip
                 for h_num in input_data.hops:
                     if h_num.hop not in pivot_rebound_hops:
@@ -995,10 +1013,7 @@ class RestrictedDeterministicConstraintEvaluator:
                 for hop_num, allowed_list in hop_allowed_cidrs.items():
                     if allowed_list:
                         chosen_subnet = allowed_list[0]
-                        try:
-                            chosen_ip = str(next(chosen_subnet.hosts()))
-                        except StopIteration:
-                            chosen_ip = str(chosen_subnet.network_address)
+                        chosen_ip = select_witness_ip(chosen_subnet)
                         witness[f"hop_{hop_num}_SourceIp"] = chosen_ip
                         if "aws:SourceIp" not in witness:
                             witness["aws:SourceIp"] = chosen_ip

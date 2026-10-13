@@ -16,7 +16,8 @@
 While the Prompt 5A remediation made substantial progress in addressing findings F1–F6 and strengthening the test suite (128 passing tests in 	ests/research/), independent execution and stress-testing of boundary conditions revealed **one confirmed correctness defect** and **one formal-contract specification gap**:
 
 1. **Defect F1.1 (High Severity — False UNKNOWN on /32 and /128 Host Networks):**  
-   In esearch/ccpf/rdce.py (lines 987 and 999), witness synthesis executes:
+   In 
+esearch/ccpf/rdce.py (lines 987 and 999), witness synthesis executes:
    `python
    static_ip = str(next(chosen_subnet.hosts()))
    `
@@ -30,7 +31,8 @@ ext(...) directly on a list raises:
    Consequently, **any single-host /32 allowed constraint or any subnet subtraction that leaves a /32 host block (e.g., /31 minus /32) erroneously collapses from SAT to UNKNOWN**.
 
 2. **Defect F3.1 (Low Severity — Multi-value Null List Silent Truncation):**  
-   In esearch/ccpf/rdce.py (line 645), the evaluator extracts only pred.values[0] for Null predicates. Under Contract §3.1.6, accepted values are strictly ["true"] or ["false"], and unrecognised formats must reject to UNKNOWN. An input like alues=["true", "false"] silently evaluates the first element rather than being conservatively rejected.
+   In 
+esearch/ccpf/rdce.py (line 645), the evaluator extracts only pred.values[0] for Null predicates. Under Contract §3.1.6, accepted values are strictly ["true"] or ["false"], and unrecognised formats must reject to UNKNOWN. An input like alues=["true", "false"] silently evaluates the first element rather than being conservatively rejected.
 
 Per the mandatory review instructions and STOP RULE:
 - Code modifications are **strictly prohibited** during this review phase.
@@ -158,7 +160,8 @@ python tests/fixtures/research_context_feasibility/validate_research_fixtures.py
 
 Before Prompt 6 integration design can be authorized, a short corrective patch (Prompt 5C) is required:
 
-1. **Fix F1.1 in esearch/ccpf/rdce.py:**
+1. **Fix F1.1 in 
+esearch/ccpf/rdce.py:**
    Replace:
    `python
    try:
@@ -175,7 +178,8 @@ Before Prompt 6 integration design can be authorized, a short corrective patch (
        static_ip = str(chosen_subnet.network_address)
    `
    (and similarly for line 999).
-2. **Fix F3.1 in esearch/ccpf/rdce.py:**
+2. **Fix F3.1 in 
+esearch/ccpf/rdce.py:**
    Enforce that pred.values for Null must have length exactly 1; reject longer lists to UNKNOWN.
 3. **Add Regression Tests:**
    Add unit tests specifically covering /32 allowed CIDRs, /31 minus /32 subtraction, IPv6 /128, and multi-value Null rejection.
@@ -192,3 +196,24 @@ Before Prompt 6 integration design can be authorized, a short corrective patch (
 ---
 
 *Report filed on 	emporal-context-dev. Awaiting researcher review and approval of Prompt 5C remediation.*
+
+
+## 6. Prompt 5C Remediation Disposition (F1.1 and F3.1 Resolved)
+
+Following the identification of Defect F1.1 and Gap F3.1 during Prompt 5B, targeted remediation was implemented and verified under Prompt 5C:
+
+### 6.1 F1.1 Remediation — Single-Host Witness Synthesis Helper
+- **Implementation:** Added `select_witness_ip` helper function in `research/ccpf/rdce.py`. It inspects the return type of `subnet.hosts()`, correctly unpacking both generator and list types (for `/32` IPv4 and `/128` IPv6 subnets), and falling back to `subnet.network_address` if no dedicated host iterator exists.
+- **Verification:** Tested on `10.0.0.1/32` (SAT, witness `10.0.0.1`), `2001:db8::1/128` (SAT, witness `2001:db8::1`), `/31` minus `/32` (SAT, witness `192.168.1.1`), exact `/32` denial (UNSAT), and multiple denied CIDRs covering allowed ranges (UNSAT).
+- **Status:** **FULLY RESOLVED**.
+
+### 6.2 F3.1 Remediation — Strict Null Condition Value Cardinality
+- **Implementation:** Updated the `Null` operator handling in `research/ccpf/rdce.py` to enforce `len(pred.values) == 1`. If `len != 1`, it immediately returns `UNKNOWN` with `INVALID_NULL_VALUES_COUNT` diagnostic rationale. Unrecognized value strings return `UNKNOWN` with `UNPARSEABLE_NULL_VALUE`.
+- **Verification:** Tested on multi-value lists `["true", "false"]` (UNKNOWN), three-value lists (UNKNOWN), empty lists `[]` (UNKNOWN), unrecognized strings `["maybe"]` (UNKNOWN), valid `["true"]` (SAT), valid `["false"]` (SAT), and predicate permutations.
+- **Status:** **FULLY RESOLVED**.
+
+### 6.3 Test Suite Expansion
+- Stage F tests added to `tests/research/test_semantic_validation.py`: 13 new regression tests (6 for F1.1, 7 for F3.1).
+- Total research suite: **141 passed / 141 total** in 0.81s (46 unit + 95 semantic).
+- Fixture validation: 6/6 research fixtures (CE1–CE6) deterministic validation verified.
+- **Revised Posture:** All identified defects from the Prompt 5 and Prompt 5B reviews are resolved.

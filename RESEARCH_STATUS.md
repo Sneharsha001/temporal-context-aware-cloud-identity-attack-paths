@@ -208,6 +208,22 @@ Independent code re-review of the remediated evaluator and test suite, followed 
 - **Determination:** **NOT READY — DEFECTS REMAIN**.
 - **Next Required Step:** Prompt 5C targeted remediation to resolve F1.1 and F3.1 with dedicated tests, followed by researcher sign-off before Prompt 6 integration design.
 
+
+
+### Prompt 5C Completion — Final Targeted Remediation (COMPLETED)
+- **Remediation Scope:** Outstanding findings F1.1 (single-host witness generation crash on /32 and /128) and F3.1 (multi-value Null condition silent truncation).
+- **Code Modifications:**
+  - `research/ccpf/rdce.py`: Added `select_witness_ip(subnet)` helper function safely extracting host addresses across generator and list types from `subnet.hosts()`, eliminating `TypeError` for `/32` IPv4 and `/128` IPv6 subnets.
+  - `research/ccpf/rdce.py`: Enforced strict `len(pred.values) == 1` cardinality for `Null` operators; lists with 0 or >1 values immediately return `UNKNOWN` with `INVALID_NULL_VALUES_COUNT` diagnostic rationale.
+- **Regression Tests Added (Stage F):**
+  - `tests/research/test_semantic_validation.py`: Added 13 new regression tests in `TestRemediationF1_1_SingleHostWitnessSynthesis` (6 tests) and `TestRemediationF3_1_NullValuesValidation` (7 tests).
+- **Authoritative Test Execution:**
+  - `tests/research/test_rdce.py`: 46 passed in 0.38s.
+  - `tests/research/test_semantic_validation.py`: 95 passed in 0.92s.
+  - `tests/research/` combined suite: **141 passed / 141 total** in 0.81s.
+  - `validate_research_fixtures.py`: 6/6 research fixtures (CE1–CE6) deterministic validation verified.
+- **Determination:** **READY FOR INTEGRATION DESIGN (PROMPT 6)**.
+
 ## Key Documents
 
 | Document | Location |
