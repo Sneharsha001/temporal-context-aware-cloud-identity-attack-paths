@@ -1,4 +1,4 @@
-﻿# ARF-RT Research Project — Current Status
+# ARF-RT Research Project — Current Status
 
 **Repository:** temporal-context-aware-cloud-identity-attack-paths
 **Branch:** temporal-context-dev
@@ -55,10 +55,11 @@ Identity Attack-Path Analysis (CCPF)
 **Detailed Specification:** [docs/CCPF_EVALUATOR_CONTRACT.md](docs/CCPF_EVALUATOR_CONTRACT.md)  
 
 ### Research Stage Sequence
-- **Prompt 3:** Isolated evaluator implementation — complete, subject to evidence.
-- **Prompt 4:** Semantic validation — complete, subject to evidence.
+- **Prompt 3:** Isolated evaluator implementation — complete.
+- **Prompt 4:** Semantic validation — complete.
 - **Prompt 5:** Independent code review — complete (findings recorded in `docs/CCPF_INDEPENDENT_REVIEW.md`).
-- **Remediation Phase:** Correct 6 identified soundness defects and strengthen test assertions.
+- **Prompt 5A:** Correctness remediation & test strengthening — complete (all 6 defects remediated, 128/128 tests passing).
+- **Independent Re-review:** Ready for reviewer evaluation.
 - **Prompt 6:** Integration design.
 - **Prompt 7:** Production integration after explicit authorization.
 - **Prompt 8:** Baseline-versus-CCPF experimental evaluation.
@@ -164,8 +165,29 @@ Identity Attack-Path Analysis (CCPF)
 - **Baseline Test History Clarification:** Reconciled that baseline test failures (910 passed, 2 failed vs 911 passed, 1 failed) are non-functional timing threshold assertion failures (`assert runtime < threshold`), not unhandled process timeouts or crashes. Functional test parity is 100%.
 - **Academic Posture Reaffirmed:** No full AWS IAM semantics, clock-based expiry, or Top-K search pruning theorems claimed.
 
-### Next Authorized Step (Remediation Phase)
-Remediation of confirmed evaluator defects and test suite assertion strengthening prior to Prompt 6 integration design.
+
+### Prompt 5A Completion — CCPF / RDCE Correctness Remediation (COMPLETED)
+- **Remediation Target:** `research/ccpf/rdce.py` (`RestrictedDeterministicConstraintEvaluator`).
+- **Test Suites:** `tests/research/test_rdce.py` (46 tests) and `tests/research/test_semantic_validation.py` (82 tests; 60 baseline + 22 Stage E counterexamples). Total: **128 passed / 128 total** in 0.57s.
+- **Confirmed Correctness Defects Remediation Summary (F1–F6):**
+  1. **F1 (NotIpAddress and Witness Soundness):** FIXED. Implemented CIDR interval subtraction `subtract_cidr_lists` using prefix decomposition. Detects complete partition denial across multiple CIDRs (e.g. `/24` covered by two `/25` subnets yields `UNSAT`). Generates constructive witness strictly in $S_{\text{allow}} \setminus \bigcup S_{\text{deny}}$. Verified by `TestRemediationF1` (4 tests).
+  2. **F2 (Bool Multi-Value Disjunction):** FIXED. Represented boolean states as explicit value sets (`hop_session_bool_domains`). Vacuous disjunction `Bool: ["true", "false"]` maintains domain `{True, False}` without fixing truth to True, allowing subsequent `false` or `true` predicates to intersect soundly. Verified by `TestRemediationF2` (4 tests).
+  3. **F3 (Predicate-Order Invariance & Null Commutativity):** FIXED. Hop-level `hop_null_assertions` tracked bidirectionally against all positive stores (`StringEquals`, `Bool`, `IpAddress`). Conjunction commutativity proven across all permutations of `[StringEquals, Null(true)]` (all `UNSAT`) and `[StringEquals, Null(false)]` (all `SAT`). Verified by `TestRemediationF3` (4 tests).
+  4. **F4 (AssumeRole Transition Handling):** FIXED. Transition boundary check evaluates predecessor hop (`prev_hop.edge_type == "sts:AssumeRole"` or explicit role transition). Caller principal and session scopes reset upon entering the target role hop. Preconditions are evaluated before postconditions so target role attached tags apply to subsequent hops. Verified by `TestRemediationF4` (3 tests).
+  5. **F5 (Mixed IPv4 and IPv6 Handling):** FIXED. Conservative fallback enforced: mixed IPv4 and IPv6 comparisons within predicates, across static origin hops, or in CIDR set operations uniformly return `UNKNOWN(unknown_rationale="UNSUPPORTED_MIXED_IP_VERSIONS: ...")` per contract Section 3.1, eliminating false UNSAT. Verified by `TestRemediationF5` (3 tests).
+  6. **F6 (String Constraints Across Supported Scopes):** FIXED. Full support implemented for `PRINCIPAL`, `SESSION`, `CONFIG`, and `REQUEST` scopes with independent scope stores and scope-specific diagnostics. Session strings persist across standard actions and reset upon AssumeRole. Config strings remain strictly hop-local. Verified by `TestRemediationF6` (4 tests).
+  7. **F7 (Strengthened Test Assertions):** FIXED. Replaced all weak `status != UNSAT` assertions in FM6 and FM7 with strict `status == SAT`, concrete witness IP inclusion/exclusion checks, and presence/absence validations. Added 22 new targeted counterexamples in Stage E.
+- **Fixture Verification Status (CE1–CE6):**
+  - All 6 research fixtures pass deterministic validation in `validate_research_fixtures.py`.
+  - Analytical classifications verified: CE1=SAT, CE2=UNSAT, CE3=SAT, CE4=UNKNOWN, CE5=UNKNOWN, CE6=UNSAT.
+- **Architectural Invariants Preserved:**
+  - Zero edits to production `arf_rt/` core engine code or `arf_rt/engine/paths.py`.
+  - Decoupled from Bayesian Q8 probability scores and Union-Find correlation logic.
+  - Baseline mirror in `C:\SNEHARSHA\ANTIGRAVITY\Artifact\ARF-RT-BASELINE` untouched.
+- **Determination:** **READY FOR INDEPENDENT RE-REVIEW**.
+
+### Next Authorized Step (Independent Re-Review & Prompt 6)
+Independent code re-review of the remediated evaluator and test suite, followed by Prompt 6 integration design upon authorization.
 
 ---
 

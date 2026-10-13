@@ -183,3 +183,36 @@ Before integration design (Prompt 6) can be initiated, the following remediation
 5. **Handle mixed IP versions:** Reject mixed IPv4/IPv6 comparisons under static origin to `UNKNOWN` per contract Section 3.1.
 6. **Support or reject session `StringEquals`:** Explicitly handle `ContextScope.SESSION` for `StringEquals` or reject to `UNKNOWN`.
 7. **Strengthen test assertions:** Add tests verifying witness validity against `NotIpAddress`, predicate order invariance, and disjunctive boolean cases.
+
+
+---
+
+## 5. Remediation Disposition and Verification Results (Prompt 5A)
+
+**Remediation Date:** 2026-10-13  
+**Remediation Target:** `research/ccpf/rdce.py` (`RestrictedDeterministicConstraintEvaluator`)  
+**Test Suite Extensions:** `tests/research/test_semantic_validation.py` (Stage E, 22 new counterexamples; strengthened FM6/FM7 assertions)  
+**Verification Outcome:** **ALL 6 CONFIRMED DEFECTS RESOLVED**; full research suite: **128 passed / 128 total** in 0.57s.  
+
+### Disposition Table
+
+| Finding ID | Classification | Severity | Summary Description | Remediation Disposition | Evidence & Verification Result |
+|---|---|---|---|---|---|
+| **F1** | Correctness Defect | High / Soundness | `NotIpAddress` witness invalidity & partition denial failure | **FIXED** | Implemented interval subtraction `subtract_cidr_lists` using prefix decomposition; returns `UNSAT` on full partition denial (`/24` covered by two `/25` subnets); selects witness IP in $S_{\text{allow}} \setminus \bigcup S_{\text{deny}}$. Verified by `TestRemediationF1` (4 tests) and strengthened FM6 test. |
+| **F2** | Correctness Defect | High / False Pruning | False-UNSAT on disjunctive `Bool: ["true", "false"]` | **FIXED** | Modeled boolean domains as sets (`hop_session_bool_domains`); vacuous disjunction `["true", "false"]` maintains `{True, False}` domain without fixing truth; subsequent `false` or `true` predicates intersect soundly. Verified by `TestRemediationF2` (4 tests). |
+| **F3** | Correctness Defect | High / Soundness | Order-dependent non-commutative conjunction (`Null` vs positive predicates) | **FIXED** | Maintained hop-level `hop_null_assertions`; enforced bidirectional cross-checks between `Null` and positive predicates across all scopes; verified that all predicate permutations yield identical `UNSAT` or `SAT` verdicts. Verified by `TestRemediationF3` (4 tests). |
+| **F4** | Correctness Defect | Medium-High / Soundness | Misindexed AssumeRole pivot check causing caller tag leakage | **FIXED** | Transition boundary check inspects predecessor hop (`prev_hop.edge_type == "sts:AssumeRole"` or explicit transition); resets caller session and principal scopes entering target role hop; preconditions evaluated before postconditions so target role attached tags apply to subsequent hops. Verified by `TestRemediationF4` (3 tests). |
+| **F5** | Correctness Defect | Medium / Contract | Unsound UNSAT on mixed IPv4/IPv6 comparisons | **FIXED** | Enforced contract Section 3.1 conservative fallback: mixed address families within predicates, across static origin hops, or in CIDR set operations explicitly return `UNKNOWN(unknown_rationale="UNSUPPORTED_MIXED_IP_VERSIONS: ...")` instead of false UNSAT. Verified by `TestRemediationF5` (3 tests). |
+| **F6** | Correctness Defect | Medium / Soundness | Silent dropping of non-principal `StringEquals` scopes | **FIXED** | Added full support for all four contract scopes: `PRINCIPAL`, `SESSION`, `CONFIG`, and `REQUEST`. Provided distinct scope isolation stores, cross-hop persistence for session strings across standard actions, and explicit scope diagnostics. Verified by `TestRemediationF6` (4 tests). |
+| **F7** | Missing Coverage | Medium / Validation | Weak test assertions masking evaluator soundness defects | **FIXED** | Replaced all `assert r.status != UNSAT` checks in FM6 and FM7 with strict `assert r.status == SAT`, concrete witness IP range checks, and key presence/absence checks. Added 22 targeted counterexample tests across Stage E. |
+| **F8** | Documentation | Informational | Baseline test history clarification | **DOCUMENTED** | Reconciled that baseline mirror and research workspace functional parity is 100% (625 unit, 250 golden, 175 focused pass bit-for-bit); the 2 failures were timing threshold assertions under Windows scheduler load. |
+
+---
+
+## 6. Revised Evaluator Determination
+
+### Status: **READY FOR INDEPENDENT RE-REVIEW**
+
+The isolated RDCE implementation has resolved all six identified correctness defects and strengthened all weak test assertions. The research suite now contains **128 deterministic unit and counterexample tests** (46 acceptance tests in `test_rdce.py` + 82 semantic and counterexample tests in `test_semantic_validation.py`), all passing 100%.
+
+The implementation remains strictly decoupled from production Best-First search (`arf_rt/engine/paths.py`), Bayesian Q8 probability scores, and the original baseline mirror (`ARF-RT-BASELINE`).

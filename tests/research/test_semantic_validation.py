@@ -532,9 +532,13 @@ class TestStageCFM6_MultiValueCombinedPredicates:
             ],
         )
         r = ev.evaluate(PathEvaluationInput(path_id="FM6-NOT-IP-NARROW", hops=[hop]))
-        assert r.status != FeasibilityStatus.UNSAT, (
-            f"FM6: NotIpAddress narrowing must not produce UNSAT; got {r.status}"
+        assert r.status == FeasibilityStatus.SAT, (
+            f"FM6: NotIpAddress narrowing must produce SAT; got {r.status}"
         )
+        assert r.witness and "aws:SourceIp" in r.witness, "FM6: Witness must provide aws:SourceIp"
+        ip = ipaddress.IPv4Address(r.witness["aws:SourceIp"])
+        assert ip in ipaddress.IPv4Network("10.0.0.0/8"), f"FM6: Witness {ip} must be inside allowed 10.0.0.0/8"
+        assert ip not in ipaddress.IPv4Network("10.0.0.0/24"), f"FM6: Witness {ip} must NOT be in forbidden 10.0.0.0/24"
 
     def test_stringequals_multi_value_not_unsat(self, ev):
         hop = HopContextSpec(
@@ -546,8 +550,11 @@ class TestStageCFM6_MultiValueCombinedPredicates:
             )],
         )
         r = ev.evaluate(PathEvaluationInput(path_id="FM6-STRINGEQ-MULTI", hops=[hop]))
-        assert r.status != FeasibilityStatus.UNSAT, (
-            f"FM6: StringEquals multi-value must not be UNSAT; got {r.status}"
+        assert r.status == FeasibilityStatus.SAT, (
+            f"FM6: StringEquals multi-value must produce SAT; got {r.status}"
+        )
+        assert r.witness and r.witness.get("sts:ExternalId") in ("partner-a-ext-id", "partner-b-ext-id"), (
+            f"FM6: Witness must satisfy StringEquals disjunction; got {r.witness}"
         )
 
 
@@ -563,8 +570,11 @@ class TestStageCFM7_NullPresenceConstraints:
             )],
         )
         r = ev.evaluate(PathEvaluationInput(path_id="FM7-NULL-TRUE", hops=[hop]))
-        assert r.status != FeasibilityStatus.UNSAT, (
-            f"FM7: Null(true) absent-key check must not be UNSAT; got {r.status}"
+        assert r.status == FeasibilityStatus.SAT, (
+            f"FM7: Null(true) absent-key check must be SAT; got {r.status}"
+        )
+        assert "aws:RequestTag/Environment" not in (r.witness or {}), (
+            f"FM7: Null(true) key must not appear in witness; got {r.witness}"
         )
 
     def test_null_false_with_stringequals_not_unsat(self, ev):
@@ -582,8 +592,11 @@ class TestStageCFM7_NullPresenceConstraints:
             ],
         )
         r = ev.evaluate(PathEvaluationInput(path_id="FM7-NULL-FALSE", hops=[hop]))
-        assert r.status != FeasibilityStatus.UNSAT, (
-            f"FM7: Null(false)+StringEquals must not be UNSAT; got {r.status}"
+        assert r.status == FeasibilityStatus.SAT, (
+            f"FM7: Null(false)+StringEquals must be SAT; got {r.status}"
+        )
+        assert r.witness and r.witness.get("aws:RequestTag/Owner") == "alice", (
+            f"FM7: Witness must contain Owner='alice'; got {r.witness}"
         )
 
 
@@ -759,3 +772,526 @@ class TestStageDCE5IsolatedFallback:
         r = evaluate_sidecar(CE5_SIDECAR)
         assert r.status == FeasibilityStatus.UNKNOWN
         assert r.status != FeasibilityStatus.UNSAT
+
+
+# ===========================================================================
+# STAGE E: Remediation regression and counterexample test suite (F1-F6)
+# ===========================================================================
+
+
+class TestRemediationF1_NotIpAddressWitnessAndPartitionDenial:
+    """F1: NotIpAddress exclusion soundness, full partition denial, and valid witness."""
+
+    def test_f1_two_25_subnets_covering_24_is_unsat(self, ev):
+        """A /24 allowed block completely covered by two /25 denied blocks must be UNSAT."""
+        hop = HopContextSpec(
+            hop=1, edge_type="s3:GetObject", src_node_id="Client", dst_node_id="Bucket",
+            required_context=[
+                ContextPredicate(
+                    key="aws:SourceIp", operator="IpAddress",
+                    values=["10.0.0.0/24"], scope=ContextScope.REQUEST,
+                ),
+                ContextPredicate(
+                    key="aws:SourceIp", operator="NotIpAddress",
+                    values=["10.0.0.0/25", "10.0.0.128/25"], scope=ContextScope.REQUEST,
+                ),
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F1-PARTITION-DENIAL", hops=[hop]))
+        assert r.status == FeasibilityStatus.UNSAT, (
+            f"F1: /24 covered by two /25 subnets must be UNSAT; got {r.status}"
+        )
+        assert r.witness is None
+        assert r.contradiction_rationale and "denied" in r.contradiction_rationale.lower()
+
+    def test_f1_exact_denied_equals_allowed_is_unsat(self, ev):
+        """Denied range identical to allowed range must be UNSAT."""
+        hop = HopContextSpec(
+            hop=1, edge_type="s3:GetObject", src_node_id="Client", dst_node_id="Bucket",
+            required_context=[
+                ContextPredicate(
+                    key="aws:SourceIp", operator="IpAddress",
+                    values=["10.0.0.0/24"], scope=ContextScope.REQUEST,
+                ),
+                ContextPredicate(
+                    key="aws:SourceIp", operator="NotIpAddress",
+                    values=["10.0.0.0/24"], scope=ContextScope.REQUEST,
+                ),
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F1-EXACT-DENIAL", hops=[hop]))
+        assert r.status == FeasibilityStatus.UNSAT
+        assert r.witness is None
+
+    def test_f1_witness_strictly_outside_denied_range(self, ev):
+        """Witness generated for allowed /16 minus denied /24 must be outside the /24."""
+        hop = HopContextSpec(
+            hop=1, edge_type="s3:GetObject", src_node_id="Client", dst_node_id="Bucket",
+            required_context=[
+                ContextPredicate(
+                    key="aws:SourceIp", operator="IpAddress",
+                    values=["10.0.0.0/16"], scope=ContextScope.REQUEST,
+                ),
+                ContextPredicate(
+                    key="aws:SourceIp", operator="NotIpAddress",
+                    values=["10.0.0.0/24"], scope=ContextScope.REQUEST,
+                ),
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F1-WITNESS-EXCLUSION", hops=[hop]))
+        assert r.status == FeasibilityStatus.SAT
+        assert r.witness and "aws:SourceIp" in r.witness
+        w_ip = ipaddress.ip_address(r.witness["aws:SourceIp"])
+        assert w_ip in ipaddress.ip_network("10.0.0.0/16"), f"Witness {w_ip} must be in 10.0.0.0/16"
+        assert w_ip not in ipaddress.ip_network("10.0.0.0/24"), f"Witness {w_ip} must NOT be in denied 10.0.0.0/24"
+
+    def test_f1_static_origin_cross_hop_partition_denial(self, ev):
+        """Under static origin, NotIpAddress on hop 2 denies allowed IP from hop 1."""
+        hop1 = HopContextSpec(
+            hop=1, edge_type="sts:AssumeRole", src_node_id="U", dst_node_id="R",
+            required_context=[
+                ContextPredicate(
+                    key="aws:SourceIp", operator="IpAddress",
+                    values=["192.168.1.0/24"], scope=ContextScope.REQUEST,
+                )
+            ],
+        )
+        hop2 = HopContextSpec(
+            hop=2, edge_type="s3:GetObject", src_node_id="R", dst_node_id="B",
+            required_context=[
+                ContextPredicate(
+                    key="aws:SourceIp", operator="NotIpAddress",
+                    values=["192.168.1.0/24"], scope=ContextScope.REQUEST,
+                )
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(
+            path_id="F1-STATIC-ORIGIN-DENIED", hops=[hop1, hop2],
+            scenario_assumptions={"static_origin_assumption": True},
+        ))
+        assert r.status == FeasibilityStatus.UNSAT
+
+
+class TestRemediationF2_BoolMultiValueSemantics:
+    """F2: Multi-value Bool disjunction semantics, vacuous cases, and non-contradiction."""
+
+    def test_f2_bool_vacuous_disjunction_with_false_is_sat(self, ev):
+        """Bool: ['true', 'false'] followed by Bool: ['false'] must evaluate to SAT."""
+        hop = HopContextSpec(
+            hop=1, edge_type="s3:GetObject", src_node_id="U", dst_node_id="B",
+            required_context=[
+                ContextPredicate(
+                    key="aws:MultiFactorAuthPresent", operator="Bool",
+                    values=["true", "false"], scope=ContextScope.SESSION,
+                ),
+                ContextPredicate(
+                    key="aws:MultiFactorAuthPresent", operator="Bool",
+                    values=["false"], scope=ContextScope.SESSION,
+                ),
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F2-BOOL-DISJUNCT-FALSE", hops=[hop]))
+        assert r.status == FeasibilityStatus.SAT, (
+            f"F2: ['true', 'false'] followed by ['false'] must be SAT; got {r.status}"
+        )
+        assert r.witness and r.witness.get("aws:MultiFactorAuthPresent") is False
+
+    def test_f2_bool_vacuous_disjunction_with_true_is_sat(self, ev):
+        """Bool: ['true', 'false'] followed by Bool: ['true'] must evaluate to SAT."""
+        hop = HopContextSpec(
+            hop=1, edge_type="s3:GetObject", src_node_id="U", dst_node_id="B",
+            required_context=[
+                ContextPredicate(
+                    key="aws:MultiFactorAuthPresent", operator="Bool",
+                    values=["true", "false"], scope=ContextScope.SESSION,
+                ),
+                ContextPredicate(
+                    key="aws:MultiFactorAuthPresent", operator="Bool",
+                    values=["true"], scope=ContextScope.SESSION,
+                ),
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F2-BOOL-DISJUNCT-TRUE", hops=[hop]))
+        assert r.status == FeasibilityStatus.SAT
+        assert r.witness and r.witness.get("aws:MultiFactorAuthPresent") is True
+
+    def test_f2_bool_order_invariance(self, ev):
+        """Bool: ['false'] followed by ['true', 'false'] must evaluate to SAT with False witness."""
+        hop = HopContextSpec(
+            hop=1, edge_type="s3:GetObject", src_node_id="U", dst_node_id="B",
+            required_context=[
+                ContextPredicate(
+                    key="aws:MultiFactorAuthPresent", operator="Bool",
+                    values=["false"], scope=ContextScope.SESSION,
+                ),
+                ContextPredicate(
+                    key="aws:MultiFactorAuthPresent", operator="Bool",
+                    values=["true", "false"], scope=ContextScope.SESSION,
+                ),
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F2-BOOL-ORDER-INV", hops=[hop]))
+        assert r.status == FeasibilityStatus.SAT
+        assert r.witness and r.witness.get("aws:MultiFactorAuthPresent") is False
+
+    def test_f2_bool_genuine_contradiction_is_unsat(self, ev):
+        """Bool: ['true'] and Bool: ['false'] must evaluate to UNSAT."""
+        hop = HopContextSpec(
+            hop=1, edge_type="s3:GetObject", src_node_id="U", dst_node_id="B",
+            required_context=[
+                ContextPredicate(
+                    key="aws:MultiFactorAuthPresent", operator="Bool",
+                    values=["true"], scope=ContextScope.SESSION,
+                ),
+                ContextPredicate(
+                    key="aws:MultiFactorAuthPresent", operator="Bool",
+                    values=["false"], scope=ContextScope.SESSION,
+                ),
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F2-BOOL-CONTRADICTION", hops=[hop]))
+        assert r.status == FeasibilityStatus.UNSAT
+        assert r.witness is None
+
+
+class TestRemediationF3_PredicateOrderInvariance:
+    """F3: Conjunction commutativity between Null and positive predicates."""
+
+    def test_f3_stringequals_then_null_true_is_unsat(self, ev):
+        """StringEquals followed by Null(true) on same key must be UNSAT."""
+        hop = HopContextSpec(
+            hop=1, edge_type="s3:GetObject", src_node_id="U", dst_node_id="B",
+            required_context=[
+                ContextPredicate(
+                    key="aws:PrincipalTag/Department", operator="StringEquals",
+                    values=["Engineering"], scope=ContextScope.PRINCIPAL,
+                ),
+                ContextPredicate(
+                    key="aws:PrincipalTag/Department", operator="Null",
+                    values=["true"], scope=ContextScope.PRINCIPAL,
+                ),
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F3-STRING-THEN-NULL", hops=[hop]))
+        assert r.status == FeasibilityStatus.UNSAT, (
+            f"F3: StringEquals then Null(true) must be UNSAT; got {r.status}"
+        )
+        assert r.witness is None
+
+    def test_f3_null_true_then_stringequals_is_unsat(self, ev):
+        """Null(true) followed by StringEquals on same key must be UNSAT."""
+        hop = HopContextSpec(
+            hop=1, edge_type="s3:GetObject", src_node_id="U", dst_node_id="B",
+            required_context=[
+                ContextPredicate(
+                    key="aws:PrincipalTag/Department", operator="Null",
+                    values=["true"], scope=ContextScope.PRINCIPAL,
+                ),
+                ContextPredicate(
+                    key="aws:PrincipalTag/Department", operator="StringEquals",
+                    values=["Engineering"], scope=ContextScope.PRINCIPAL,
+                ),
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F3-NULL-THEN-STRING", hops=[hop]))
+        assert r.status == FeasibilityStatus.UNSAT, (
+            f"F3: Null(true) then StringEquals must be UNSAT; got {r.status}"
+        )
+        assert r.witness is None
+
+    def test_f3_permutations_commutative_conjunction(self, ev):
+        """Test all permutations of [StringEquals, Null(true)] yield identical UNSAT verdict."""
+        import itertools
+        p1 = ContextPredicate(
+            key="aws:PrincipalTag/Team", operator="StringEquals",
+            values=["RedTeam"], scope=ContextScope.PRINCIPAL,
+        )
+        p2 = ContextPredicate(
+            key="aws:PrincipalTag/Team", operator="Null",
+            values=["true"], scope=ContextScope.PRINCIPAL,
+        )
+        for idx, perm in enumerate(itertools.permutations([p1, p2])):
+            hop = HopContextSpec(
+                hop=1, edge_type="s3:GetObject", src_node_id="U", dst_node_id="B",
+                required_context=list(perm),
+            )
+            r = ev.evaluate(PathEvaluationInput(path_id=f"F3-PERM-{idx}", hops=[hop]))
+            assert r.status == FeasibilityStatus.UNSAT, f"F3 permutation {idx} failed to yield UNSAT"
+
+    def test_f3_null_false_and_stringequals_order_invariance(self, ev):
+        """Both [Null(false), StringEquals] and [StringEquals, Null(false)] yield SAT with witness."""
+        import itertools
+        p1 = ContextPredicate(
+            key="aws:PrincipalTag/Team", operator="StringEquals",
+            values=["RedTeam"], scope=ContextScope.PRINCIPAL,
+        )
+        p2 = ContextPredicate(
+            key="aws:PrincipalTag/Team", operator="Null",
+            values=["false"], scope=ContextScope.PRINCIPAL,
+        )
+        for idx, perm in enumerate(itertools.permutations([p1, p2])):
+            hop = HopContextSpec(
+                hop=1, edge_type="s3:GetObject", src_node_id="U", dst_node_id="B",
+                required_context=list(perm),
+            )
+            r = ev.evaluate(PathEvaluationInput(path_id=f"F3-NULL-FALSE-PERM-{idx}", hops=[hop]))
+            assert r.status == FeasibilityStatus.SAT, f"F3 Null(false) permutation {idx} failed"
+            assert r.witness and r.witness.get("aws:PrincipalTag/Team") == "RedTeam"
+
+
+class TestRemediationF4_AssumeRoleTransitionLifecycle:
+    """F4: Correct indexing and scope resets across AssumeRole transitions."""
+
+    def test_f4_caller_principal_tags_do_not_survive_assumerole(self, ev):
+        """Caller tags on hop 1 do not survive sts:AssumeRole into hop 2."""
+        hop1 = HopContextSpec(
+            hop=1, edge_type="sts:AssumeRole", src_node_id="UserDev", dst_node_id="RoleAdmin",
+            required_context=[
+                ContextPredicate(
+                    key="aws:PrincipalTag/Department", operator="StringEquals",
+                    values=["Development"], scope=ContextScope.PRINCIPAL,
+                )
+            ],
+            produced_context=[
+                ProducedStateModification(
+                    key="active_principal", operation="SET",
+                    value="arn:aws:iam::123456789012:role/RoleAdmin",
+                ),
+                ProducedStateModification(
+                    key="aws:PrincipalTag/Department", operation="SET",
+                    value="Operations",
+                ),
+            ],
+        )
+        hop2 = HopContextSpec(
+            hop=2, edge_type="s3:GetObject", src_node_id="RoleAdmin", dst_node_id="Bucket",
+            required_context=[
+                ContextPredicate(
+                    key="aws:PrincipalTag/Department", operator="StringEquals",
+                    values=["Operations"], scope=ContextScope.PRINCIPAL,
+                )
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F4-ROLE-TAG-RESET-SAT", hops=[hop1, hop2]))
+        assert r.status == FeasibilityStatus.SAT, (
+            f"F4: Target role tag Operations should satisfy Hop 2; got {r.status}"
+        )
+        assert r.witness and r.witness.get("aws:PrincipalTag/Department") == "Operations"
+
+    def test_f4_caller_session_bool_resets_across_assumerole(self, ev):
+        """Caller session MFA on hop 1 does not survive into new role session on hop 2."""
+        hop1 = HopContextSpec(
+            hop=1, edge_type="sts:AssumeRole", src_node_id="MFAUser", dst_node_id="Role",
+            required_context=[
+                ContextPredicate(
+                    key="aws:MultiFactorAuthPresent", operator="Bool",
+                    values=["true"], scope=ContextScope.SESSION,
+                )
+            ],
+        )
+        hop2 = HopContextSpec(
+            hop=2, edge_type="s3:GetObject", src_node_id="Role", dst_node_id="Bucket",
+            required_context=[
+                ContextPredicate(
+                    key="aws:MultiFactorAuthPresent", operator="Bool",
+                    values=["false"], scope=ContextScope.SESSION,
+                )
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F4-MFA-SESSION-RESET", hops=[hop1, hop2]))
+        assert r.status == FeasibilityStatus.SAT, (
+            f"F4: Hop 2 fresh session requiring MFA=false must be SAT; got {r.status}"
+        )
+        assert r.witness and r.witness.get("hop_2_aws:MultiFactorAuthPresent") is False
+
+    def test_f4_three_hop_sequence_with_assumerole_pivot(self, ev):
+        """Hop 1 (standard) -> Hop 2 (AssumeRole) -> Hop 3 (standard): tag reset correctly placed."""
+        hop1 = HopContextSpec(
+            hop=1, edge_type="s3:ListBuckets", src_node_id="User", dst_node_id="S3",
+            required_context=[
+                ContextPredicate(
+                    key="aws:PrincipalTag/Dept", operator="StringEquals",
+                    values=["Dev"], scope=ContextScope.PRINCIPAL,
+                )
+            ],
+        )
+        hop2 = HopContextSpec(
+            hop=2, edge_type="sts:AssumeRole", src_node_id="User", dst_node_id="Role",
+            required_context=[],
+            produced_context=[
+                ProducedStateModification(
+                    key="aws:PrincipalTag/Dept", operation="SET", value="SecOps",
+                )
+            ],
+        )
+        hop3 = HopContextSpec(
+            hop=3, edge_type="secretsmanager:GetSecretValue", src_node_id="Role", dst_node_id="Secret",
+            required_context=[
+                ContextPredicate(
+                    key="aws:PrincipalTag/Dept", operator="StringEquals",
+                    values=["SecOps"], scope=ContextScope.PRINCIPAL,
+                )
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F4-3HOP-RESET", hops=[hop1, hop2, hop3]))
+        assert r.status == FeasibilityStatus.SAT, (
+            f"F4: Hop 3 inheriting SecOps tag must be SAT; got {r.status}"
+        )
+
+
+class TestRemediationF5_MixedIpVersionsFallback:
+    """F5: Conservative fallback to UNKNOWN on unsupported mixed IPv4 and IPv6."""
+
+    def test_f5_mixed_ipv4_ipv6_single_predicate_is_unknown(self, ev):
+        """Single predicate with both IPv4 and IPv6 values must yield UNKNOWN."""
+        hop = HopContextSpec(
+            hop=1, edge_type="s3:GetObject", src_node_id="Client", dst_node_id="Bucket",
+            required_context=[
+                ContextPredicate(
+                    key="aws:SourceIp", operator="IpAddress",
+                    values=["10.0.0.0/8", "2001:db8::/32"], scope=ContextScope.REQUEST,
+                )
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F5-MIXED-PRED-UNKNOWN", hops=[hop]))
+        assert r.status == FeasibilityStatus.UNKNOWN, (
+            f"F5: Mixed IPv4 and IPv6 must yield UNKNOWN; got {r.status}"
+        )
+        assert r.status != FeasibilityStatus.UNSAT
+        assert r.unknown_rationale and "UNSUPPORTED_MIXED_IP_VERSIONS" in r.unknown_rationale
+
+    def test_f5_mixed_ipv4_ipv6_static_origin_is_unknown(self, ev):
+        """Cross-hop static origin between IPv4 and IPv6 must yield UNKNOWN, not UNSAT."""
+        hop1 = HopContextSpec(
+            hop=1, edge_type="sts:AssumeRole", src_node_id="U", dst_node_id="R",
+            required_context=[
+                ContextPredicate(
+                    key="aws:SourceIp", operator="IpAddress",
+                    values=["10.0.0.0/8"], scope=ContextScope.REQUEST,
+                )
+            ],
+        )
+        hop2 = HopContextSpec(
+            hop=2, edge_type="s3:GetObject", src_node_id="R", dst_node_id="B",
+            required_context=[
+                ContextPredicate(
+                    key="aws:SourceIp", operator="IpAddress",
+                    values=["2001:db8::/32"], scope=ContextScope.REQUEST,
+                )
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(
+            path_id="F5-MIXED-STATIC-ORIGIN", hops=[hop1, hop2],
+            scenario_assumptions={"static_origin_assumption": True},
+        ))
+        assert r.status == FeasibilityStatus.UNKNOWN, (
+            f"F5: Mixed IP under static origin must yield UNKNOWN; got {r.status}"
+        )
+        assert r.status != FeasibilityStatus.UNSAT
+        assert r.unknown_rationale and "UNSUPPORTED_MIXED_IP_VERSIONS" in r.unknown_rationale
+
+    def test_f5_mixed_ipv4_ipv6_not_ip_is_unknown(self, ev):
+        """Allowed IPv4 with denied IPv6 must yield UNKNOWN."""
+        hop = HopContextSpec(
+            hop=1, edge_type="s3:GetObject", src_node_id="U", dst_node_id="B",
+            required_context=[
+                ContextPredicate(
+                    key="aws:SourceIp", operator="IpAddress",
+                    values=["10.0.0.0/8"], scope=ContextScope.REQUEST,
+                ),
+                ContextPredicate(
+                    key="aws:SourceIp", operator="NotIpAddress",
+                    values=["2001:db8::/32"], scope=ContextScope.REQUEST,
+                ),
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F5-MIXED-NOT-IP", hops=[hop]))
+        assert r.status == FeasibilityStatus.UNKNOWN
+        assert r.status != FeasibilityStatus.UNSAT
+
+
+class TestRemediationF6_StringScopesHandling:
+    """F6: StringEquals across all supported scopes (SESSION, CONFIG, PRINCIPAL, REQUEST)."""
+
+    def test_f6_session_scope_string_equals_consistent_is_sat(self, ev):
+        """StringEquals in SESSION scope produces SAT with valid session witness."""
+        hop = HopContextSpec(
+            hop=1, edge_type="sts:AssumeRole", src_node_id="U", dst_node_id="R",
+            required_context=[
+                ContextPredicate(
+                    key="aws:userid", operator="StringEquals",
+                    values=["AROAEXAMPLE:session1"], scope=ContextScope.SESSION,
+                )
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F6-SESSION-STRING-SAT", hops=[hop]))
+        assert r.status == FeasibilityStatus.SAT
+        assert r.witness and r.witness.get("aws:userid") == "AROAEXAMPLE:session1"
+
+    def test_f6_session_scope_string_equals_contradiction_is_unsat(self, ev):
+        """Contradictory StringEquals in SESSION scope on same hop yields UNSAT."""
+        hop = HopContextSpec(
+            hop=1, edge_type="sts:AssumeRole", src_node_id="U", dst_node_id="R",
+            required_context=[
+                ContextPredicate(
+                    key="aws:userid", operator="StringEquals",
+                    values=["AROAEXAMPLE:alice"], scope=ContextScope.SESSION,
+                ),
+                ContextPredicate(
+                    key="aws:userid", operator="StringEquals",
+                    values=["AROAEXAMPLE:bob"], scope=ContextScope.SESSION,
+                ),
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F6-SESSION-STRING-UNSAT", hops=[hop]))
+        assert r.status == FeasibilityStatus.UNSAT
+        assert r.witness is None
+        assert r.contradiction_rationale and "session" in r.contradiction_rationale.lower()
+
+    def test_f6_session_scope_persists_across_standard_actions(self, ev):
+        """Session string constraints persist across standard actions and clash if contradictory."""
+        hop1 = HopContextSpec(
+            hop=1, edge_type="s3:ListBuckets", src_node_id="U", dst_node_id="S3",
+            required_context=[
+                ContextPredicate(
+                    key="aws:PrincipalArn", operator="StringEquals",
+                    values=["arn:aws:iam::123456789012:role/RoleA"], scope=ContextScope.SESSION,
+                )
+            ],
+        )
+        hop2 = HopContextSpec(
+            hop=2, edge_type="s3:GetObject", src_node_id="S3", dst_node_id="Bucket",
+            required_context=[
+                ContextPredicate(
+                    key="aws:PrincipalArn", operator="StringEquals",
+                    values=["arn:aws:iam::123456789012:role/RoleB"], scope=ContextScope.SESSION,
+                )
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F6-SESSION-PERSIST-UNSAT", hops=[hop1, hop2]))
+        assert r.status == FeasibilityStatus.UNSAT
+        assert r.witness is None
+
+    def test_f6_config_scope_hop_local_does_not_clash_across_hops(self, ev):
+        """CONFIG scope (sts:ExternalId) is hop-local and does not contradict across hops."""
+        hop1 = HopContextSpec(
+            hop=1, edge_type="sts:AssumeRole", src_node_id="Client", dst_node_id="RoleA",
+            required_context=[
+                ContextPredicate(
+                    key="sts:ExternalId", operator="StringEquals",
+                    values=["PartnerA-Secret"], scope=ContextScope.CONFIG,
+                )
+            ],
+        )
+        hop2 = HopContextSpec(
+            hop=2, edge_type="sts:AssumeRole", src_node_id="RoleA", dst_node_id="RoleB",
+            required_context=[
+                ContextPredicate(
+                    key="sts:ExternalId", operator="StringEquals",
+                    values=["PartnerB-Secret"], scope=ContextScope.CONFIG,
+                )
+            ],
+        )
+        r = ev.evaluate(PathEvaluationInput(path_id="F6-CONFIG-HOP-LOCAL-SAT", hops=[hop1, hop2]))
+        assert r.status == FeasibilityStatus.SAT
+        assert r.witness is not None
