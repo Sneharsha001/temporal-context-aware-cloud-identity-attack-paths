@@ -15,10 +15,12 @@ This repository hosts active research extending ARF-RT with **Context-Conditione
 - **Current Status:**
   - **Prompt 3: Isolated evaluator implementation** — complete, subject to evidence (`research/ccpf/rdce.py`, 46 acceptance tests in `tests/research/test_rdce.py`).
   - **Prompt 4: Semantic validation** — complete, subject to evidence (`tests/research/test_semantic_validation.py`, 60 tests: Stage B [20 tests], Stage C 10 failure modes [35 tests], Stage D CE5 isolated fallback [5 tests]; 106 total research tests passing).
+  - **Prompt 5: Independent code review & soundness audit** — complete. **Determination: NOT READY — CORRECTNESS DEFECTS REMAIN** ([docs/CCPF_INDEPENDENT_REVIEW.md](docs/CCPF_INDEPENDENT_REVIEW.md)). Audit identified 6 confirmed correctness defects (false-UNSAT on boolean disjunctions and AssumeRole boundaries; false-SAT on predicate ordering, NotIpAddress partition denial, and session string dropping; non-satisfying witness generation). Remediation required before Prompt 6 integration design.
 - **Research Stage Sequence:**
   - Prompt 3: Isolated evaluator implementation — complete, subject to evidence.
   - Prompt 4: Semantic validation — complete, subject to evidence.
-  - Prompt 5: Independent code review.
+  - Prompt 5: Independent code review — complete (defects identified).
+  - Remediation Phase: Evaluator correctness and test assertion fixes.
   - Prompt 6: Integration design.
   - Prompt 7: Production integration after explicit authorization.
   - Prompt 8: Baseline-versus-CCPF experimental evaluation.
@@ -26,6 +28,7 @@ This repository hosts active research extending ARF-RT with **Context-Conditione
 - **Research Status & Gate Summary:** [RESEARCH_STATUS.md](RESEARCH_STATUS.md)
 - **Evaluator Interface Contract:** [docs/CCPF_EVALUATOR_CONTRACT.md](docs/CCPF_EVALUATOR_CONTRACT.md)
 - **Formal Design Gate:** [docs/CCPF_FORMAL_DESIGN_GATE.md](docs/CCPF_FORMAL_DESIGN_GATE.md)
+- **Independent Code Review Report:** [docs/CCPF_INDEPENDENT_REVIEW.md](docs/CCPF_INDEPENDENT_REVIEW.md)
 
 ---
 

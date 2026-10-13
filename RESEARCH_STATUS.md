@@ -28,6 +28,7 @@ Identity Attack-Path Analysis (CCPF)
 | Prompt 3 | Isolated Evaluator Implementation (RDCE) | COMPLETE (Subject to evidence) |
 | Prompt 4 | Semantic Validation & Counterexample Suite (CE1–CE6, FM1–FM10) | COMPLETE (Subject to evidence) |
 | Prompt 4A | Final Report Reconciliation & Stage Sequence Alignment | COMPLETE |
+| Prompt 5 | Independent Code Review & Soundness Audit | COMPLETE (Defects Identified; NOT READY) |
 
 ---
 
@@ -56,7 +57,8 @@ Identity Attack-Path Analysis (CCPF)
 ### Research Stage Sequence
 - **Prompt 3:** Isolated evaluator implementation — complete, subject to evidence.
 - **Prompt 4:** Semantic validation — complete, subject to evidence.
-- **Prompt 5:** Independent code review.
+- **Prompt 5:** Independent code review — complete (findings recorded in `docs/CCPF_INDEPENDENT_REVIEW.md`).
+- **Remediation Phase:** Correct 6 identified soundness defects and strengthen test assertions.
 - **Prompt 6:** Integration design.
 - **Prompt 7:** Production integration after explicit authorization.
 - **Prompt 8:** Baseline-versus-CCPF experimental evaluation.
@@ -149,8 +151,21 @@ Identity Attack-Path Analysis (CCPF)
 - **Baseline Production Suite:** Unchanged (910 passed, 2 pre-existing stress timeouts).
 - **Architectural Isolation:** Zero edits to arf_rt/, paths.py, correlation.py, or baseline mirror.
 
-### Next Authorized Step (Prompt 5)
-Independent code review of the isolated RDCE evaluator and research test suites.
+### Prompt 5 Completion — Independent Code Review & Soundness Audit (COMPLETED)
+- **Review Document:** [docs/CCPF_INDEPENDENT_REVIEW.md](docs/CCPF_INDEPENDENT_REVIEW.md)
+- **Determination:** **NOT READY — CORRECTNESS DEFECTS REMAIN**
+- **Confirmed Correctness Defects (6):**
+  1. *False-SAT & Non-Satisfying Witness on NotIpAddress Exclusion:* Witness generator picks `10.0.0.1` inside forbidden `/24` subnet; fails to detect complete partition denial across multiple CIDRs.
+  2. *False-UNSAT on Disjunctive Bool ["true", "false"]:* Treats vacuous disjunction as fixed True, falsely clashing with subsequent False requirements.
+  3. *Order-Dependent False-SAT on Null and Positive Predicates:* Swapping `Null: ["true"]` and `StringEquals` flips verdict between UNSAT and SAT (non-commutative conjunction).
+  4. *False-UNSAT Across AssumeRole Boundaries:* Boundary check misindexes hop sequence, copying caller principal tags to downstream assumed role session.
+  5. *Unsound UNSAT on Mixed IPv4/IPv6 Dual-Stack Comparisons:* Falsely returns UNSAT instead of contract-mandated UNKNOWN fallback.
+  6. *Silent Dropping of Non-Principal StringEquals Scopes:* Ignores `ContextScope.SESSION` constraints, returning SAT on direct contradictions.
+- **Baseline Test History Clarification:** Reconciled that baseline test failures (910 passed, 2 failed vs 911 passed, 1 failed) are non-functional timing threshold assertion failures (`assert runtime < threshold`), not unhandled process timeouts or crashes. Functional test parity is 100%.
+- **Academic Posture Reaffirmed:** No full AWS IAM semantics, clock-based expiry, or Top-K search pruning theorems claimed.
+
+### Next Authorized Step (Remediation Phase)
+Remediation of confirmed evaluator defects and test suite assertion strengthening prior to Prompt 6 integration design.
 
 ---
 
@@ -164,3 +179,4 @@ Independent code review of the isolated RDCE evaluator and research test suites.
 | Phase 17 Novelty Assessment | docs/PHASE17_RELATED_WORK_NOVELTY_ASSESSMENT.md |
 | Final Baseline Verification Report | verification/FINAL_BASELINE_VERIFICATION_REPORT.md |
 | Evidence Closeout Report | verification/EVIDENCE_CLOSEOUT_REPORT.md |
+| Independent Code Review Report | docs/CCPF_INDEPENDENT_REVIEW.md |
