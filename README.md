@@ -31,6 +31,7 @@ This repository hosts active research extending ARF-RT with **Context-Conditione
 - **Evaluator Interface Contract:** [docs/CCPF_EVALUATOR_CONTRACT.md](docs/CCPF_EVALUATOR_CONTRACT.md)
 - **Formal Design Gate:** [docs/CCPF_FORMAL_DESIGN_GATE.md](docs/CCPF_FORMAL_DESIGN_GATE.md)
 - **Independent Code Review Report:** [docs/CCPF_INDEPENDENT_REVIEW.md](docs/CCPF_INDEPENDENT_REVIEW.md)
+- **Independent Re-Review Report:** [docs/CCPF_RE_REVIEW.md](docs/CCPF_RE_REVIEW.md)
 
 ---
 

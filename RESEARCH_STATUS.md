@@ -191,6 +191,23 @@ Independent code re-review of the remediated evaluator and test suite, followed 
 
 ---
 
+
+
+### Prompt 5B Completion — Independent Re-Review After Remediation (COMPLETED)
+- **Reviewer Role:** Independent Cloud Security Researcher, Python Code Reviewer, and Formal-Constraint Reasoning Reviewer.
+- **Review Report:** [docs/CCPF_RE_REVIEW.md](docs/CCPF_RE_REVIEW.md).
+- **Evaluation Scope:** Independent verification of remediations F1–F6, test assertion quality (F7), stress-testing boundary cases (/31, /32, /128, overlapping CIDRs, multi-value Null).
+- **Authoritative Test Execution:**
+  - `tests/research/test_rdce.py`: 46 passed in 0.55s.
+  - `tests/research/test_semantic_validation.py`: 82 passed in 0.94s.
+  - `tests/research/` combined suite: 128 passed in 0.75s.
+  - `validate_research_fixtures.py`: 6/6 fixtures (CE1–CE6) passed deterministic structural validation.
+- **Independent Findings:**
+  1. **Defect F1.1 (High Severity — False UNKNOWN on /32 and /128 Host Subnets):** In `research/ccpf/rdce.py` (lines 987, 999), `next(chosen_subnet.hosts())` raises `TypeError: 'list' object is not an iterator` because `hosts()` on a `/32` IPv4 (or `/128` IPv6) network returns a list, not an iterator. Caught by outer handler and converted to UNKNOWN, erroneously marking feasible single-host paths as UNKNOWN.
+  2. **Defect F3.1 (Low Severity — Multi-value Null List Silent Truncation):** Multi-value Null lists (e.g. `['true', 'false']`) silently evaluate `values[0]` rather than being rejected to UNKNOWN per Contract Section 3.1.6.
+- **Determination:** **NOT READY — DEFECTS REMAIN**.
+- **Next Required Step:** Prompt 5C targeted remediation to resolve F1.1 and F3.1 with dedicated tests, followed by researcher sign-off before Prompt 6 integration design.
+
 ## Key Documents
 
 | Document | Location |
@@ -202,3 +219,4 @@ Independent code re-review of the remediated evaluator and test suite, followed 
 | Final Baseline Verification Report | verification/FINAL_BASELINE_VERIFICATION_REPORT.md |
 | Evidence Closeout Report | verification/EVIDENCE_CLOSEOUT_REPORT.md |
 | Independent Code Review Report | docs/CCPF_INDEPENDENT_REVIEW.md |
+| Independent Re-Review Report | docs/CCPF_RE_REVIEW.md |
