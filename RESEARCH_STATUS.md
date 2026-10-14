@@ -273,3 +273,19 @@ Independent code re-review of the remediated evaluator and test suite, followed 
   - Top-K search mechanics corrected: `max_depth` verified as hard per-path cutoff; `max_expansions` does not exist in `search_top_k` (claims retracted).
   - Scope of safe single-hop pruning formally bounded to single-statement verified conjunctions.
 - **Readiness Determination:** **NOT READY FOR UNRESTRICTED PRODUCTION INTEGRATION**. Permitted scope for Prompt 7 strictly restricted to Mode A (passive audit logging without pruning) or Mode B (gated single-condition active pruning).
+
+
+### Prompt 6B Completion -- Final CCPF Pruning Authorization Correction (PASSIVE AUDIT ONLY)
+- **Phase:** Documentation-Only Pruning Boundary Resolution (no production code modified).
+- **Audited Commit:** `854131f` on `temporal-context-dev`.
+- **Artifact:** `docs/CCPF_INTEGRATION_DESIGN.md` (re-evaluated and updated).
+- **Core Findings on Stored Condition Counts:**
+  - Proved from `trust_policy_parser.py` that a stored database condition count of 1 (`count == 1`) does **NOT** prove a single-statement policy.
+  - An unconditional alternative Allow statement (lacking conditions) emits zero condition records; deduplication on `condition_type` drops alternative conditional statements. In both cases, an edge may possess `count == 1` while alternative Allow paths exist.
+  - Active pruning based on condition counts (Mode B) is mathematically unsound and risks false UNSATs.
+- **Revised Authorization Boundary:**
+  - **Mode A (Passive Audit with ZERO Pruning) is the ONLY currently approved integration mode for Prompt 7.**
+  - **Mode B (Active Pruning) is explicitly DEFERRED** until source-level policy statement provenance, alternative paths, and effect semantics can be verified from schema updates.
+  - Incomplete or ambiguous metadata must never authorize pruning.
+  - RDCE remains completely isolated from Q8 probability scoring (no probability multipliers).
+- **Determination:** READY FOR PROMPT 7 IMPLEMENTATION IN PASSIVE AUDIT MODE ONLY.

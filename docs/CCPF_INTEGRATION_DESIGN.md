@@ -1,11 +1,11 @@
 ﻿# CCPF Integration Design & Correctness Audit
-## Prompt 6 / 6A -- Verified Integration Design & Soundness Specification
+## Prompt 6 / 6A / 6B -- Verified Integration Design & Soundness Specification
 
 **Document:** `docs/CCPF_INTEGRATION_DESIGN.md`
 **Branch:** `temporal-context-dev`
 **Date:** 2026-10-14
-**Audited Commit:** `6fb9ec0`
-**Status:** DESIGN AUDIT & SOUNDNESS SPECIFICATION -- NOT READY FOR UNRESTRICTED PRODUCTION INTEGRATION
+**Audited Commit:** `854131f`
+**Status:** DESIGN AUDIT & SOUNDNESS SPECIFICATION -- MODE A (PASSIVE AUDIT ONLY) APPROVED; ACTIVE PRUNING DEFERRED
 
 > **STOP RULE:** This document records an architectural design and correctness audit only.
 > In strict compliance with research safety constraints, no production code under `arf_rt/` has
@@ -18,16 +18,13 @@
 
 This document provides a source-grounded correctness audit and revised integration design for connecting the isolated **Restricted Deterministic Constraint Evaluator (RDCE)** (`research/ccpf/rdce.py`) into the **ARF-RT Best-First search engine** (`arf_rt/engine/paths.py`).
 
-Prompt 6A resolves contract inconsistencies, establishes policy-mapping soundness across IAM statement structures, corrects search-bound and Top-K claims, and defines the exact boundaries under which single-hop pruning is sound.
-
-**Scope:**
-1. Grounded inspection of real production source code, SQLite schemas, parsers, and RDCE contracts.
-2. Reconciliation of the UNSAT contract, eliminating invented fields (`confidence_q` on result, `rationale` field naming) and removing unjustified numeric confidence thresholds.
-3. Rigorous audit of IAM trust policy semantics: disjunctive statements, intra-statement conjunctions, multi-valued conditions, and missing statement identifiers (`Sid`).
-4. Formal delineation of safe single-hop pruning vs multi-hop prefix feasibility.
-5. Correction of Top-K search mechanics: distinguishing `max_depth` from search termination conditions (`len(results) < k`) and eliminating non-existent `max_expansions` references.
-6. Staged validation plan with empirical go/no-go criteria.
-7. Final readiness determination based on evidence.
+Following Prompt 6A and Prompt 6B audits, this specification:
+1. Reconciles the evaluator contract with actual source code, eliminating invented fields and arbitrary confidence thresholds.
+2. Audits IAM trust policy semantics, proving that stored condition counts cannot guarantee a single-statement policy and that flattening statement alternatives causes false UNSAT.
+3. Formally establishes the integration readiness boundary: **Mode A (passive audit with zero pruning) is the ONLY approved integration mode for Prompt 7**.
+4. Defers all active pruning (Mode B) until source-level policy statement provenance, alternative Allow paths, and relevant effect semantics are preserved in the schema.
+5. Corrects Top-K search mechanics, distinguishing `max_depth` from termination conditions and retracting invalid `max_expansions` claims.
+6. Preserves complete probability isolation (no probability multipliers, bit-identical scores for surviving candidates).
 
 ---
 
@@ -37,11 +34,11 @@ Prompt 6A resolves contract inconsistencies, establishes policy-mapping soundnes
 |---|---|---|
 | **Repository Path** | `C:\SNEHARSHA\ANTIGRAVITY\ARF-RT-TEMPORAL` | Local workspace |
 | **Active Branch** | `temporal-context-dev` | `git status --short --branch` |
-| **Audited HEAD** | `6fb9ec0` | `git log -n 1 --oneline` |
+| **Audited HEAD** | `854131f` | `git log -n 1 --oneline` |
 | **Upstream Sync** | Synchronized with `origin/temporal-context-dev` | `git status` |
 | **Working Tree** | Clean (untracked IDE `.agents/` preserved) | `git status` |
 | **Protected Mirrors** | `main`, `master`, `ARF-RT-BASELINE` untouched | Repository safety rule |
-| **Research Test Suite** | **141 passed / 141 total** (1.12s) | `tests/research/` |
+| **Research Test Suite** | **141 passed / 141 total** (0.84s) | `tests/research/` |
 | **Engine Unit Tests** | **625 passed / 625 total** (33.49s) | `tests/unit/` |
 | **Prompt 5D Verdict** | READY FOR INTEGRATION DESIGN | `docs/CCPF_RE_REVIEW.md` Section 7 |
 
@@ -59,6 +56,13 @@ class FeasibilityStatus(str, Enum):
     UNSAT = "UNSAT"
     UNKNOWN = "UNKNOWN"
 
+class ContextScope(str, Enum):
+    REQUEST = "request"        # Per-API-call origin (e.g., aws:SourceIp)
+    SESSION = "session"        # Bound to active STS token set (e.g., aws:MultiFactorAuthPresent)
+    PRINCIPAL = "principal"    # Bound to active IAM entity (e.g., aws:PrincipalTag/<key>)
+    CONFIG = "config"          # Hop-local request parameter (e.g., sts:ExternalId)
+    UNKNOWN = "unknown"        # Unmapped or unclassified scope (yields FeasibilityStatus.UNKNOWN)
+
 @dataclass(frozen=True)
 class PathEvaluationResult:
     path_id: str
@@ -74,26 +78,21 @@ class PathEvaluationResult:
 
 ### 3.2 Resolution of Contract Inconsistencies
 
-1. **`confidence_q` Field Removed from Result:**
+1. **`confidence_q` Removed from Result:**
    - **Finding:** `confidence_q` does **not** exist in `PathEvaluationResult` or `rdce.py`. It exists solely in ARF-RT's SQLite `constraints` table as a Bayesian belief prior (e.g., 800 for auto-derived trust conditions).
    - **Correction:** The integration design must never look for or assert `confidence_q` on `PathEvaluationResult`.
 
 2. **Removal of the `confidence_q >= 500` Rule:**
    - **Finding:** The Prompt 6 draft proposed: *"Constraint is VALIDATED with confidence_q >= 500 before trusting UNSAT."*
-   - **Correction:** This rule is **removed**. A soft Bayesian probability score (500 = 0.50) cannot substitute for a formal proof of logical contradiction. RDCE is a deterministic, tri-state logical evaluator. If a constraint is formally proven UNSAT within the safe fragment, its mathematical infeasibility does not depend on a numerical prior. Conversely, if constraint provenance or policy structure is unverified, a high confidence score (800) does **not** prevent false UNSAT.
+   - **Correction:** This rule is **removed**. A soft Bayesian probability score (500 = 0.50) cannot substitute for a formal proof of logical contradiction. RDCE is a deterministic, tri-state logical evaluator. If a constraint contradiction is formally proven within the safe fragment, its mathematical infeasibility does not depend on a numerical prior. Conversely, if constraint provenance or policy structure is unverified, a high confidence score (800) does **not** prevent false UNSAT.
 
 3. **Field Naming Correction:**
-   - The generic field `rationale` referenced in Prompt 6 does not exist. The actual fields are `contradiction_rationale: Optional[str]` (populated on UNSAT) and `unknown_rationale: Optional[str]` (populated on UNKNOWN).
+   - The generic field `rationale` referenced in Prompt 6 does not exist. The actual contract fields are `contradiction_rationale: Optional[str]` (populated on UNSAT) and `unknown_rationale: Optional[str]` (populated on UNKNOWN).
 
-### 3.3 Strict Prerequisites for Trusting an UNSAT Result
-
-An expansion may be pruned on `UNSAT` **only** when all of the following conditions are satisfied:
-1. `result.status == FeasibilityStatus.UNSAT`
-2. `result.timeout_occurred is False`
-3. `result.contradiction_rationale is not None` and non-empty.
-4. **All** evaluated predicates belong strictly to RDCE's supported operator fragment (`IpAddress`, `NotIpAddress`, `StringEquals`, `StringLike` without wildcards, `Bool`, `Null`).
-5. **Semantic Conjunction Precondition:** The evaluated constraints are proven to form a pure logical **conjunction** (originating within a single policy statement), OR the complete disjunction of statements has been evaluated and proved unsatisfiable across all branches.
-6. If any precondition fails, or if constraint grouping is ambiguous, the result **must** be conservatively demoted to `UNKNOWN` and **must not prune**.
+4. **Distinction Between Existing and Proposed Types:**
+   - **Existing Production Types (`arf_rt/`):** `NodeInput`, `EdgeInput`, `ConstraintInput`, `search_top_k`.
+   - **Existing Research Types (`research/ccpf/rdce.py`):** `ContextScope`, `ContextPredicate`, `HopContextSpec`, `ProducedStateModification`, `TransitionRelation`, `PathEvaluationInput`, `PathEvaluationResult`, `FeasibilityStatus`, `RestrictedDeterministicConstraintEvaluator`.
+   - **Proposed Future Adapter Components (`arf_rt/ccpf_bridge.py`):** `infer_scope(condition_key) -> ContextScope`, `build_constraint_index(conn) -> dict`, `build_hop_spec(...) -> HopContextSpec`, `evaluate_single_hop(...) -> PathEvaluationResult`.
 
 ---
 
@@ -155,10 +154,15 @@ A line-by-line audit of `parse_trust_conditions` and `resolve_trust_constraints`
      `if ckey not in constraints: constraints[ckey] = ...`
    - If Statement 1 and Statement 2 both contain `SOURCE_IP` conditions with different CIDRs, Statement 2's condition is **silently dropped**!
 
-3. **Explicit Deny Statements Ignored:**
-   - Statements with `Effect == "Deny"` are skipped entirely by the parser. Any explicit Deny constraint (which should take precedence and render an attack path impossible) is absent from the graph.
+3. **Absence of Condition Records for Unconditional Alternatives:**
+   - If Statement 1 has a condition (e.g., `aws:SourceIp in 10.0.0.0/24`) and Statement 2 has **no condition** (e.g., allowing an administrative backup principal unconditionally), Statement 2 produces **zero** condition records.
+   - The database edge will therefore have **exactly one attached condition**, creating the false appearance of a single-statement policy, even though the role is unconditionally assumable via Statement 2!
 
-4. **Multi-Valued Condition Keys:**
+4. **Explicit Deny Statements:**
+   - Statements with `Effect == "Deny"` are skipped entirely by the parser.
+   - Note: An explicit Deny statement does **not** automatically make an entire attack path infeasible in all contexts. In AWS IAM, a Deny statement with a condition applies only when its condition evaluates to true (e.g., deny if `aws:MultiFactorAuthPresent == "false"` does not deny when MFA is present). Because Deny statements are not parsed, ARF-RT neither accounts for them nor evaluates their conditions.
+
+5. **Multi-Valued Condition Keys:**
    - In IAM, multiple values for a single key within an operator evaluate with logical **OR** (e.g., `StringEquals: {"aws:PrincipalTag/Dept": ["Eng", "Sec"]}`).
    - RDCE correctly supports set membership for `StringEquals` and CIDR unions for `IpAddress`, but enforces strict single-value cardinality for `Null`.
 
@@ -182,45 +186,50 @@ A line-by-line audit of `parse_trust_conditions` and `resolve_trust_constraints`
 
 ### 5.3 Source-Grounded Condition Key Mapping Table
 
-| Condition Key in DB | Scope | RDCE Operator | Value Representation | RDCE Supported? | Mapping Status / Limitations |
+| Condition Key in DB | Scope (`ContextScope`) | RDCE Operator | Value Representation | RDCE Supported? | Mapping Status / Limitations |
 |---|---|---|---|---|---|
 | `aws:sourceip` | `REQUEST` | `IpAddress`, `NotIpAddress` | CIDR string list | **YES** | Supported. Multi-CIDR is OR. |
 | `aws:principaltag/<key>` | `PRINCIPAL` | `StringEquals`, `StringLike` (no wildcards) | String list | **YES** | Supported. Multi-value is OR. |
 | `aws:multifactorauthpresent` | `SESSION` | `Bool` | `["true"]`, `["false"]`, `["0"]`, `["1"]` | **YES** | Supported. |
 | `sts:externalid` | `CONFIG` | `StringEquals` | String list | **YES** | Supported hop-locally. |
-| `aws:sourcevpc` | `REQUEST` | N/A | VPC ID list | **NO** | Unsupported by RDCE. Must yield `UNKNOWN`. |
-| `aws:sourcevpce` | `REQUEST` | N/A | VPCE ID list | **NO** | Unsupported by RDCE. Must yield `UNKNOWN`. |
-| `aws:principalorgid` | `PRINCIPAL` | N/A | Org ID string | **NO** | Unsupported by RDCE. Must yield `UNKNOWN`. |
-| `aws:principalorgpaths` | `PRINCIPAL` | N/A | Org path string | **NO** | Unsupported by RDCE. Must yield `UNKNOWN`. |
-| `sts:rolesessionname` | `SESSION` | N/A | Session name | **NO** | Unsupported by RDCE. Must yield `UNKNOWN`. |
-| `aws:multifactorauthage` | `SESSION` | N/A | Numeric seconds | **NO** | Unsupported by RDCE. Must yield `UNKNOWN`. |
-| `aws:requesttag/<key>` | `REQUEST` | N/A | String list | **NO** | Unsupported by RDCE. Must yield `UNKNOWN`. |
-| `aws:tagkeys` | `REQUEST` | N/A | Tag key list | **NO** | Unsupported by RDCE. Must yield `UNKNOWN`. |
+| `aws:sourcevpc` | `UNKNOWN` | N/A | VPC ID list | **NO** | Unsupported by RDCE. Yields `ContextScope.UNKNOWN` -> `UNKNOWN`. |
+| `aws:sourcevpce` | `UNKNOWN` | N/A | VPCE ID list | **NO** | Unsupported by RDCE. Yields `ContextScope.UNKNOWN` -> `UNKNOWN`. |
+| `aws:principalorgid` | `UNKNOWN` | N/A | Org ID string | **NO** | Unsupported by RDCE. Yields `ContextScope.UNKNOWN` -> `UNKNOWN`. |
+| `aws:principalorgpaths` | `UNKNOWN` | N/A | Org path string | **NO** | Unsupported by RDCE. Yields `ContextScope.UNKNOWN` -> `UNKNOWN`. |
+| `sts:rolesessionname` | `UNKNOWN` | N/A | Session name | **NO** | Unsupported by RDCE. Yields `ContextScope.UNKNOWN` -> `UNKNOWN`. |
+| `aws:multifactorauthage` | `UNKNOWN` | N/A | Numeric seconds | **NO** | Unsupported by RDCE. Yields `ContextScope.UNKNOWN` -> `UNKNOWN`. |
+| `aws:requesttag/<key>` | `UNKNOWN` | N/A | String list | **NO** | Unsupported by RDCE. Yields `ContextScope.UNKNOWN` -> `UNKNOWN`. |
+| `aws:tagkeys` | `UNKNOWN` | N/A | Tag key list | **NO** | Unsupported by RDCE. Yields `ContextScope.UNKNOWN` -> `UNKNOWN`. |
+
+*Note on `ContextScope.UNKNOWN`:* In `research/ccpf/rdce.py:ContextScope`, `UNKNOWN = "unknown"` is an actual enum member. Lines 122-131 of `rdce.py` explicitly check `if scope == ContextScope.UNKNOWN:` and reject the evaluation with `FeasibilityStatus.UNKNOWN` and rationale `"UNSUPPORTED_OR_UNKNOWN_SCOPE"`. Therefore, mapping unsupported keys to `ContextScope.UNKNOWN` in the bridge provides a fully safe, native fallback without inventing any new production API.
 
 ---
 
-## 6. Scope of Safe Single-Hop Pruning
+## 6. Re-Evaluation of Pruning Authorization & Invalidation of Mode B
 
-### 6.1 Sound Pruning Boundary
+### 6.1 Why Stored Condition Counts Cannot Authorize Pruning
 
-Given the architectural gap in `trust_policy_parser.py`, under what conditions is single-hop pruning mathematically sound?
+The Prompt 6A draft proposed a restricted "Mode B" that would permit active pruning if an edge possessed "exactly one" attached trust condition. Prompt 6B re-evaluated this rule against the actual parser implementation:
 
-**Soundness Theorem (Local Contradiction):**
-Single-hop pruning of an edge expansion (u, v) is sound **if and only if**:
-1. **Single-Statement Conjunction Guarantee:** The edge possesses either:
-   - Exactly **one** active trust condition, OR
-   - Multiple conditions proven to originate from the **same statement block** in the source policy.
-2. **Supported Operator & Scope:** All conditions belong strictly to the supported fragment in Section 5.3.
-3. **No Unmodeled Disjunction:** There are no alternative Allow statements for the role that lack conditions.
-4. **Deterministic Clash:** RDCE returns `status = UNSAT` with `timeout_occurred == False` and a valid `contradiction_rationale` (e.g., self-contradictory CIDR restriction or contradiction with explicit scenario assumptions).
+1. **Unconditional Alternatives:** If an IAM policy has Statement 1 with a condition and Statement 2 without a condition, `trust_policy_parser.py` emits only Statement 1's condition. The database records exactly 1 condition for the edge, but the policy contains an unconditional alternative Allow statement!
+2. **Deduplication Collisions:** If an IAM policy has two separate Allow statements with conditions of the same `condition_type` (e.g., different CIDRs), `resolve_trust_constraints` discards the second condition during deduplication. The database records exactly 1 condition, but the source policy contained alternative conditional statements!
+3. **Unrepresented Denies:** Deny statements with specific conditions are completely omitted.
 
-### 6.2 Pruning Policy When Metadata Is Incomplete
+**Core Finding:**
+> **A stored condition count (`count == 1`) does NOT prove that the source policy contains only one statement, nor that there are no unrepresented alternative Allow statements.**
+> Equating stored condition count with verified single-statement policy structure is mathematically unsound and risks false UNSAT pruning.
 
-When an edge targets a role with:
-- Multiple conditions whose statement grouping is unknown, OR
-- Any unsupported condition key (`aws:SourceVpc`, `aws:PrincipalOrgID`, etc.), OR
-- An unmodeled policy statement,
-the adapter **MUST NOT PRUNE**. The verdict must be treated as **UNKNOWN (conservative passthrough)**.
+### 6.2 Strict Pruning Soundness Rule
+
+Active pruning of an edge expansion is mathematically sound **only if** the integration can prove from verified source-level policy metadata that:
+1. All conditions evaluated form a genuine intra-statement conjunction ($C_1 \land C_2 \dots$).
+2. No alternative Allow statements exist in the source policy (or all alternatives have been simultaneously evaluated and proved contradictory).
+3. The conditions belong to RDCE's safe supported fragment.
+4. The clash rationale is deterministic and `timeout_occurred == False`.
+
+Because the current ARF-RT SQLite schema and `trust_policy_parser.py` do **not** preserve statement IDs or statement grouping:
+- **Active pruning (Mode B) CANNOT be justified in the current repository state and is DEFERRED.**
+- Incomplete or ambiguous policy metadata must **never** authorize pruning.
 
 ---
 
@@ -230,7 +239,7 @@ the adapter **MUST NOT PRUNE**. The verdict must be treated as **UNKNOWN (conser
 
 ARF-RT's Top-K search is a Best-First search over path probabilities:
 - **Priority Key:** `(-p_worst_q8, path_length, edge_id_seq_str)`
-- **Candidate Eligibility:** Sound UNSAT pruning prevents logically impossible neighbor expansions from entering the heap.
+- **Candidate Eligibility:** In passive audit mode, candidate eligibility is 100% identical to baseline. If active pruning is enabled in the future, sound UNSAT pruning would prevent logically impossible neighbor expansions from entering the heap.
 - **Score Invariance (PI-1 to PI-4):**
   - Logical feasibility evaluation does not alter Bayesian probability scores.
   - For every candidate path P that is expanded and added to the heap, p_worst_q8(P) and p_best_q8(P) are **bit-identical** to the unguided baseline.
@@ -270,8 +279,9 @@ ARF-RT's Top-K search is a Best-First search over path probabilities:
 - On unannotated privilege graphs or with `ARF_CCPF_GUARD=0`, execute `search_top_k`.
 - Assert: Generated paths, probabilities, and rankings match baseline byte-for-byte.
 
-### Stage 4: Top-K Replacement Verification
-- In a scenario with M infeasible paths in baseline Top-K, verify that the guided search replaces exactly M infeasible paths with the next highest-scoring feasible candidates.
+### Stage 4: Passive Audit Log Validation
+- In passive mode (`ARF_CCPF_GUARD=1`), assert that verdicts and rationales are logged correctly for all expanded edges.
+- Assert that heap size, results, and execution path remain identical to baseline (zero pruning).
 
 ### Stage 5: Efficiency Benchmarking
 - Measure per-hop RDCE evaluation latency.
@@ -281,27 +291,26 @@ ARF-RT's Top-K search is a Best-First search over path probabilities:
 
 ## 9. Final Readiness Determination & Evidential Recommendation
 
-### 9.1 Readiness Finding: NOT READY FOR UNRESTRICTED PRODUCTION INTEGRATION
+### 9.1 Readiness Finding: MODE A (PASSIVE AUDIT ONLY) APPROVED; ACTIVE PRUNING DEFERRED
 
-The Prompt 6A correctness audit confirms:
-1. **Blocking Architectural Gap:** `trust_policy_parser.py` flattens alternative IAM statements into a single unindexed constraint list, discarding `StatementId` and `Effect`. An unrestricted bridge evaluating all edge constraints as a conjunction would generate **false UNSAT** and discard valid attack paths.
-2. **Missing Field Gaps:** `edge_type` is omitted from the search query in `paths.py` (Gap G1), and `ProducedStateModification` has no database representation (Gap G3).
+The Prompt 6A and 6B correctness audits confirm:
+1. **Architectural Gap:** `trust_policy_parser.py` flattens alternative IAM statements into a single unindexed constraint list, discarding `StatementId` and `Effect`. Unconditional alternative statements emit zero condition records, meaning an edge with a stored condition count of 1 may be unconditionally allowed.
+2. **Pruning Soundness Precondition Unmet:** A count of stored conditions cannot substitute for verified statement structure. Consequently, active pruning (Mode B) cannot guarantee zero false UNSATs in the current repository state.
 
-### 9.2 Authorized Scopes for Prompt 7
+### 9.2 Authorized Scope for Prompt 7
 
-Production integration is authorized **only under one of the following two safe operating modes**:
+Production integration is authorized **exclusively under Mode A**:
 
-1. **Mode A (Passive / Audit Mode - Recommended):**
-   - The bridge is implemented behind `ARF_CCPF_GUARD=1`.
-   - RDCE evaluates candidate hops and logs verdicts (`SAT`, `UNSAT`, `UNKNOWN`) with diagnostic rationales.
-   - **Zero pruning is performed.** Candidate expansion and heap operations proceed identically to baseline.
-   - This validates bridge performance, data extraction, and logging without risking search truncation or false UNSAT.
+- **Mode A (Passive Audit Mode — Exclusively Authorized):**
+  - Implement `arf_rt/ccpf_bridge.py` behind the `ARF_CCPF_GUARD=1` feature flag.
+  - Call RDCE during neighbor expansion to evaluate candidate hops.
+  - Log verdicts (`SAT`, `UNSAT`, `UNKNOWN`), solver duration, and diagnostic rationales.
+  - **Zero pruning is performed.** All candidate edges are pushed to the heap exactly as in baseline.
+  - Probability scores (`p_worst_q8`, `p_best_q8`) and heap priorities remain 100% bit-identical to baseline.
+  - This safely validates bridge data mapping, performance, and real-world evaluator verdicts with zero risk of search truncation or false UNSAT.
 
-2. **Mode B (Gated Single-Condition Active Pruning):**
-   - Pruning is activated **strictly and exclusively** on edges that have **exactly one** attached trust condition from the supported safe fragment.
-   - Edges with multiple conditions, missing statement IDs, or unsupported keys pass through as `UNKNOWN` without pruning.
-
-Full unrestricted multi-condition pruning is deferred until `trust_policy_parser.py` and the SQLite schema are upgraded to preserve `StatementId` and disjunctive statement structure.
+**Active Pruning Deferral:**
+All active pruning (discarding neighbor expansions or suppressing heap pushes) is **deferred** until `trust_policy_parser.py` and the SQLite schema are upgraded to store `StatementId`, statement boundaries, and policy alternatives.
 
 ---
 
