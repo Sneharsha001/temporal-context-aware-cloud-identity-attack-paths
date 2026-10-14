@@ -236,3 +236,25 @@ Independent code re-review of the remediated evaluator and test suite, followed 
 | Evidence Closeout Report | verification/EVIDENCE_CLOSEOUT_REPORT.md |
 | Independent Code Review Report | docs/CCPF_INDEPENDENT_REVIEW.md |
 | Independent Re-Review Report | docs/CCPF_RE_REVIEW.md |
+
+
+### Prompt 6 Completion -- CCPF Integration Design (COMPLETED)
+- **Phase:** Integration Design Only (no production code modified).
+- **HEAD at completion:** `9da2b29` on `temporal-context-dev`.
+- **Artifact:** `docs/CCPF_INTEGRATION_DESIGN.md` (supersedes earlier `CCPF_PROMPT6_INTEGRATION_DESIGN.md` draft).
+- **Architecture inspected (source-verified):**
+  - `arf_rt/engine/paths.py`: Best-First search with heap priority `(-p_worst_q8, path_length, edge_id_seq_str)`. No feasibility hook exists. `edge_type` is in the DB but NOT loaded by the search SELECT query (Gap G1).
+  - `arf_rt/models/core.py`, `arf_rt/storage/migrations.py`: Edge schema confirmed. No policy condition block on edges; trust conditions stored via `constraints` + `edge_constraints` tables.
+  - `arf_rt/adapters/trust_policy_parser.py`: Extracts 9+ IAM condition key types into `constraints.properties`.
+  - `research/ccpf/rdce.py`: Fully isolated; zero `arf_rt/` imports.
+- **Proposed integration boundary:**
+  - New module `arf_rt/ccpf_bridge.py` (not yet created): `build_constraint_index`, `infer_scope`, `build_hop_spec`, `evaluate_single_hop`.
+  - Minimal patch to `arf_rt/engine/paths.py`: add `edge_type` to SELECT (Gap G1), insert feature-flag-gated guard call at neighbor-generation point (Option A, single-hop mode).
+  - Feature flag: `ARF_CCPF_GUARD` env var; default disabled.
+- **SAT/UNSAT/UNKNOWN contract:** SAT and UNKNOWN are passthrough (no score change). UNSAT prunes only on VALIDATED constraints with `confidence_q >= 500`, `timeout_occurred=False`, and non-empty rationale.
+- **Probability isolation:** PI-1 through PI-7 invariants specified and testable.
+- **Top-K analysis:** Option A (neighbor generation) recommended; single-hop mode to avoid O3/O6/O7 full-prefix obligations. All O1-O8 obligations remain OPEN.
+- **Staged experiment plan:** 8 stages defined with explicit go/no-go criteria. `false_unsat_rate == 0.0` and `UNKNOWN->UNSAT conversion == 0` are blocking defects.
+- **Acceptance criteria:** A1-A12 criteria defined; all require explicit researcher authorization before implementation (Prompt 7+).
+- **Production files modified in Prompt 6:** NONE.
+- **Determination:** DESIGN COMPLETE -- awaiting researcher authorization to proceed to Prompt 7 implementation.
