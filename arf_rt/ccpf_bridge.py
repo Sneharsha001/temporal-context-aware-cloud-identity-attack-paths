@@ -1,4 +1,4 @@
-﻿"""CCPF Passive Audit Bridge (Mode A: Zero Pruning).
+"""CCPF Passive Audit Bridge (Mode A: Zero Pruning).
 
 This module provides the narrow integration boundary between ARF-RT's
 graph search engine and the Restricted Deterministic Constraint Evaluator (RDCE).
@@ -33,6 +33,29 @@ from research.ccpf.rdce import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+class ConstraintIndex(dict):
+    """In-memory index mapping edge_id to list of ContextPredicates.
+
+    Subclasses dict[str, list[ContextPredicate]] to ensure strict backward
+    compatibility with callers expecting a mapping, while carrying explicit
+    loading status metadata to distinguish:
+    - Successful constraint loading with verified records (load_error is None).
+    - Confirmed absence of contextual constraints (empty dict, load_error is None).
+    - Missing, unavailable, malformed or ambiguous constraint metadata (tracked per record).
+    - Constraint-index construction failure (load_error is not None).
+    """
+
+    def __init__(
+        self,
+        predicates_by_edge: dict[str, list[ContextPredicate]] | None = None,
+        load_error: str | None = None,
+        malformed_count: int = 0,
+    ):
+        super().__init__(predicates_by_edge or {})
+        self.load_error = load_error
+        self.malformed_count = malformed_count
 
 
 def infer_scope(condition_key: str | None) -> ContextScope:
@@ -73,11 +96,16 @@ def extract_predicates_from_constraint(
     """Extract RDCE ContextPredicates from a constraint properties dictionary.
 
     Extracts operational context requirements (e.g., source IP, MFA, tags, external ID).
-    If the constraint does not define context condition keys (e.g., unconditional SCP),
-    returns an empty list.
+    Distinguishes:
+    - Verified absence of contextual constraints (returns empty list).
+    - Malformed or invalid JSON structure (returns UNKNOWN predicate).
+    - Missing key or value metadata (returns UNKNOWN predicate; never silently drops).
+    - Unsupported operators or scopes (returns UNKNOWN predicate).
+    - Legitimate supported conditions (returns properly scoped predicates).
 
-    If a condition key or operator is present but unsupported, maps to ContextScope.UNKNOWN
-    so RDCE conservatively returns FeasibilityStatus.UNKNOWN.
+    Prompt 7A Rule:
+    Never invent policy values (e.g. StringEquals(["*"])) for unavailable ExternalId.
+    If ExternalId values are unavailable or wildcarded, map to ContextScope.UNKNOWN.
     """
     predicates: list[ContextPredicate] = []
 
@@ -88,61 +116,201 @@ def extract_predicates_from_constraint(
                 operator="Unsupported",
                 values=[],
                 scope=ContextScope.UNKNOWN,
-                description=f"constraint:{constraint_id}",
+                description=f"constraint:{constraint_id}: properties is not a dict",
+            )
+        ]
+
+    # Explicit JSON parse failure captured during index loading
+    if "__malformed_json_error__" in properties:
+        return [
+            ContextPredicate(
+                key="malformed_constraint_json",
+                operator="Unsupported",
+                values=[],
+                scope=ContextScope.UNKNOWN,
+                description=f"constraint:{constraint_id}: malformed JSON ({properties['__malformed_json_error__']})",
             )
         ]
 
     # Format 1: Explicit conditions list (e.g. [{"key": ..., "operator": ..., "values": [...]}])
-    if "conditions" in properties and isinstance(properties["conditions"], list):
-        for item in properties["conditions"]:
-            if isinstance(item, dict):
-                k = str(item.get("key") or "")
-                op = str(item.get("operator") or "")
-                vals = item.get("values") or []
-                if not isinstance(vals, list):
-                    vals = [str(vals)]
-                scope = infer_scope(k)
+    if "conditions" in properties:
+        cond_list = properties["conditions"]
+        if not isinstance(cond_list, list):
+            return [
+                ContextPredicate(
+                    key="malformed_conditions_list",
+                    operator="Unsupported",
+                    values=[],
+                    scope=ContextScope.UNKNOWN,
+                    description=f"constraint:{constraint_id}: conditions field is not a list",
+                )
+            ]
+
+        # Explicitly documented interpretation of empty condition lists:
+        # If a contextual TRUST constraint defines an empty conditions list, this indicates
+        # missing condition metadata (a trust condition without conditions is ambiguous).
+        # For non-contextual constraints, an empty list means confirmed absence of context conditions.
+        if len(cond_list) == 0:
+            if constraint_type in ("TRUST_CONDITION", "TRUST"):
+                return [
+                    ContextPredicate(
+                        key="empty_trust_conditions_list",
+                        operator="Unsupported",
+                        values=[],
+                        scope=ContextScope.UNKNOWN,
+                        description=f"constraint:{constraint_id}: trust condition has empty conditions list",
+                    )
+                ]
+            return []
+
+        for item in cond_list:
+            if not isinstance(item, dict):
+                predicates.append(
+                    ContextPredicate(
+                        key="malformed_condition_item",
+                        operator="Unsupported",
+                        values=[],
+                        scope=ContextScope.UNKNOWN,
+                        description=f"constraint:{constraint_id}: condition entry is not a dict",
+                    )
+                )
+                continue
+
+            k = str(item.get("key") or "").strip()
+            op = str(item.get("operator") or "").strip()
+            raw_vals = item.get("values")
+
+            # Missing key or value metadata must NOT silently disappear
+            if not k or raw_vals is None:
+                predicates.append(
+                    ContextPredicate(
+                        key=k or "missing_condition_key",
+                        operator="Unsupported",
+                        values=[],
+                        scope=ContextScope.UNKNOWN,
+                        description=f"constraint:{constraint_id}: missing key or values in condition",
+                    )
+                )
+                continue
+
+            if not isinstance(raw_vals, list):
+                raw_vals = [raw_vals]
+            vals = [str(v) for v in raw_vals if v is not None]
+
+            if not vals:
                 predicates.append(
                     ContextPredicate(
                         key=k,
-                        operator=op,
-                        values=[str(v) for v in vals],
-                        scope=scope,
-                        description=f"constraint:{constraint_id}",
+                        operator="Unsupported",
+                        values=[],
+                        scope=ContextScope.UNKNOWN,
+                        description=f"constraint:{constraint_id}: empty condition values list",
                     )
                 )
+                continue
+
+            # ExternalId handling: do NOT invent wildcard or treat unavailable value as supported
+            if k.lower() == "sts:externalid":
+                if vals == ["*"]:
+                    predicates.append(
+                        ContextPredicate(
+                            key=k,
+                            operator="Unsupported",
+                            values=[],
+                            scope=ContextScope.UNKNOWN,
+                            description=f"constraint:{constraint_id}: external_id value unavailable or wildcard",
+                        )
+                    )
+                    continue
+
+            scope = infer_scope(k)
+            predicates.append(
+                ContextPredicate(
+                    key=k,
+                    operator=op or "StringEquals",
+                    values=vals,
+                    scope=scope,
+                    description=f"constraint:{constraint_id}",
+                )
+            )
         return predicates
 
-    # Format 2: Direct condition key/operator/values (trust_policy_parser output or DB row)
+    # Format 2: Direct condition fields (trust_policy_parser output or DB row)
     if "condition_key" in properties or "condition_type" in properties:
-        k = str(properties.get("condition_key") or properties.get("condition_type") or "")
-        op = str(properties.get("condition_operator") or "StringEquals")
-        vals = (
+        k = str(properties.get("condition_key") or properties.get("condition_type") or "").strip()
+        op = str(properties.get("condition_operator") or "StringEquals").strip()
+        raw_vals = (
             properties.get("required_values")
             or properties.get("values")
             or properties.get("condition_value")
-            or []
         )
-        if not isinstance(vals, list):
-            vals = [str(vals)]
+
+        if not k or raw_vals is None:
+            return [
+                ContextPredicate(
+                    key=k or "missing_condition_key",
+                    operator="Unsupported",
+                    values=[],
+                    scope=ContextScope.UNKNOWN,
+                    description=f"constraint:{constraint_id}: missing condition key or values metadata",
+                )
+            ]
+
+        if not isinstance(raw_vals, list):
+            raw_vals = [raw_vals]
+        vals = [str(v) for v in raw_vals if v is not None]
+
+        if not vals:
+            return [
+                ContextPredicate(
+                    key=k,
+                    operator="Unsupported",
+                    values=[],
+                    scope=ContextScope.UNKNOWN,
+                    description=f"constraint:{constraint_id}: empty required_values metadata",
+                )
+            ]
+
+        # ExternalId handling: if ExternalId values are unavailable or wildcarded, map to UNKNOWN
+        if k.lower() in ("sts:externalid", "external_id"):
+            if vals == ["*"]:
+                return [
+                    ContextPredicate(
+                        key="sts:ExternalId",
+                        operator="Unsupported",
+                        values=[],
+                        scope=ContextScope.UNKNOWN,
+                        description=f"constraint:{constraint_id}: external_id value unavailable or wildcard",
+                    )
+                ]
+            scope = ContextScope.CONFIG
+            return [
+                ContextPredicate(
+                    key="sts:ExternalId",
+                    operator=op,
+                    values=vals,
+                    scope=scope,
+                    description=f"constraint:{constraint_id}",
+                )
+            ]
+
         scope = infer_scope(k)
-        predicates.append(
+        return [
             ContextPredicate(
                 key=k,
                 operator=op,
-                values=[str(v) for v in vals],
+                values=vals,
                 scope=scope,
                 description=f"constraint:{constraint_id}",
             )
-        )
-        return predicates
+        ]
 
     # Format 3: Simple string condition flag (e.g. {"condition": "mfa_required"})
     if "condition" in properties:
-        cond_str = str(properties.get("condition", ""))
+        cond_str = str(properties.get("condition", "")).strip()
         cond_lower = cond_str.lower()
         if cond_lower == "mfa_required":
-            predicates.append(
+            return [
                 ContextPredicate(
                     key="aws:MultiFactorAuthPresent",
                     operator="Bool",
@@ -150,33 +318,32 @@ def extract_predicates_from_constraint(
                     scope=ContextScope.SESSION,
                     description=f"constraint:{constraint_id}",
                 )
-            )
-            return predicates
-        elif cond_lower.startswith("sts:externalid"):
-            predicates.append(
+            ]
+        elif cond_lower.startswith("sts:externalid") or cond_lower == "external_id":
+            # Prompt 7A: Remove invented StringEquals(["*"]) shortcut!
+            # Since string condition flag provides no actual secret value, represent as UNKNOWN.
+            return [
                 ContextPredicate(
                     key="sts:ExternalId",
-                    operator="StringEquals",
-                    values=["*"],
-                    scope=ContextScope.CONFIG,
-                    description=f"constraint:{constraint_id}",
+                    operator="Unsupported",
+                    values=[],
+                    scope=ContextScope.UNKNOWN,
+                    description=f"constraint:{constraint_id}: external_id value unavailable from string condition flag",
                 )
-            )
-            return predicates
+            ]
         else:
-            predicates.append(
+            return [
                 ContextPredicate(
-                    key=cond_str,
+                    key=cond_str or "unsupported_condition",
                     operator="Unsupported",
                     values=[],
                     scope=ContextScope.UNKNOWN,
                     description=f"constraint:{constraint_id}",
                 )
-            )
-            return predicates
+            ]
 
     # If the constraint is a TRUST_CONDITION but contains no recognized condition fields,
-    # treat as malformed/unsupported trust condition (UNKNOWN scope).
+    # treat as missing/unsupported trust condition metadata (UNKNOWN scope).
     if constraint_type in ("TRUST_CONDITION", "TRUST"):
         return [
             ContextPredicate(
@@ -184,7 +351,7 @@ def extract_predicates_from_constraint(
                 operator="Unsupported",
                 values=[],
                 scope=ContextScope.UNKNOWN,
-                description=f"constraint:{constraint_id}",
+                description=f"constraint:{constraint_id}: trust condition missing recognizable condition fields",
             )
         ]
 
@@ -192,16 +359,19 @@ def extract_predicates_from_constraint(
     return []
 
 
-def build_constraint_index(conn: sqlite3.Connection) -> dict[str, list[ContextPredicate]]:
+def build_constraint_index(conn: sqlite3.Connection) -> ConstraintIndex:
     """Build pre-search in-memory index mapping edge_id to list of ContextPredicates.
 
     Loads active constraints linked via edge_constraints and translates them
     into ContextPredicate objects.
 
     Returns:
-        dict[edge_id, list[ContextPredicate]]
+        ConstraintIndex mapping edge_id to list[ContextPredicate], with explicit
+        load_error attribute distinguishing construction failures from genuine
+        absence of constraints.
     """
-    index: dict[str, list[ContextPredicate]] = {}
+    predicates_by_edge: dict[str, list[ContextPredicate]] = {}
+    malformed_count = 0
 
     try:
         cur = conn.execute(
@@ -215,8 +385,9 @@ def build_constraint_index(conn: sqlite3.Connection) -> dict[str, list[ContextPr
         )
         rows = cur.fetchall()
     except Exception as ex:
-        logger.debug("CCPF bridge: unable to query edge constraints: %s", ex)
-        return index
+        err_msg = f"{type(ex).__name__}: {ex}"
+        logger.warning("CCPF bridge: constraint index query failed: %s", err_msg)
+        return ConstraintIndex(predicates_by_edge={}, load_error=err_msg)
 
     for row in rows:
         eid = row["edge_id"]
@@ -225,23 +396,35 @@ def build_constraint_index(conn: sqlite3.Connection) -> dict[str, list[ContextPr
         pjson = row["properties_json"]
 
         try:
-            props = json.loads(pjson) if isinstance(pjson, str) else (pjson or {})
-        except Exception:
-            props = {}
+            if isinstance(pjson, str):
+                props = json.loads(pjson)
+            elif isinstance(pjson, dict):
+                props = pjson
+            elif pjson is None:
+                props = {}
+            else:
+                props = {"__malformed_type__": type(pjson).__name__}
+        except Exception as json_err:
+            props = {"__malformed_json_error__": str(json_err)}
+            malformed_count += 1
 
         preds = extract_predicates_from_constraint(cid, ctype, props)
         if preds:
-            if eid not in index:
-                index[eid] = []
-            index[eid].extend(preds)
+            if eid not in predicates_by_edge:
+                predicates_by_edge[eid] = []
+            predicates_by_edge[eid].extend(preds)
 
-    return index
+    return ConstraintIndex(
+        predicates_by_edge=predicates_by_edge,
+        load_error=None,
+        malformed_count=malformed_count,
+    )
 
 
 def evaluate_candidate_hop(
     eid: str,
     edge_data: dict[str, Any],
-    constraint_index: dict[str, list[ContextPredicate]],
+    constraint_index: dict[str, list[ContextPredicate]] | ConstraintIndex,
     evaluator: RestrictedDeterministicConstraintEvaluator | None = None,
     audit_sink: list[dict[str, Any]] | None = None,
     scenario_assumptions: dict[str, Any] | None = None,
@@ -255,13 +438,45 @@ def evaluate_candidate_hop(
     This evaluation is strictly observational. The caller must NEVER prune
     on UNSAT or alter path probabilities / ranking based on this return value.
     """
-    if evaluator is None:
-        evaluator = RestrictedDeterministicConstraintEvaluator()
-
     edge_type = str(edge_data.get("edge_type", ""))
     src = str(edge_data.get("src", ""))
     dst = str(edge_data.get("dst", ""))
+
+    # 1. Distinguish constraint-index loading failure from genuine absence of constraints
+    load_error = getattr(constraint_index, "load_error", None)
+    if load_error is not None:
+        result = PathEvaluationResult(
+            path_id=eid,
+            status=FeasibilityStatus.UNKNOWN,
+            unknown_rationale=f"CONSTRAINT_INDEX_LOAD_FAILURE: {load_error}",
+            evaluated_hops=1,
+            solver_duration_ms=0.0,
+            diagnostic_metadata={"load_error": load_error, "index_construction_failed": True},
+        )
+        if audit_sink is not None:
+            try:
+                audit_sink.append(
+                    {
+                        "edge_id": eid,
+                        "edge_type": edge_type,
+                        "src_node_id": src,
+                        "dst_node_id": dst,
+                        "status": result.status.value,
+                        "contradiction_rationale": None,
+                        "unknown_rationale": result.unknown_rationale,
+                        "solver_duration_ms": 0.0,
+                        "predicates_count": 0,
+                    }
+                )
+            except Exception as sink_ex:
+                logger.debug("Failed to append diagnostic to audit sink: %s", sink_ex)
+        return result
+
     required_context = constraint_index.get(eid, [])
+
+    # 2. Invoke RDCE evaluator
+    if evaluator is None:
+        evaluator = RestrictedDeterministicConstraintEvaluator()
 
     try:
         hop_spec = HopContextSpec(
@@ -291,19 +506,21 @@ def evaluate_candidate_hop(
 
     # Diagnostic recording for passive audit
     if audit_sink is not None:
-        # Bounded diagnostic record omitting sensitive secret values
-        audit_sink.append(
-            {
-                "edge_id": eid,
-                "edge_type": edge_type,
-                "src_node_id": src,
-                "dst_node_id": dst,
-                "status": result.status.value,
-                "contradiction_rationale": result.contradiction_rationale,
-                "unknown_rationale": result.unknown_rationale,
-                "solver_duration_ms": result.solver_duration_ms,
-                "predicates_count": len(required_context),
-            }
-        )
+        try:
+            audit_sink.append(
+                {
+                    "edge_id": eid,
+                    "edge_type": edge_type,
+                    "src_node_id": src,
+                    "dst_node_id": dst,
+                    "status": result.status.value,
+                    "contradiction_rationale": result.contradiction_rationale,
+                    "unknown_rationale": result.unknown_rationale,
+                    "solver_duration_ms": result.solver_duration_ms,
+                    "predicates_count": len(required_context),
+                }
+            )
+        except Exception as sink_ex:
+            logger.debug("Failed to append diagnostic to audit sink: %s", sink_ex)
 
     return result

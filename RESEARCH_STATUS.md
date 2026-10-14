@@ -309,3 +309,30 @@ Independent code re-review of the remediated evaluator and test suite, followed 
   - Output paths, ordering, ranks, `p_worst_q8`, `p_best_q8`, and flags are **100% bit-identical** to baseline.
   - Measured median search overhead: $< 0.5$ ms absolute overhead per Top-K search.
 - **Safety Invariant:** Zero pruning performed. Mode B active pruning remains strictly deferred.
+
+
+### Prompt 7A Completion -- CCPF Passive Bridge Reliability and Observability Audit (AUDITED & BENCHMARKED)
+- **Phase:** Reliability, Observability, and Error-Handling Hardening (Mode A: ZERO PRUNING).
+- **Branch:** `temporal-context-dev`.
+- **Primary Enhancements:**
+  - `arf_rt/ccpf_bridge.py`:
+    - Introduced `ConstraintIndex` with explicit `load_error` and `malformed_count` attributes.
+    - Captures SQLite query and index-building errors so hops evaluate as `UNKNOWN` with `CONSTRAINT_INDEX_LOAD_FAILURE` instead of masquerading as unconstrained edges.
+    - Removed manufactured `StringEquals(["*"])` ExternalId shortcut; unvouched or missing condition values strictly evaluate to `ContextScope.UNKNOWN`.
+    - Protected `audit_sink` appending against external logging or formatting exceptions.
+  - `arf_rt/engine/paths.py`:
+    - Hoisted bridge function import out of inner neighbor-expansion loop to reduce call overhead.
+    - Updated `search_and_store_top_k` to accept and pass `ccpf_audit_sink`.
+  - `tests/integration/test_ccpf_bridge.py`:
+    - Expanded integration suite to 15 comprehensive tests covering constraint index query failures, real trust policy parser output, malformed condition mapping, audit sink retrieval, and full-field baseline comparisons.
+- **Verification Results:**
+  - `tests/integration/`: **15 passed / 15 total** (1.51s)
+  - `tests/research/`: **141 passed / 141 total** (1.46s)
+  - `tests/unit/`: **625 passed / 625 total** (33.85s)
+  - Total test suite: **781 passed / 781 total** (100% passing)
+- **25-Round Paired Performance Benchmark (Warm-up = 5):**
+  - `minimal_scenario.json`: Baseline 0.282 ms, Audit 0.397 ms (+0.115 ms, +40.8%)
+  - `complex_scenario.json`: Baseline 7.479 ms, Audit 10.513 ms (+3.034 ms, +40.6%)
+  - `primary_realistic_scenario.json`: Baseline 1.681 ms, Audit 2.371 ms (+0.690 ms, +41.0%)
+  - **Performance Gate Determination:** Absolute overhead remains tiny (< 3.1 ms on complex graphs), but relative overhead (~40.8%) exceeds the strict <= 10% target. Recorded transparently as **UNMET**. Default operation is unaffected (`CCPF_FEASIBILITY_GUARD=False`).
+- **Safety Invariant Maintained:** Mode A Zero-Pruning invariant holds 100%. Active pruning remains deferred.

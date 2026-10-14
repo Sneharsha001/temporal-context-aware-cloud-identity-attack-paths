@@ -1,4 +1,4 @@
-﻿"""CCPF Passive Audit Bridge Integration Tests (Prompt 7 Mode A: Zero Pruning).
+"""CCPF Passive Audit Bridge Integration Tests (Prompt 7 Mode A: Zero Pruning).
 
 These tests verify the 10 mandatory integration and failure-isolation criteria:
 1. Feature disabled: baseline outputs and scores unchanged.
@@ -14,6 +14,7 @@ These tests verify the 10 mandatory integration and failure-isolation criteria:
 """
 
 from __future__ import annotations
+import sqlite3
 
 import json
 from pathlib import Path
@@ -24,6 +25,7 @@ import pytest
 from arf_rt.adapters.replay import ReplayAdapter
 from arf_rt.adapters.seed_json import load_scenario_file
 from arf_rt.ccpf_bridge import (
+    ConstraintIndex,
     build_constraint_index,
     evaluate_candidate_hop,
     extract_predicates_from_constraint,
@@ -34,7 +36,11 @@ from arf_rt.engine.correlation import compute_correlation
 from arf_rt.engine.paths import search_top_k
 from arf_rt.engine.updater import apply_all_observations
 from arf_rt.storage.sqlite_store import connect
-from research.ccpf.rdce import ContextScope, FeasibilityStatus
+from research.ccpf.rdce import (
+    ContextScope,
+    FeasibilityStatus,
+    RestrictedDeterministicConstraintEvaluator,
+)
 
 
 FIXTURES = Path(__file__).parent.parent / "fixtures"
@@ -406,3 +412,326 @@ def test_repeated_evaluations_idempotence():
             assert p0["edge_id_sequence"] == p["edge_id_sequence"]
             assert p0["p_worst_q8"] == p["p_worst_q8"]
             assert p0["p_best_q8"] == p["p_best_q8"]
+
+# ===================================================================
+# Test 11: Constraint Index Failure Distinguished from Empty Index
+# ===================================================================
+def test_constraint_index_query_failure_distinguished_from_empty():
+    """Verify that a database query failure during index construction produces UNKNOWN
+
+    and does NOT masquerade as an unconstrained edge or confirmed absence of constraints.
+    """
+    conn = _build_pipeline_db(MINIMAL)
+    oid = _get_first_objective(conn)
+
+    # 1. Valid empty metadata: query succeeds, index has load_error=None
+    index_valid = build_constraint_index(conn)
+    assert index_valid.load_error is None
+    assert isinstance(index_valid, ConstraintIndex)
+    assert isinstance(index_valid, dict)
+
+    # Edge evaluated with valid empty index has rationale NO_CONTEXT_CONSTRAINTS_DEFINED
+    sink_valid = []
+    res_valid = evaluate_candidate_hop(
+        eid="edge-test-1",
+        edge_data={"edge_type": "STS_ASSUME_ROLE", "src": "src1", "dst": "dst1"},
+        constraint_index=index_valid,
+        audit_sink=sink_valid,
+    )
+    assert res_valid.status == FeasibilityStatus.UNKNOWN
+    assert res_valid.unknown_rationale == "NO_CONTEXT_CONSTRAINTS_DEFINED"
+    assert sink_valid[0]["unknown_rationale"] == "NO_CONTEXT_CONSTRAINTS_DEFINED"
+
+    # 2. Query failure: simulate SQLite exception during constraint query
+    class FailingConn:
+        def execute(self, *args, **kwargs):
+            raise sqlite3.OperationalError("disk I/O failure")
+
+    index_failed = build_constraint_index(FailingConn())  # type: ignore
+    assert index_failed.load_error is not None
+    assert "OperationalError" in index_failed.load_error
+    assert "disk I/O failure" in index_failed.load_error
+
+    # Edge evaluated with failed index MUST produce CONSTRAINT_INDEX_LOAD_FAILURE
+    sink_failed = []
+    res_failed = evaluate_candidate_hop(
+        eid="edge-test-1",
+        edge_data={"edge_type": "STS_ASSUME_ROLE", "src": "src1", "dst": "dst1"},
+        constraint_index=index_failed,
+        audit_sink=sink_failed,
+    )
+    assert res_failed.status == FeasibilityStatus.UNKNOWN
+    assert "CONSTRAINT_INDEX_LOAD_FAILURE" in res_failed.unknown_rationale
+    assert sink_failed[0]["unknown_rationale"] == res_failed.unknown_rationale
+
+    # 3. In full search, failed index must preserve baseline search behavior (ZERO PRUNING)
+    baseline_paths = search_top_k(conn, oid, ccpf_guard=False)
+    with patch("arf_rt.ccpf_bridge.build_constraint_index", return_value=index_failed):
+        sink_search = []
+        audit_paths = search_top_k(conn, oid, ccpf_guard=True, ccpf_audit_sink=sink_search)
+
+    assert len(audit_paths) == len(baseline_paths)
+    assert audit_paths[0]["edge_id_sequence"] == baseline_paths[0]["edge_id_sequence"]
+    assert len(sink_search) > 0
+    for rec in sink_search:
+        assert rec["status"] == "UNKNOWN"
+        assert "CONSTRAINT_INDEX_LOAD_FAILURE" in rec["unknown_rationale"]
+
+
+# ===================================================================
+# Test 12: Real Trust Policy Parser Integration and Condition Mapping
+# ===================================================================
+def test_real_trust_policy_parser_output_integration():
+    """Verify condition mapping using real output from trust_policy_parser.py."""
+    from arf_rt.adapters.trust_policy_parser import (
+        parse_trust_conditions,
+        resolve_trust_constraints,
+    )
+
+    trust_doc = {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Principal": {"AWS": "arn:aws:iam::123456789012:root"},
+                "Action": "sts:AssumeRole",
+                "Condition": {
+                    "IpAddress": {"aws:SourceIp": ["203.0.113.0/24"]},
+                    "Bool": {"aws:MultiFactorAuthPresent": "true"},
+                    "StringEquals": {
+                        "sts:ExternalId": "my-client-secret-12345",
+                        "aws:PrincipalTag/department": "finance",
+                        "aws:SourceVpc": "vpc-0123456789abcdef0",
+                    },
+                    "NumericLessThan": {"aws:MultiFactorAuthAge": "3600"},
+                },
+            }
+        ],
+    }
+    role_arn = "arn:aws:iam::123456789012:role/AuditTargetRole"
+    edges = [
+        {
+            "edge_type": "STS_ASSUME_ROLE",
+            "src": {"provider_id": "arn:aws:iam::123456789012:user/Alice"},
+            "dst": {"provider_id": role_arn},
+            "region": "us-east-1",
+        }
+    ]
+
+    constraints, edge_constraints, warnings = resolve_trust_constraints(
+        {role_arn: trust_doc}, edges
+    )
+    assert len(constraints) > 0
+    assert len(edge_constraints) > 0
+
+    evaluator = RestrictedDeterministicConstraintEvaluator()
+
+    for c in constraints:
+        props = c["properties"]
+        preds = extract_predicates_from_constraint(c["scope_id"], c["constraint_type"], props)
+        assert len(preds) == 1
+        p = preds[0]
+
+        if p.key == "aws:SourceIp":
+            assert p.scope == ContextScope.REQUEST
+            assert p.operator == "IpAddress"
+            assert p.values == ["203.0.113.0/24"]
+            # Feasibility test: valid IP constraint yields SAT with witness
+            r_sat = evaluate_candidate_hop(
+                "e1",
+                {"edge_type": "STS_ASSUME_ROLE"},
+                {"e1": [p]},
+                evaluator=evaluator,
+            )
+            assert r_sat.status == FeasibilityStatus.SAT
+            assert r_sat.witness is not None
+
+            # Conflicting disjoint IP constraints on the same hop yield UNSAT
+            from research.ccpf.rdce import ContextPredicate
+            p_conflict = ContextPredicate(
+                key="aws:SourceIp",
+                operator="IpAddress",
+                values=["10.0.0.0/8"],
+                scope=ContextScope.REQUEST,
+            )
+            r_unsat = evaluate_candidate_hop(
+                "e1",
+                {"edge_type": "STS_ASSUME_ROLE"},
+                {"e1": [p, p_conflict]},
+                evaluator=evaluator,
+            )
+            assert r_unsat.status == FeasibilityStatus.UNSAT
+            assert r_unsat.contradiction_rationale is not None
+
+        elif p.key == "aws:MultiFactorAuthPresent":
+            assert p.scope == ContextScope.SESSION
+            assert p.operator == "Bool"
+            assert p.values == ["true"]
+
+        elif p.key == "sts:ExternalId":
+            assert p.scope == ContextScope.CONFIG
+            assert p.operator == "StringEquals"
+            assert p.values == ["my-client-secret-12345"]
+
+        elif p.key.startswith("aws:PrincipalTag/"):
+            assert p.scope == ContextScope.PRINCIPAL
+            assert p.operator == "StringEquals"
+            assert p.values == ["finance"]
+
+        elif p.key == "aws:SourceVpc":
+            # Unsupported condition key -> UNKNOWN scope
+            assert p.scope == ContextScope.UNKNOWN
+            r_unk = evaluate_candidate_hop(
+                "e1",
+                {"edge_type": "STS_ASSUME_ROLE"},
+                {"e1": [p]},
+                evaluator=evaluator,
+            )
+            assert r_unk.status == FeasibilityStatus.UNKNOWN
+            assert "UNSUPPORTED_OR_UNKNOWN_SCOPE" in r_unk.unknown_rationale
+
+
+# ===================================================================
+# Test 13: Malformed and Edge-Case Condition Mapping
+# ===================================================================
+def test_malformed_and_edge_case_condition_mapping():
+    """Verify conservative, safe handling of malformed, missing, and wildcarded metadata."""
+    # 1. Invalid JSON string error representation
+    preds = extract_predicates_from_constraint("c1", "TRUST_CONDITION", {"__malformed_json_error__": "Expecting ',' delimiter"})
+    assert len(preds) == 1
+    assert preds[0].key == "malformed_constraint_json"
+    assert preds[0].scope == ContextScope.UNKNOWN
+
+    # 2. Non-dict properties
+    preds_nd = extract_predicates_from_constraint("c2", "TRUST_CONDITION", ["not", "a", "dict"])  # type: ignore
+    assert len(preds_nd) == 1
+    assert preds_nd[0].key == "malformed_properties"
+    assert preds_nd[0].scope == ContextScope.UNKNOWN
+
+    # 3. Empty conditions list interpretation
+    # Non-contextual constraint with empty conditions list = verified absence
+    preds_empty_scp = extract_predicates_from_constraint("c3", "ORGANIZATION_SCP", {"conditions": []})
+    assert preds_empty_scp == []
+
+    # TRUST_CONDITION with empty conditions list = ambiguous/missing metadata (UNKNOWN)
+    preds_empty_trust = extract_predicates_from_constraint("c4", "TRUST_CONDITION", {"conditions": []})
+    assert len(preds_empty_trust) == 1
+    assert preds_empty_trust[0].key == "empty_trust_conditions_list"
+    assert preds_empty_trust[0].scope == ContextScope.UNKNOWN
+
+    # 4. Missing key or values in conditions list
+    preds_miss = extract_predicates_from_constraint(
+        "c5",
+        "TRUST_CONDITION",
+        {"conditions": [{"key": "", "operator": "StringEquals", "values": ["val"]}]},
+    )
+    assert len(preds_miss) == 1
+    assert preds_miss[0].key == "missing_condition_key"
+    assert preds_miss[0].scope == ContextScope.UNKNOWN
+
+    preds_miss_val = extract_predicates_from_constraint(
+        "c6",
+        "TRUST_CONDITION",
+        {"conditions": [{"key": "aws:SourceIp", "operator": "IpAddress", "values": []}]},
+    )
+    assert len(preds_miss_val) == 1
+    assert preds_miss_val[0].scope == ContextScope.UNKNOWN
+
+    # 5. ExternalId shortcut removal: never invent StringEquals(["*"])
+    # Format 2 with wildcard
+    preds_ext_wild = extract_predicates_from_constraint(
+        "c7",
+        "TRUST_CONDITION",
+        {"condition_key": "sts:ExternalId", "condition_operator": "StringEquals", "required_values": ["*"]},
+    )
+    assert len(preds_ext_wild) == 1
+    assert preds_ext_wild[0].scope == ContextScope.UNKNOWN
+    assert preds_ext_wild[0].operator == "Unsupported"
+
+    # Format 3 string flag
+    preds_ext_flag = extract_predicates_from_constraint(
+        "c8",
+        "TRUST_CONDITION",
+        {"condition": "sts:externalid"},
+    )
+    assert len(preds_ext_flag) == 1
+    assert preds_ext_flag[0].scope == ContextScope.UNKNOWN
+    assert preds_ext_flag[0].operator == "Unsupported"
+    assert "unavailable" in preds_ext_flag[0].description
+
+
+# ===================================================================
+# Test 14: Audit Output Accessible via search_and_store_top_k Entry Point
+# ===================================================================
+def test_audit_output_accessible_via_search_and_store_top_k():
+    """Verify that search_and_store_top_k forwards and populates the audit sink."""
+    from arf_rt.engine.paths import search_and_store_top_k
+
+    conn = _build_pipeline_db(MINIMAL)
+
+    # 1. Feature disabled: sink receives 0 records
+    sink_disabled = []
+    results_off = search_and_store_top_k(conn, ccpf_guard=False, ccpf_audit_sink=sink_disabled)
+    assert len(sink_disabled) == 0
+    assert len(results_off) > 0
+
+    # 2. Feature enabled: sink receives diagnostic records
+    sink_enabled = []
+    results_on = search_and_store_top_k(conn, ccpf_guard=True, ccpf_audit_sink=sink_enabled)
+    assert len(results_on) == len(results_off)
+    assert len(sink_enabled) > 0
+
+    # Inspect record fields
+    for rec in sink_enabled:
+        assert "edge_id" in rec
+        assert "edge_type" in rec
+        assert "src_node_id" in rec
+        assert "dst_node_id" in rec
+        assert rec["status"] in ("SAT", "UNSAT", "UNKNOWN")
+        assert "predicates_count" in rec
+        assert "solver_duration_ms" in rec
+        # Ensure no raw credentials or sensitive data are logged
+        assert "password" not in rec
+        assert "secret" not in str(rec.values()).lower()
+
+    # 3. Faulty audit sink (robustness): an append exception does not disrupt search
+    class FaultySink:
+        def append(self, item):
+            raise RuntimeError("Audit log disk buffer full")
+
+    faulty_sink = FaultySink()
+    results_faulty = search_and_store_top_k(conn, ccpf_guard=True, ccpf_audit_sink=faulty_sink)
+    assert len(results_faulty) == len(results_off)
+    for oid in results_off:
+        assert len(results_faulty[oid]) == len(results_off[oid])
+
+
+# ===================================================================
+# Test 15: Baseline vs Audit Full Field Comparison
+# ===================================================================
+def test_baseline_vs_audit_full_field_comparison_on_fixtures():
+    """Compare all path fields between disabled and enabled guard on minimal & complex."""
+    from arf_rt.engine.paths import search_and_store_top_k
+
+    for fixture in (MINIMAL, COMPLEX):
+        conn = _build_pipeline_db(fixture)
+
+        paths_disabled = search_and_store_top_k(conn, ccpf_guard=False)
+        paths_enabled = search_and_store_top_k(conn, ccpf_guard=True)
+
+        assert set(paths_disabled.keys()) == set(paths_enabled.keys())
+
+        for oid in paths_disabled:
+            dis_list = paths_disabled[oid]
+            en_list = paths_enabled[oid]
+            assert len(dis_list) == len(en_list)
+
+            for d_p, e_p in zip(dis_list, en_list):
+                # Verify bit-identical scores and identical fields
+                assert d_p["edge_id_sequence"] == e_p["edge_id_sequence"]
+                assert d_p["p_worst_q8"] == e_p["p_worst_q8"]
+                assert d_p["p_best_q8"] == e_p["p_best_q8"]
+                assert d_p["rank"] == e_p["rank"]
+                assert d_p["confidence_band"] == e_p["confidence_band"]
+                assert d_p["path_length"] == e_p["path_length"]
+                assert d_p["flags_json"] == e_p["flags_json"]

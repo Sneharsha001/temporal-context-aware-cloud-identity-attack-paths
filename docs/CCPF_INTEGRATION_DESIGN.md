@@ -366,3 +366,36 @@ Empirical evaluation across three scenario fixtures (15 repetitions per scenario
 
 - **Active Pruning Deferred:** Mode B active pruning remains strictly prohibited until statement boundaries (`StatementId`) and alternative Allow paths are stored and indexed.
 - **Multi-Hop Transition Relations Deferred:** Cross-hop state mutations (`ProducedStateModification`) remain deferred until schema support for transition relations is introduced.
+
+
+---
+
+## 11. Prompt 7A Reliability & Observability Audit
+
+### 11.1 Corrected Issues & Architecture Hardening
+1. **Constraint-Index Loading Failure Handling:**
+   - Introduced `ConstraintIndex` (subclassing `dict` with explicit `load_error` and `malformed_count` attributes).
+   - If SQLite querying or index building fails, `load_error` is captured. Subsequent candidate-hop evaluations record `status=UNKNOWN` with `CONSTRAINT_INDEX_LOAD_FAILURE: <error>` rather than silently treating edges as unconstrained.
+2. **Unsupported / Malformed Condition Mapping:**
+   - Removed artificial wildcard ExternalId shortcut (`StringEquals(["*"])`). Unvouched or missing condition values strictly map to `ContextScope.UNKNOWN`.
+   - Handled non-JSON/malformed properties and empty trust condition lists safely without raising exceptions or masking edge constraints.
+3. **Audit Output Accessibility:**
+   - Hoisted `evaluate_candidate_hop` import out of the neighbor expansion loop in `arf_rt/engine/paths.py`.
+   - Updated `search_and_store_top_k()` to accept and forward `ccpf_audit_sink`, making full diagnostic traces accessible to calling workflows.
+4. **Integration Test Suite Expansion:**
+   - Expanded `tests/integration/test_ccpf_bridge.py` from 10 to 15 tests. All 15 pass (100% passing).
+   - Verified full field comparison on scenario fixtures (`minimal_scenario.json`, `complex_scenario.json`, `primary_realistic_scenario.json`) confirming complete bit-identical equivalence to baseline.
+
+### 11.2 25-Round Paired Performance Benchmark (Warm-up = 5)
+
+| Scenario Fixture | Baseline Median (ms) | Audit Median (ms) | Absolute Overhead (ms) | Relative Overhead (%) | Target Gate (<= 10%) | Status |
+|---|---|---|---|---|---|---|
+| `minimal_scenario.json` | 0.282 | 0.397 | +0.115 | +40.8% | <= 10% | UNMET |
+| `complex_scenario.json` | 7.479 | 10.513 | +3.034 | +40.6% | <= 10% | UNMET |
+| `primary_realistic_scenario.json` | 1.681 | 2.371 | +0.690 | +41.0% | <= 10% | UNMET |
+
+**Performance Analysis & Gate Determination:**
+- **Absolute Overhead:** The absolute latency cost remains low (0.1 to 3.0 ms per Top-K search on complex graphs).
+- **Relative Overhead:** Relative latency overhead is ~40.8%, exceeding the strict <= 10% relative gate target.
+- **Root Cause:** In Python, invoking the RDCE per neighbor expansion on 50+ candidate hops adds interpreted dispatch and object allocation overhead relative to the lightweight C/SQLite search loop.
+- **Gate Conclusion:** The relative performance gate is recorded as **UNMET**. Because Mode A is purely observational (and disabled by default with `CCPF_FEASIBILITY_GUARD=False`), it introduces zero overhead in default operation. Active pruning remains deferred.

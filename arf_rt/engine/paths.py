@@ -1,4 +1,4 @@
-﻿"""Top-K path search for ARF-RT (spec Â§15).
+"""Top-K path search for ARF-RT (spec Â§15).
 
 Best-first search using p_worst_partial_q8 as the admissible bound.
 Global components ensure extending a path cannot increase the bound.
@@ -66,14 +66,16 @@ def search_top_k(
     if ccpf_guard is None:
         ccpf_guard = CCPF_FEASIBILITY_GUARD
 
-    ccpf_constraint_index: dict[str, Any] = {}
+    ccpf_constraint_index: Any = {}
     ccpf_evaluator: Any = None
+    ccpf_evaluate_fn: Any = None
     if ccpf_guard:
         try:
-            from arf_rt.ccpf_bridge import build_constraint_index
+            from arf_rt.ccpf_bridge import build_constraint_index, evaluate_candidate_hop
             from research.ccpf.rdce import RestrictedDeterministicConstraintEvaluator
             ccpf_constraint_index = build_constraint_index(conn)
             ccpf_evaluator = RestrictedDeterministicConstraintEvaluator()
+            ccpf_evaluate_fn = evaluate_candidate_hop
         except Exception as ex:
             logger.warning("CCPF passive bridge failed to initialize: %s", ex)
             ccpf_guard = False
@@ -190,10 +192,9 @@ def search_top_k(
                 continue  # Cycle safety
 
             # CCPF Passive Audit Hook (Mode A: Zero Pruning)
-            if ccpf_guard:
+            if ccpf_guard and ccpf_evaluate_fn is not None:
                 try:
-                    from arf_rt.ccpf_bridge import evaluate_candidate_hop
-                    evaluate_candidate_hop(
+                    ccpf_evaluate_fn(
                         eid=eid,
                         edge_data=edge_data.get(eid, {}),
                         constraint_index=ccpf_constraint_index,
@@ -249,6 +250,7 @@ def search_and_store_top_k(
     conn: sqlite3.Connection,
     correlation: dict[str, Any] | None = None,
     ccpf_guard: bool | None = None,
+    ccpf_audit_sink: list[dict[str, Any]] | None = None,
 ) -> dict[str, list[dict]]:
     """Search Top-K for all objectives and store in derived_topk.
 
@@ -266,7 +268,13 @@ def search_and_store_top_k(
 
     for obj in objectives:
         oid = obj["objective_id"]
-        paths = search_top_k(conn, oid, correlation, ccpf_guard=ccpf_guard)
+        paths = search_top_k(
+            conn,
+            oid,
+            correlation,
+            ccpf_guard=ccpf_guard,
+            ccpf_audit_sink=ccpf_audit_sink,
+        )
         all_results[oid] = paths
 
         # Store in derived_topk
