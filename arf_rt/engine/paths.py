@@ -1,9 +1,9 @@
-"""Top-K path search for ARF-RT (spec §15).
+﻿"""Top-K path search for ARF-RT (spec Â§15).
 
 Best-first search using p_worst_partial_q8 as the admissible bound.
 Global components ensure extending a path cannot increase the bound.
 
-Frontier priority (§15.2):
+Frontier priority (Â§15.2):
   1. Higher p_worst_partial_q8 (best probability first)
   2. Shorter path length
   3. Lexicographic edge_id_sequence COLLATE BINARY
@@ -18,7 +18,10 @@ import json
 import sqlite3
 from typing import Any
 
-from arf_rt.config import Q8
+import logging
+from arf_rt.config import Q8, CCPF_FEASIBILITY_GUARD
+
+logger = logging.getLogger(__name__)
 from arf_rt.engine.correlation import compute_correlation
 from arf_rt.util.canon import canonical_json, edge_p_q8, grouped_product_q8
 
@@ -27,6 +30,8 @@ def search_top_k(
     conn: sqlite3.Connection,
     objective_id: str,
     correlation: dict[str, Any] | None = None,
+    ccpf_guard: bool | None = None,
+    ccpf_audit_sink: list[dict[str, Any]] | None = None,
 ) -> list[dict]:
     """Find Top-K paths for an objective.
 
@@ -58,13 +63,28 @@ def search_top_k(
     if correlation is None:
         correlation = compute_correlation(conn)
 
+    if ccpf_guard is None:
+        ccpf_guard = CCPF_FEASIBILITY_GUARD
+
+    ccpf_constraint_index: dict[str, Any] = {}
+    ccpf_evaluator: Any = None
+    if ccpf_guard:
+        try:
+            from arf_rt.ccpf_bridge import build_constraint_index
+            from research.ccpf.rdce import RestrictedDeterministicConstraintEvaluator
+            ccpf_constraint_index = build_constraint_index(conn)
+            ccpf_evaluator = RestrictedDeterministicConstraintEvaluator()
+        except Exception as ex:
+            logger.warning("CCPF passive bridge failed to initialize: %s", ex)
+            ccpf_guard = False
+
     edge_groups = correlation["edge_groups"]
     p_worst_reps = correlation["p_worst_reps"]
     p_best_reps = correlation["p_best_reps"]
 
-    # Build adjacency: src_node_id → [(edge_id, dst_node_id)]
+    # Build adjacency: src_node_id â†’ [(edge_id, dst_node_id)]
     edges = conn.execute(
-        "SELECT edge_id, src_node_id, dst_node_id, alpha_i, beta_i, flags_json "
+        "SELECT edge_id, edge_type, src_node_id, dst_node_id, alpha_i, beta_i, flags_json "
         "FROM edges ORDER BY edge_id COLLATE BINARY"
     ).fetchall()
 
@@ -78,6 +98,7 @@ def search_top_k(
             adj[src] = []
         adj[src].append((eid, dst))
         edge_data[eid] = {
+            "edge_type": e["edge_type"],
             "alpha_i": e["alpha_i"],
             "beta_i": e["beta_i"],
             "flags_json": e["flags_json"],
@@ -168,6 +189,22 @@ def search_top_k(
             if dst in visited:
                 continue  # Cycle safety
 
+            # CCPF Passive Audit Hook (Mode A: Zero Pruning)
+            if ccpf_guard:
+                try:
+                    from arf_rt.ccpf_bridge import evaluate_candidate_hop
+                    evaluate_candidate_hop(
+                        eid=eid,
+                        edge_data=edge_data.get(eid, {}),
+                        constraint_index=ccpf_constraint_index,
+                        evaluator=ccpf_evaluator,
+                        audit_sink=ccpf_audit_sink,
+                    )
+                except Exception as ex:
+                    logger.debug("CCPF passive audit hook encountered error for edge %s: %s", eid, ex)
+                # ABSOLUTE INVARIANT (MODE A): ZERO PRUNING.
+                # Every candidate edge proceeds through baseline expansion and heap insertion.
+
             # Compute new p_worst
             info = edge_groups.get(eid, {})
             w_sig = info.get("p_worst_sig", canonical_json([["NONE", eid]]))
@@ -176,7 +213,7 @@ def search_top_k(
             new_pw_q8 = pw_q8
             new_worst_sigs = worst_sigs
             if w_sig not in worst_sigs:
-                # First time seeing this group in this path → multiply
+                # First time seeing this group in this path â†’ multiply
                 ep = _get_p_worst_q8(eid)
                 new_pw_q8 = grouped_product_q8(pw_q8, ep)
                 new_worst_sigs = worst_sigs | {w_sig}
@@ -211,11 +248,12 @@ def search_top_k(
 def search_and_store_top_k(
     conn: sqlite3.Connection,
     correlation: dict[str, Any] | None = None,
+    ccpf_guard: bool | None = None,
 ) -> dict[str, list[dict]]:
     """Search Top-K for all objectives and store in derived_topk.
 
     Returns:
-        Dict mapping objective_id → list of path results.
+        Dict mapping objective_id â†’ list of path results.
     """
     if correlation is None:
         correlation = compute_correlation(conn)
@@ -228,7 +266,7 @@ def search_and_store_top_k(
 
     for obj in objectives:
         oid = obj["objective_id"]
-        paths = search_top_k(conn, oid, correlation)
+        paths = search_top_k(conn, oid, correlation, ccpf_guard=ccpf_guard)
         all_results[oid] = paths
 
         # Store in derived_topk
@@ -256,7 +294,7 @@ def _aggregate_path_flags(
 ) -> str:
     """Aggregate flags across path edges.
 
-    Any edge with conflict=true → path has conflict=true, etc.
+    Any edge with conflict=true â†’ path has conflict=true, etc.
     """
     import json as _json
     flags = {
@@ -286,7 +324,7 @@ def _aggregate_path_flags(
 
 
 def _confidence_band(p_worst_q8: int) -> str:
-    """Map p_worst_q8 to confidence band (spec §16)."""
+    """Map p_worst_q8 to confidence band (spec Â§16)."""
     # p_worst is in Q8 scale (0 to 100_000_000)
     # Convert to percentage-like for band mapping
     pct = p_worst_q8 * 100 // Q8  # 0-100 range

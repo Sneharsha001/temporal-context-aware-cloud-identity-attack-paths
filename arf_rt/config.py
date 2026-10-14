@@ -54,3 +54,11 @@ DEFAULT_BETA_I: int = 1
 # §20.1 — Belief decay (opt-in via --as-of)
 DECAY_HALF_LIFE_DAYS: float = 90.0   # 90 days = quarterly reassessment cycle
 DECAY_MIN_WEIGHT: float = 0.01       # floor: never decay below 1% of original weight
+
+
+# CCPF Feasibility Guard Configuration (Prompt 7 Mode A: Passive Audit Only)
+import os
+
+CCPF_FEASIBILITY_GUARD: bool = (
+    os.environ.get("ARF_CCPF_GUARD", "0").strip().lower() in ("1", "true", "yes")
+)

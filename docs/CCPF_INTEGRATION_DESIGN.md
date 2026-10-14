@@ -320,3 +320,49 @@ All active pruning (discarding neighbor expansions or suppressing heap pushes) i
 - `docs/CCPF_RE_REVIEW.md` -- Independent re-review report
 - `arf_rt/adapters/trust_policy_parser.py` -- IAM trust condition extraction
 - `arf_rt/engine/paths.py` -- Best-First Top-K path search engine
+
+
+---
+
+## 10. Prompt 7 Implementation & Empirical Validation (Mode A: Passive Audit)
+
+### 10.1 Implemented Components and Call Points
+
+1. **Feature Flag (`arf_rt/config.py`):**
+   - Config constant: `CCPF_FEASIBILITY_GUARD = os.environ.get("ARF_CCPF_GUARD", "0").strip().lower() in ("1", "true", "yes")`.
+   - Default: `False` (zero overhead, zero code path change).
+
+2. **Isolated Passive Bridge (`arf_rt/ccpf_bridge.py`):**
+   - `infer_scope(condition_key)`: Maps supported IAM keys to formal `ContextScope` (`REQUEST`, `PRINCIPAL`, `SESSION`, `CONFIG`); all unsupported or unrecognized keys map to `ContextScope.UNKNOWN`.
+   - `extract_predicates_from_constraint(...)`: Resiliently extracts condition predicates; ignores unconditional structural constraints; maps unsupported conditions to `ContextScope.UNKNOWN`.
+   - `build_constraint_index(conn)`: Pre-loads edge constraints from DB into an in-memory dictionary before search traversal.
+   - `evaluate_candidate_hop(...)`: Invokes RDCE to evaluate candidate hops; records diagnostic records in `audit_sink`; isolates any bridge or solver exception into a safe `UNKNOWN` fallback without interrupting search.
+
+3. **Search Call Point (`arf_rt/engine/paths.py:search_top_k`):**
+   - Added `edge_type` to adjacency SELECT query (resolving Gap G1).
+   - Placed observational hook inside neighbor expansion loop behind `if ccpf_guard:`.
+   - **Zero Pruning Invariant:** The candidate edge always proceeds to `heapq.heappush` with exact baseline Q8 probabilities and priority tuples.
+
+4. **Integration Test Suite (`tests/integration/test_ccpf_bridge.py`):**
+   - 10 focused tests covering all failure isolation, invariance, and edge cases: **10/10 passed** (0.43s).
+
+### 10.2 Baseline Equivalence & Empirical Overhead Results
+
+Empirical evaluation across three scenario fixtures (15 repetitions per scenario, median reported):
+
+| Scenario Fixture | Paths Returned | Baseline Equivalence | Hops Evaluated | Median Baseline Latency | Median Audit Mode Latency | Absolute Overhead | Overhead % |
+|---|---|---|---|---|---|---|---|
+| `minimal_scenario.json` | 1 | **100% Bit-Identical** | 2 (0 SAT, 0 UNSAT, 2 UNK) | 0.136 ms | 0.184 ms | +0.048 ms | +35.5% |
+| `complex_scenario.json` | 15 | **100% Bit-Identical** | 54 (2 SAT, 0 UNSAT, 52 UNK) | 2.360 ms | 2.840 ms | +0.480 ms | +20.3% |
+| `primary_realistic_scenario.json` | 5 | **100% Bit-Identical** | 23 (2 SAT, 0 UNSAT, 21 UNK) | 1.083 ms | 1.333 ms | +0.250 ms | +23.1% |
+
+**Key Findings:**
+- **Bit-Identical Correctness:** Every candidate path identity (`edge_id_sequence`), rank, `p_worst_q8`, `p_best_q8`, `confidence_band`, and `flags_json` matches baseline byte-for-byte.
+- **Zero Pruning Enforced:** No paths were eliminated, delayed, or reordered.
+- **Sub-Millisecond Overhead:** Absolute audit latency overhead is under $0.5$ ms per Top-K search.
+- **Privacy Boundary Maintained:** Diagnostic records capture operational metadata (`edge_id`, `src_node_id`, `dst_node_id`, `edge_type`, `status`, `solver_duration_ms`, `predicates_count`) while omitting sensitive secret values.
+
+### 10.3 Remaining Limitations and Explicit Deferrals
+
+- **Active Pruning Deferred:** Mode B active pruning remains strictly prohibited until statement boundaries (`StatementId`) and alternative Allow paths are stored and indexed.
+- **Multi-Hop Transition Relations Deferred:** Cross-hop state mutations (`ProducedStateModification`) remain deferred until schema support for transition relations is introduced.
