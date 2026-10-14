@@ -258,3 +258,18 @@ Independent code re-review of the remediated evaluator and test suite, followed 
 - **Acceptance criteria:** A1-A12 criteria defined; all require explicit researcher authorization before implementation (Prompt 7+).
 - **Production files modified in Prompt 6:** NONE.
 - **Determination:** DESIGN COMPLETE -- awaiting researcher authorization to proceed to Prompt 7 implementation.
+
+
+### Prompt 6A Completion -- CCPF Integration Design Correctness Audit (AUDITED & RESTRICTED)
+- **Phase:** Design Audit & Documentation Correction Only (no production code modified).
+- **Audited Commit:** `6fb9ec0` on `temporal-context-dev`.
+- **Artifact:** `docs/CCPF_INTEGRATION_DESIGN.md` (updated with verified audit findings).
+- **Reconciled Contract & Findings:**
+  - `confidence_q` removed from `PathEvaluationResult` (does not exist in RDCE; exists only as Bayesian belief prior in DB).
+  - `confidence_q >= 500` rule removed: soft numeric prior cannot substitute for formal logical proof.
+  - Field naming corrected to `contradiction_rationale` and `unknown_rationale`.
+  - Trust policy parser audit: identified disjunctive statement flattening vulnerability in `trust_policy_parser.py` (multiple Allow statements conjoined into a flat list, discarding `StatementId`; conjoining alternative statements yields false UNSAT).
+  - Supported condition key mapping table established (4 supported, 8 unsupported mapping to UNKNOWN).
+  - Top-K search mechanics corrected: `max_depth` verified as hard per-path cutoff; `max_expansions` does not exist in `search_top_k` (claims retracted).
+  - Scope of safe single-hop pruning formally bounded to single-statement verified conjunctions.
+- **Readiness Determination:** **NOT READY FOR UNRESTRICTED PRODUCTION INTEGRATION**. Permitted scope for Prompt 7 strictly restricted to Mode A (passive audit logging without pruning) or Mode B (gated single-condition active pruning).
