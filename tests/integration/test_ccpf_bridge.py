@@ -735,3 +735,272 @@ def test_baseline_vs_audit_full_field_comparison_on_fixtures():
                 assert d_p["confidence_band"] == e_p["confidence_band"]
                 assert d_p["path_length"] == e_p["path_length"]
                 assert d_p["flags_json"] == e_p["flags_json"]
+
+
+# ===================================================================
+# Test 16: Real Parser to SQLite Storage to RDCE Pipeline (Prompt 7B)
+# ===================================================================
+def test_real_parser_to_sqlite_storage_to_rdce_pipeline():
+    """Verify condition transformation across actual parser -> storage -> RDCE pipeline."""
+    from arf_rt.storage.migrations import run_migrations
+    from arf_rt.models.core import ScenarioInput, NodeInput, EdgeInput, TemplateInput, ObjectiveInput
+    from arf_rt.adapters.trust_policy_parser import resolve_trust_constraints
+    from arf_rt.adapters.replay import ReplayAdapter
+
+    conn = sqlite3.connect(":memory:")
+    conn.row_factory = sqlite3.Row
+    run_migrations(conn)
+
+    role_arn = "arn:aws:iam::123456789012:role/PipelineVerifiedRole"
+    user_arn = "arn:aws:iam::123456789012:user/Engineer"
+
+    trust_doc = {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Principal": {"AWS": "arn:aws:iam::123456789012:root"},
+                "Action": "sts:AssumeRole",
+                "Condition": {
+                    "IpAddress": {"aws:SourceIp": ["198.51.100.0/24"]},
+                    "Bool": {"aws:MultiFactorAuthPresent": "true"},
+                    "StringEquals": {
+                        "sts:ExternalId": "client-confidential-extid",
+                        "aws:PrincipalTag/Department": "Finance",
+                        "aws:SourceVpc": "vpc-0987654321fedcba0",
+                        "aws:PrincipalOrgID": "o-abcdef1234",
+                    },
+                    "NumericLessThan": {"aws:MultiFactorAuthAge": "1800"},
+                },
+            }
+        ],
+    }
+
+    edges_in = [
+        {
+            "edge_type": "STS_ASSUME_ROLE",
+            "src": {"provider": "aws", "node_type": "USER", "provider_id": user_arn, "region": "-"},
+            "dst": {"provider": "aws", "node_type": "ROLE", "provider_id": role_arn, "region": "-"},
+            "region": "-",
+        }
+    ]
+
+    constraints, edge_constraints, warnings = resolve_trust_constraints(
+        {role_arn: trust_doc}, edges_in
+    )
+    assert len(constraints) == 7
+    assert len(edge_constraints) == 7
+
+    scenario = ScenarioInput(
+        nodes=[
+            NodeInput(provider="aws", node_type="USER", provider_id=user_arn, region="-"),
+            NodeInput(provider="aws", node_type="ROLE", provider_id=role_arn, region="-"),
+        ],
+        templates=[
+            TemplateInput(provider="aws", edge_type="STS_ASSUME_ROLE", features={}),
+        ],
+        edges=[
+            EdgeInput(
+                edge_type="STS_ASSUME_ROLE",
+                src={"provider": "aws", "node_type": "USER", "provider_id": user_arn, "region": "-"},
+                dst={"provider": "aws", "node_type": "ROLE", "provider_id": role_arn, "region": "-"},
+                region="-",
+                features={},
+            )
+        ],
+        constraints=constraints,
+        edge_constraints=edge_constraints,
+        objectives=[
+            ObjectiveInput(
+                objective_type="ADMIN_ACCESS",
+                start_nodes=[{"provider": "aws", "node_type": "USER", "provider_id": user_arn, "region": "-"}],
+                target_nodes=[{"provider": "aws", "node_type": "ROLE", "provider_id": role_arn, "region": "-"}],
+                max_depth=3,
+                k=5,
+            )
+        ],
+        observations=[],
+    )
+
+    adapter = ReplayAdapter(conn)
+    ingest_warnings = adapter.ingest(scenario)
+    assert len(ingest_warnings) == 0
+
+    # Verify SQLite rows created by pipeline
+    cursor = conn.cursor()
+    cursor.execute("SELECT constraint_id, constraint_type, properties_json FROM constraints")
+    stored_constraints = cursor.fetchall()
+    assert len(stored_constraints) == 7
+
+    # Load via build_constraint_index from the actual SQLite tables
+    index = build_constraint_index(conn)
+    assert index.load_error is None
+    assert len(index) == 1
+
+    edge_id = list(index.keys())[0]
+    preds = index[edge_id]
+    assert len(preds) == 7
+
+    pred_by_key = {p.key: p for p in preds}
+
+    # Verify supported condition keys and mappings
+    assert pred_by_key["aws:SourceIp"].scope == ContextScope.REQUEST
+    assert pred_by_key["aws:SourceIp"].operator == "IpAddress"
+    assert pred_by_key["aws:SourceIp"].values == ["198.51.100.0/24"]
+
+    assert pred_by_key["aws:MultiFactorAuthPresent"].scope == ContextScope.SESSION
+    assert pred_by_key["aws:MultiFactorAuthPresent"].operator == "Bool"
+    assert pred_by_key["aws:MultiFactorAuthPresent"].values == ["true"]
+
+    assert pred_by_key["sts:ExternalId"].scope == ContextScope.CONFIG
+    assert pred_by_key["sts:ExternalId"].operator == "StringEquals"
+    assert pred_by_key["sts:ExternalId"].values == ["client-confidential-extid"]
+
+    assert pred_by_key["aws:PrincipalTag/Department"].scope == ContextScope.PRINCIPAL
+    assert pred_by_key["aws:PrincipalTag/Department"].operator == "StringEquals"
+    assert pred_by_key["aws:PrincipalTag/Department"].values == ["Finance"]
+
+    # Verify unsupported condition keys correctly map to UNKNOWN
+    assert pred_by_key["aws:SourceVpc"].scope == ContextScope.UNKNOWN
+    assert pred_by_key["aws:PrincipalOrgID"].scope == ContextScope.UNKNOWN
+    assert pred_by_key["aws:MultiFactorAuthAge"].scope == ContextScope.UNKNOWN
+
+    # Evaluate hop with unsupported conditions -> returns UNKNOWN with diagnostic
+    evaluator = RestrictedDeterministicConstraintEvaluator()
+    sink: list[dict] = []
+    res = evaluate_candidate_hop(
+        eid=edge_id,
+        edge_data={"edge_type": "STS_ASSUME_ROLE", "src": user_arn, "dst": role_arn},
+        constraint_index=index,
+        evaluator=evaluator,
+        audit_sink=sink,
+    )
+    assert res.status == FeasibilityStatus.UNKNOWN
+    assert "UNSUPPORTED_OR_UNKNOWN_SCOPE" in res.unknown_rationale
+    assert len(sink) == 1
+    assert sink[0]["status"] == "UNKNOWN"
+
+    # Evaluate edge with only supported predicates -> yields SAT with witness
+    supported_preds = [
+        pred_by_key["aws:SourceIp"],
+        pred_by_key["aws:MultiFactorAuthPresent"],
+        pred_by_key["sts:ExternalId"],
+        pred_by_key["aws:PrincipalTag/Department"],
+    ]
+    res_sat = evaluate_candidate_hop(
+        eid="edge_supported",
+        edge_data={"edge_type": "STS_ASSUME_ROLE"},
+        constraint_index={"edge_supported": supported_preds},
+        evaluator=evaluator,
+    )
+    assert res_sat.status == FeasibilityStatus.SAT
+    assert res_sat.witness is not None
+
+    # Condition_type vs condition_key separation:
+    # A property with condition_type but missing condition_key must return UNKNOWN
+    isolated_preds = extract_predicates_from_constraint(
+        "c_type_only",
+        "TRUST_CONDITION",
+        {"condition_type": "EXTERNAL_ID", "condition_operator": "StringEquals", "required_values": ["val"]},
+    )
+    assert len(isolated_preds) == 1
+    assert isolated_preds[0].scope == ContextScope.UNKNOWN
+    assert "internal category 'EXTERNAL_ID' without actual condition_key" in isolated_preds[0].description
+
+
+# ===================================================================
+# Test 17: Distinguishable Diagnostic Signatures (Prompt 7B)
+# ===================================================================
+def test_distinguishable_diagnostic_signatures_for_four_edge_states():
+    """Verify that all four edge evaluation states have mutually distinct diagnostic signatures."""
+    from research.ccpf.rdce import ContextPredicate
+    evaluator = RestrictedDeterministicConstraintEvaluator()
+
+    # 1. Successfully loaded edge with no contextual predicates
+    sink_unconstrained: list[dict] = []
+    res_unconstrained = evaluate_candidate_hop(
+        eid="e_unconstrained",
+        edge_data={"edge_type": "STS_ASSUME_ROLE"},
+        constraint_index={"e_unconstrained": []},
+        evaluator=evaluator,
+        audit_sink=sink_unconstrained,
+    )
+    # RDCE contract: total_constraints == 0 returns UNKNOWN with NO_CONTEXT_CONSTRAINTS_DEFINED
+    assert res_unconstrained.status == FeasibilityStatus.UNKNOWN
+    assert sink_unconstrained[0]["status"] == "UNKNOWN"
+    assert sink_unconstrained[0]["predicates_count"] == 0
+    assert sink_unconstrained[0]["unknown_rationale"] == "NO_CONTEXT_CONSTRAINTS_DEFINED"
+    assert sink_unconstrained[0]["contradiction_rationale"] is None
+
+    # 2. Edge with valid contextual condition
+    valid_pred = ContextPredicate(
+        key="aws:SourceIp",
+        operator="IpAddress",
+        values=["10.0.0.0/16"],
+        scope=ContextScope.REQUEST,
+    )
+    sink_valid: list[dict] = []
+    res_valid = evaluate_candidate_hop(
+        eid="e_valid",
+        edge_data={"edge_type": "STS_ASSUME_ROLE"},
+        constraint_index={"e_valid": [valid_pred]},
+        evaluator=evaluator,
+        audit_sink=sink_valid,
+    )
+    assert res_valid.status == FeasibilityStatus.SAT
+    assert res_valid.witness is not None
+    assert sink_valid[0]["status"] == "SAT"
+    assert sink_valid[0]["predicates_count"] == 1
+    assert sink_valid[0]["unknown_rationale"] is None
+
+    # 3. Edge with malformed contextual condition
+    malformed_pred = ContextPredicate(
+        key="malformed_constraint_json",
+        operator="Unsupported",
+        values=[],
+        scope=ContextScope.UNKNOWN,
+        description="constraint:c_bad: malformed JSON",
+    )
+    sink_malformed: list[dict] = []
+    res_malformed = evaluate_candidate_hop(
+        eid="e_malformed",
+        edge_data={"edge_type": "STS_ASSUME_ROLE"},
+        constraint_index={"e_malformed": [malformed_pred]},
+        evaluator=evaluator,
+        audit_sink=sink_malformed,
+    )
+    assert res_malformed.status == FeasibilityStatus.UNKNOWN
+    assert sink_malformed[0]["status"] == "UNKNOWN"
+    assert sink_malformed[0]["predicates_count"] == 1
+    assert "UNSUPPORTED_OR_UNKNOWN_SCOPE" in sink_malformed[0]["unknown_rationale"]
+
+    # 4. Failed constraint query
+    index_failure = ConstraintIndex(
+        predicates_by_edge={},
+        load_error="sqlite3.OperationalError: disk I/O error",
+    )
+    sink_failure: list[dict] = []
+    res_failure = evaluate_candidate_hop(
+        eid="e_failure",
+        edge_data={"edge_type": "STS_ASSUME_ROLE"},
+        constraint_index=index_failure,
+        evaluator=evaluator,
+        audit_sink=sink_failure,
+    )
+    assert res_failure.status == FeasibilityStatus.UNKNOWN
+    assert sink_failure[0]["status"] == "UNKNOWN"
+    assert sink_failure[0]["predicates_count"] == 0
+    assert "CONSTRAINT_INDEX_LOAD_FAILURE" in sink_failure[0]["unknown_rationale"]
+    assert "disk I/O error" in sink_failure[0]["unknown_rationale"]
+
+    # Assert mutual distinctness across all 4 diagnostic signatures
+    signatures = [
+        (
+            s[0]["status"],
+            s[0]["predicates_count"],
+            s[0]["unknown_rationale"],
+            "LOAD_FAILURE" in str(s[0]["unknown_rationale"]),
+        )
+        for s in (sink_unconstrained, sink_valid, sink_malformed, sink_failure)
+    ]
+    assert len(set(signatures)) == 4, f"Signatures not mutually distinct: {signatures}"

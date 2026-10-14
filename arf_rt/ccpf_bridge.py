@@ -237,7 +237,22 @@ def extract_predicates_from_constraint(
 
     # Format 2: Direct condition fields (trust_policy_parser output or DB row)
     if "condition_key" in properties or "condition_type" in properties:
-        k = str(properties.get("condition_key") or properties.get("condition_type") or "").strip()
+        has_actual_key = "condition_key" in properties and bool(str(properties.get("condition_key") or "").strip())
+        if not has_actual_key:
+            # Audit finding (Prompt 7B): condition_type represents an internal classification category,
+            # NOT an IAM condition key. Do not assume interchangeability or fabricate semantics.
+            ctype_cat = str(properties.get("condition_type") or "").strip()
+            return [
+                ContextPredicate(
+                    key=ctype_cat or "missing_condition_key",
+                    operator=str(properties.get("condition_operator") or "Unsupported").strip(),
+                    values=[],
+                    scope=ContextScope.UNKNOWN,
+                    description=f"constraint:{constraint_id}: internal category '{ctype_cat}' without actual condition_key",
+                )
+            ]
+
+        k = str(properties.get("condition_key")).strip()
         op = str(properties.get("condition_operator") or "StringEquals").strip()
         raw_vals = (
             properties.get("required_values")
@@ -245,14 +260,14 @@ def extract_predicates_from_constraint(
             or properties.get("condition_value")
         )
 
-        if not k or raw_vals is None:
+        if raw_vals is None:
             return [
                 ContextPredicate(
-                    key=k or "missing_condition_key",
+                    key=k,
                     operator="Unsupported",
                     values=[],
                     scope=ContextScope.UNKNOWN,
-                    description=f"constraint:{constraint_id}: missing condition key or values metadata",
+                    description=f"constraint:{constraint_id}: missing condition values metadata",
                 )
             ]
 
@@ -272,7 +287,7 @@ def extract_predicates_from_constraint(
             ]
 
         # ExternalId handling: if ExternalId values are unavailable or wildcarded, map to UNKNOWN
-        if k.lower() in ("sts:externalid", "external_id"):
+        if k.lower() == "sts:externalid":
             if vals == ["*"]:
                 return [
                     ContextPredicate(

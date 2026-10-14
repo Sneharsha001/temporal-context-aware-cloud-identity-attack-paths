@@ -336,3 +336,26 @@ Independent code re-review of the remediated evaluator and test suite, followed 
   - `primary_realistic_scenario.json`: Baseline 1.681 ms, Audit 2.371 ms (+0.690 ms, +41.0%)
   - **Performance Gate Determination:** Absolute overhead remains tiny (< 3.1 ms on complex graphs), but relative overhead (~40.8%) exceeds the strict <= 10% target. Recorded transparently as **UNMET**. Default operation is unaffected (`CCPF_FEASIBILITY_GUARD=False`).
 - **Safety Invariant Maintained:** Mode A Zero-Pruning invariant holds 100%. Active pruning remains deferred.
+
+
+### Prompt 7B Completion -- CCPF Passive Integration Conformance Audit (AUDIT PASSED)
+- **Phase:** Conformance Audit & End-to-End Pipeline Verification (Mode A: ZERO PRUNING).
+- **Branch:** `temporal-context-dev`.
+- **Primary Conformance Audit Findings & Additions:**
+  - `arf_rt/ccpf_bridge.py`:
+    - Disentangled `condition_type` (internal classification category) from `condition_key` (actual IAM condition key).
+    - If `condition_key` is missing and only `condition_type` is present, strictly returns `ContextScope.UNKNOWN` rather than fabricating semantics.
+  - `tests/integration/test_ccpf_bridge.py`:
+    - Added Test 16: `test_real_parser_to_sqlite_storage_to_rdce_pipeline` verifying real `trust_policy_parser.py` -> `ScenarioInput` -> `ReplayAdapter` SQLite persistence -> `build_constraint_index` -> RDCE evaluation.
+    - Added Test 17: `test_distinguishable_diagnostic_signatures_for_four_edge_states` verifying mutually distinct signatures for unconstrained, valid context, malformed context, and query failure edges.
+- **Verification Results:**
+  - `tests/integration/`: **17 passed / 17 total** (1.18s)
+  - `tests/research/`: **141 passed / 141 total** (0.83s)
+  - `tests/unit/`: **625 passed / 625 total** (31.58s)
+  - Total test suite: **783 passed / 783 total** (100% passing)
+- **Performance Gate Reconciliation:**
+  - Stage 5 authorized threshold: `< 15% increase` total pipeline overhead.
+  - Prompt 7A referenced `10%` (noted as requiring researcher clarification).
+  - Measured ~40.8% relative overhead exceeds both thresholds; gate remains recorded as **UNMET**.
+  - Absolute overhead remains sub-3.1ms. Default operation (`CCPF_FEASIBILITY_GUARD=False`) has zero RDCE overhead.
+- **Safety Invariant Maintained:** Zero pruning performed. Active pruning remains strictly deferred. All 9 acceptance criteria verified.
