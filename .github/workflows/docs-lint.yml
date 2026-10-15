@@ -1,0 +1,26 @@
+name: Documentation Quality
+
+on:
+  push:
+    paths:
+      - "docs/**"
+      - "*.md"
+  pull_request:
+    paths:
+      - "docs/**"
+      - "*.md"
+
+jobs:
+  lint-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check markdown files exist and are readable
+        run: |
+          echo "Scanning Markdown documentation..."
+          find docs -name "*.md" -type f | while read -r file; do
+            echo "Checking: $file"
+            test -s "$file" || exit 1
+          done
+          echo "All documentation files valid."
