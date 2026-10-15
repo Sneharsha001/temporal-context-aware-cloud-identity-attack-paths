@@ -1,43 +1,37 @@
-﻿# Contributing to ARF-RT Temporal Context Research
+# Contributing to ARF-RT
 
-This repository is a research artifact. Contributions follow a strict research-engineering
-discipline to maintain scientific reproducibility.
+Welcome to ARF-RT! This repository is a scientific research and engineering platform for Bayesian reasoning on cloud identity attack paths.
 
 ## Branch Strategy
 
 | Branch | Purpose |
 |---|---|
-| `main` | Stable documentation and verification mirror |
-| `temporal-context-dev` | Active research workspace |
+| `main` | Production-ready codebase, verified documentation, and release baseline |
+| `temporal-context-dev` | Active research workspace and experimental stage implementations |
 
-## Pre-Contribution Requirements
+## Pre-Contribution Checklist
 
-Before any code contribution to `arf_rt/`:
+Before submitting a Pull Request or pushing changes:
+1. Ensure your Python environment is version 3.10 or higher.
+2. Run the environment health check:
+   ```bash
+   python scripts/health_check.py
+   ```
+3. Run the code quality gate:
+   ```bash
+   python scripts/lint_check.py
+   ```
+4. Run the fixture validation script:
+   ```bash
+   python scripts/validate_fixtures.py
+   ```
+5. Ensure all commits adhere to Conventional Commits:
+   - `feat(...)`: New capability or enhancement
+   - `docs(...)`: Documentation additions or updates
+   - `test(...)`: Test additions or regressions
+   - `refactor(...)`: Code refactoring without behavior change
+   - `ci(...)`: Automation or CI workflow updates
 
-1. Run the full baseline verification campaign using `verification/run_full_suites.py`
-2. Confirm Gate B status (911/912 tests pass; sole failure is host-performance only)
-3. Obtain explicit researcher authorization
-4. Document all changes in `docs/` before implementing
-
-## Commit Style
-
-Commits must follow this format:
-```
-<scope>: <short description>
-
-<body explaining what, why, and evidence>
-```
-
-Scopes: `arf_rt`, `docs`, `verification`, `tests`, `research`
-
-## Scientific Integrity Rules
-
-- Do NOT modify `arf_rt/` without a prior formal design document in `docs/`
-- Do NOT change test assertions or timing thresholds to make tests pass
-- Do NOT commit without running the full test suite first
-- All claims in docs must be supported by reproducible log evidence
-
-## Research Contact
-
-Researcher: Sneharsha001
-Repository: temporal-context-aware-cloud-identity-attack-paths
+## Scientific Rigor & Reproducibility
+- All performance benchmarks must follow the rules in `docs/BENCHMARK_METHODOLOGY.md`.
+- No live cloud credentials or API calls are permitted; ARF-RT operates strictly against deterministic replays.
