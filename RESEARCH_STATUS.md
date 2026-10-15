@@ -359,3 +359,22 @@ Independent code re-review of the remediated evaluator and test suite, followed 
   - Measured ~40.8% relative overhead exceeds both thresholds; gate remains recorded as **UNMET**.
   - Absolute overhead remains sub-3.1ms. Default operation (`CCPF_FEASIBILITY_GUARD=False`) has zero RDCE overhead.
 - **Safety Invariant Maintained:** Zero pruning performed. Active pruning remains strictly deferred. All 9 acceptance criteria verified.
+
+
+### Prompt 7C Completion -- CCPF Path-Level Semantics & Disabled-Mode Evidence Audit (AUDITED & GATED)
+- **Phase:** Path-Level Semantics Audit & Disabled-Mode Verification (Mode A: ZERO PRUNING).
+- **Branch:** `temporal-context-dev`.
+- **Primary Audit Findings:**
+  - **Single-Hop vs. Path-Wide:** Proved from code and tests that `evaluate_candidate_hop()` evaluates solely the candidate edge (`hops=[hop_spec]`, `len(hops)==1`) in isolation. Multi-hop joint constraint evaluation in RDCE is **never exercised** by ARF-RT search today. Claims of path-wide feasibility reasoning are retracted.
+  - **Multi-Hop Counterexample:** Test 18 proved that two consecutive hops with disjoint IP constraints (`10.0.0.0/24` and `192.168.1.0/24`), which jointly evaluate to `UNSAT` in RDCE under the static-origin assumption, are evaluated independently as `SAT` by the bridge, completely missing the joint contradiction.
+  - **Feature-Disabled Verification:** Test 19 proved zero RDCE/bridge calls and untouched audit sink when `ccpf_guard=False`. The only modification is the addition of `edge_type` to the SQL query (+11.5 µs measured overhead). The "zero overhead" claim was corrected.
+- **Verification Results:**
+  - `tests/integration/`: **19 passed / 19 total** (1.47s)
+  - `tests/research/`: **141 passed / 141 total** (1.04s)
+  - `tests/unit/`: **625 passed / 625 total** (32.03s)
+  - Total test suite: **785 passed / 785 total** (100% passing)
+- **Performance Gate Reconciliation:**
+  - Authorized threshold: `< 15% increase` total pipeline overhead.
+  - Measured relative overhead across 30 paired repetitions: **+30.8%** (`minimal_scenario`), **+27.9%** (`complex_scenario`).
+  - Gate remains recorded as **UNMET**. Absolute overhead is $+0.12$ ms to $+1.36$ ms.
+- **Design Gap Documented:** Documented Section 13.5 outlining requirements for multi-hop prefix propagation, incremental solving, and context inheritance scoping. Active pruning remains strictly deferred.

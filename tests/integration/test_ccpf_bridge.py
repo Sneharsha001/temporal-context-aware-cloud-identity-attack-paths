@@ -1004,3 +1004,106 @@ def test_distinguishable_diagnostic_signatures_for_four_edge_states():
         for s in (sink_unconstrained, sink_valid, sink_malformed, sink_failure)
     ]
     assert len(set(signatures)) == 4, f"Signatures not mutually distinct: {signatures}"
+
+
+# ===================================================================
+# Test 18: Multi-Hop Counterexample Evaluation Limitation (Prompt 7C)
+# ===================================================================
+def test_multihop_counterexample_joint_unsat_evaluated_independently_as_sat():
+    """Demonstrate that joint multi-hop UNSAT is evaluated independently as SAT by bridge."""
+    from research.ccpf.rdce import (
+        ContextPredicate,
+        ContextScope,
+        FeasibilityStatus,
+        HopContextSpec,
+        PathEvaluationInput,
+        RestrictedDeterministicConstraintEvaluator,
+    )
+
+    evaluator = RestrictedDeterministicConstraintEvaluator()
+
+    pred_hop1 = ContextPredicate(
+        key="aws:SourceIp",
+        operator="IpAddress",
+        values=["10.0.0.0/24"],
+        scope=ContextScope.REQUEST,
+    )
+
+    pred_hop2 = ContextPredicate(
+        key="aws:SourceIp",
+        operator="IpAddress",
+        values=["192.168.1.0/24"],
+        scope=ContextScope.REQUEST,
+    )
+
+    # 1. Direct RDCE evaluation of the joint 2-hop path under static origin assumption
+    hop1_spec = HopContextSpec(
+        hop=1, edge_type="STS_ASSUME_ROLE", src_node_id="NodeA", dst_node_id="NodeB", required_context=[pred_hop1]
+    )
+    hop2_spec = HopContextSpec(
+        hop=2, edge_type="STS_ASSUME_ROLE", src_node_id="NodeB", dst_node_id="NodeC", required_context=[pred_hop2]
+    )
+
+    joint_input = PathEvaluationInput(
+        path_id="path_joint_1_2",
+        hops=[hop1_spec, hop2_spec],
+        scenario_assumptions={"static_origin_assumption": True},
+    )
+    joint_result = evaluator.evaluate(joint_input)
+
+    # Formal joint result: UNSAT due to disjoint CIDRs under static origin
+    assert joint_result.status == FeasibilityStatus.UNSAT
+    assert "disjoint" in str(joint_result.contradiction_rationale).lower()
+
+    # 2. What integrated evaluate_candidate_hop does: each hop evaluated in isolation
+    audit_sink: list[dict] = []
+    res1 = evaluate_candidate_hop(
+        eid="edge_hop1",
+        edge_data={"edge_type": "STS_ASSUME_ROLE", "src": "NodeA", "dst": "NodeB"},
+        constraint_index={"edge_hop1": [pred_hop1]},
+        evaluator=evaluator,
+        audit_sink=audit_sink,
+        scenario_assumptions={"static_origin_assumption": True},
+    )
+    res2 = evaluate_candidate_hop(
+        eid="edge_hop2",
+        edge_data={"edge_type": "STS_ASSUME_ROLE", "src": "NodeB", "dst": "NodeC"},
+        constraint_index={"edge_hop2": [pred_hop2]},
+        evaluator=evaluator,
+        audit_sink=audit_sink,
+        scenario_assumptions={"static_origin_assumption": True},
+    )
+
+    # Empirical limitation proof: both independent hops evaluate to SAT!
+    assert res1.status == FeasibilityStatus.SAT
+    assert res2.status == FeasibilityStatus.SAT
+    assert [s["status"] for s in audit_sink] == ["SAT", "SAT"]
+
+
+# ===================================================================
+# Test 19: Feature-Disabled Mode Zero Evaluations and Untouched Sink (Prompt 7C)
+# ===================================================================
+def test_feature_disabled_mode_zero_evaluations_and_sink_untouched():
+    """Verify that when ccpf_guard=False, no RDCE calls occur and audit sink is untouched."""
+    from unittest.mock import patch
+    from arf_rt.engine.paths import search_and_store_top_k
+
+    conn = _build_pipeline_db(COMPLEX)
+    sink: list[dict] = []
+
+    with patch("arf_rt.ccpf_bridge.build_constraint_index") as mock_build_idx, \
+         patch("research.ccpf.rdce.RestrictedDeterministicConstraintEvaluator") as mock_evaluator, \
+         patch("arf_rt.ccpf_bridge.evaluate_candidate_hop") as mock_eval_hop:
+
+        results = search_and_store_top_k(conn, ccpf_guard=False, ccpf_audit_sink=sink)
+
+        # Assert zero invocations of bridge and solver components
+        assert mock_build_idx.call_count == 0
+        assert mock_evaluator.call_count == 0
+        assert mock_eval_hop.call_count == 0
+
+        # Assert audit sink is untouched
+        assert len(sink) == 0
+
+        # Assert search executed and produced results
+        assert len(results) > 0

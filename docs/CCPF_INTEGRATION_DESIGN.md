@@ -479,3 +479,81 @@ A dedicated test (`test_distinguishable_diagnostic_signatures_for_four_edge_stat
 
 **Overall Conformance Audit Verdict:** **AUDIT PASSED (PASSIVE MODE CONFORMANCE VERIFIED)**.
 Active pruning remains deferred pending future researcher authorization.
+
+
+---
+
+## 13. Prompt 7C Path-Level Semantics & Disabled-Mode Evidence Audit
+
+### 13.1 Audit of Path-Wide vs. Single-Hop Evaluation Semantics
+A rigorous code audit of `arf_rt/engine/paths.py:search_top_k()` and `arf_rt/ccpf_bridge.py:evaluate_candidate_hop()` established the following facts regarding integrated evaluation:
+
+1. **Per-Hop Evaluation Scope:**
+   - In `arf_rt/engine/paths.py`, the call site passes only the candidate edge identifier `eid` and its local dictionary `edge_data.get(eid, {})`.
+   - The path prefix (`curr_path`) is **not** passed to `evaluate_candidate_hop()`.
+   - In `arf_rt/ccpf_bridge.py`, `evaluate_candidate_hop()` evaluates solely the candidate edge in complete isolation.
+2. **Construction of `PathEvaluationInput.hops`:**
+   - At the bridge call site, `hop_spec = HopContextSpec(hop=1, edge_type=edge_type, src_node_id=src, dst_node_id=dst, required_context=required_context)`.
+   - `eval_input = PathEvaluationInput(path_id=eid, hops=[hop_spec], scenario_assumptions=scenario_assumptions or {})`.
+   - The input `hops` list is **always a 1-element list (`len(hops) == 1`)**.
+3. **Absence of Cross-Hop Constraint Correlation:**
+   - Constraints from distinct hops along a candidate path are evaluated independently and sequentially as neighbor edges are expanded.
+   - The integrated search does not accumulate context predicates across the path prefix.
+4. **Unexercised Multi-Hop RDCE Capabilities:**
+   - While the underlying RDCE solver (`research/ccpf/rdce.py`) natively supports multi-hop paths via `PathEvaluationInput(hops=[hop1, hop2, ...])` and evaluates cross-hop scope consistency (e.g., shared static origin, session token lifecycle), this capability is **never exercised** by the integrated bridge in ARF-RT search.
+5. **Justified Claims Boundary:**
+   - The current integration is strictly an **observational single-hop edge constraint evaluator**.
+   - No claims of path-wide, multi-hop context feasibility reasoning in ARF-RT search are justified by the existing codebase. Describing the integration as "path-wide feasibility reasoning" is factually inaccurate.
+
+### 13.2 Concrete Multi-Hop Counterexample Demonstration
+A dedicated integration test (`test_multihop_counterexample_joint_unsat_evaluated_independently_as_sat`, Test 18) proved the limitation:
+- **Scenario:** Two consecutive hops where Hop 1 requires `aws:SourceIp` in `10.0.0.0/24` and Hop 2 requires `aws:SourceIp` in `192.168.1.0/24`.
+- **Under Static Origin Assumption (`static_origin_assumption: True`):**
+  - **Direct RDCE Joint Evaluation:** When evaluated as `hops=[hop1, hop2]`, RDCE correctly returns `status=UNSAT` with contradiction rationale: `"Contradictory persistent context under static origin assumption: CIDRs on hop 1 ([IPv4Network('10.0.0.0/24')]) are disjoint from hop 2 ([IPv4Network('192.168.1.0/24')])"`.
+  - **Integrated Bridge Behavior:** In `search_top_k()`, Hop 1 is evaluated in isolation with `[10.0.0.0/24]` -> returns `status=SAT`. Hop 2 is evaluated in isolation with `[192.168.1.0/24]` -> returns `status=SAT`. Both are recorded as `SAT` in `audit_sink`.
+  - **Conclusion:** The current integrated bridge completely fails to detect joint multi-hop contradictions.
+
+### 13.3 Audit of Feature-Disabled Behavior
+Inspection and spy-based testing (`test_feature_disabled_mode_zero_evaluations_and_sink_untouched`, Test 19) established:
+1. **Solver & Bridge Invocations:**
+   - When `CCPF_FEASIBILITY_GUARD=False`, test doubles verify:
+     - `build_constraint_index` call count = 0.
+     - `RestrictedDeterministicConstraintEvaluator` instantiation count = 0.
+     - `evaluate_candidate_hop` call count = 0.
+     - `ccpf_audit_sink` length = 0 (untouched).
+2. **Output Equivalence:**
+   - Baseline path output identities, ordering, `p_worst_q8`, `p_best_q8`, ranks, flags, and confidence bands remain 100% identical.
+3. **Query Overhead Correction ("Zero Overhead" Claim Reconciled):**
+   - The query in `search_top_k` unconditionally selects `edge_type`:
+     `SELECT edge_id, edge_type, src_node_id, dst_node_id, alpha_i, beta_i, flags_json FROM edges...`
+   - Micro-benchmarks (200 repetitions) measured:
+     - Query with `edge_type`: $102.00$ µs median.
+     - Query without `edge_type`: $90.50$ µs median.
+     - Net difference: $+11.50$ µs per search query.
+   - **Documentation Correction:** Calling the disabled path "zero overhead" is technically inaccurate due to this $+11.5$ µs SQL column selection. While negligible, it is an unconditional structural modification resulting from Gap G1.
+
+### 13.4 Performance Benchmark & Threshold Reconciliation
+- **Authorized Target:** The original Section 8.5 (Stage 5) target of `< 15% increase` total pipeline overhead is retained as the authoritative threshold.
+- **Paired 30-Round Benchmark (5 warm-up iterations):**
+
+| Scenario Fixture | Disabled Median (IQR) | Enabled Audit Median (IQR) | Absolute Difference | Relative Overhead | Authorized Target (< 15%) | Gate Status |
+|---|---|---|---|---|---|---|
+| `minimal_scenario.json` | 0.392 ms (0.030 ms) | 0.513 ms (0.034 ms) | +0.121 ms | +30.8% | < 15% | **UNMET** |
+| `complex_scenario.json` | 4.868 ms (1.306 ms) | 6.226 ms (1.214 ms) | +1.358 ms | +27.9% | < 15% | **UNMET** |
+
+- **Performance Gate Determination:** The performance gate remains **UNMET** (measured relative overhead is $pprox 28-31\%$, exceeding the 15% threshold).
+- **Absolute Latency Cost:** Absolute latency cost remains small ($+0.12$ ms to $+1.36$ ms per search).
+
+### 13.5 Design Gap Note: Requirements for Genuine Path-Level Feasibility Integration
+To transition from the current single-hop observational hook to sound multi-hop path feasibility reasoning, the following architectural gaps must be addressed:
+1. **Search State Augmentation:**
+   - ARF-RT's Best-First search heap currently stores `(neg_p_worst, p_best, path_tuple, curr_node)`.
+   - To evaluate path-wide context, the search must either:
+     - Pass the accumulated path edge sequence (`path_tuple + (eid,)`) to reconstruct the full `PathEvaluationInput` with all hops `1..k`.
+     - Or maintain an incremental context state tracker alongside the path tuple.
+2. **Incremental Solving / Path Prefix Caching:**
+   - Re-evaluating the full prefix from hop 1 to hop $k$ for every neighbor candidate at depth $k$ creates $O(k^2)$ solver invocations.
+   - An incremental RDCE evaluator or prefix result cache is required to keep evaluation overhead tractable.
+3. **Explicit Context Inheritance Scoping:**
+   - Multi-hop rules (such as `static_origin_assumption`) cannot be applied globally without domain justification (e.g. AWS role chaining across external accounts may originate from different IP addresses via intermediate compute services).
+   - Scenario assumptions must formally define which hops share persistent request/session contexts.
