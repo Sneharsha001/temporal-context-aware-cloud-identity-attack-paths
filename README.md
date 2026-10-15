@@ -1,5 +1,10 @@
 # ARF-RT — Risk Topology Engine
 
+[![ARF-RT CI](https://github.com/Sneharsha001/temporal-context-aware-cloud-identity-attack-paths/actions/workflows/ci.yml/badge.svg)](https://github.com/Sneharsha001/temporal-context-aware-cloud-identity-attack-paths/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python: 3.10+](https://img.shields.io/badge/Python-3.10%2B-brightgreen.svg)](https://www.python.org/)
+[![Code Style: Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+
 A Bayesian reasoning engine for cloud identity attack path analysis. ARF-RT ingests privilege graphs (PMapper, AWS Organizations), models policy constraints as correlated belief structures, and computes the most informative probe sequence to reduce uncertainty about path viability.
 
 **SEMANTICS_VERSION:** 1.0.0  
