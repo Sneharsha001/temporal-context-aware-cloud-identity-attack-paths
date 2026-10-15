@@ -76,6 +76,20 @@ On a 4-account AWS fixture (14 principals, 16 edges, 2 SCPs, 2 trust conditions)
 
 All four edges governed by the same SCP. Naive independence: 0.74² ≈ 55%. With correlation: the representative's observed DENY propagates to all edges → 1.2%. A 46× reduction from a single structural insight.
 
+## Developer Tooling & Automation Scripts
+
+ARF-RT provides a suite of developer utilities in `scripts/`:
+
+| Script | Purpose | Command |
+|---|---|---|
+| `run_tests.py` | Unified runner across unit, integration, stress, and research suites | `python scripts/run_tests.py --suite all` |
+| `benchmark.py` | Performance harness with median, $p_{95}$, and $p_{99}$ latency tracking | `python scripts/benchmark.py` |
+| `lint_check.py` | Static quality gate executing ruff, mypy, and bandit | `python scripts/lint_check.py` |
+| `validate_fixtures.py` | Validates JSON/YAML golden test fixtures against schema rules | `python scripts/validate_fixtures.py --strict` |
+| `compare_benchmarks.py` | Detects performance regressions against baseline runs | `python scripts/compare_benchmarks.py base.json cand.json` |
+| `health_check.py` | Validates interpreter, Git configuration, and tool availability | `python scripts/health_check.py` |
+| `generate_report.py` | Builds research artifact reports with codebase and git metrics | `python scripts/generate_report.py` |
+
 ## Quick Start
 
 ```bash
