@@ -11,6 +11,13 @@ import subprocess
 import shutil
 from pathlib import Path
 
+# Ensure UTF-8 output on Windows terminals
+if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 
 def check_python_version() -> bool:
     print(f"Checking Python version: {sys.version.split()[0]} ...", end=" ")

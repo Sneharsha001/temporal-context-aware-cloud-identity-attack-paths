@@ -20,6 +20,13 @@ import sys
 from pathlib import Path
 from typing import Any
 
+# Ensure UTF-8 output on Windows terminals
+if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 ROOT = Path(__file__).resolve().parent.parent
 
 # Required keys every fixture must contain
