@@ -356,4 +356,21 @@ arf_rt/
   storage/
     sqlite_store.py              WAL, FK=ON, row_factory, COLLATE BINARY
     migrations.py                Schema creation (11 tables + call_log)
+  util/
+    retry.py                     Retry decorator with exponential back-off
+    text.py                      Text normalization, slugify, and formatting
+    structures.py                Dictionary flattening, deep merge, chunking
 ```
+
+## Documentation Index
+
+- **[System Architecture](docs/ARCHITECTURE.md)** — Core subsystems, data flow, and belief network design
+- **[CCPF Path-Level Integration Design](docs/CCPF_PATH_LEVEL_INTEGRATION_DESIGN.md)** — Multi-hop feasibility specification
+- **[CCPF API Reference](docs/CCPF_API_REFERENCE.md)** — Data contracts and evaluator interface
+- **[Benchmark Methodology](docs/BENCHMARK_METHODOLOGY.md)** — Empirical performance standards and p95/p99 controls
+- **[Frequently Asked Questions](docs/FAQ.md)** — Common questions and operational guidance
+- **[Troubleshooting Guide](docs/TROUBLESHOOTING.md)** — Common runtime issues and resolutions
+- **[Domain Glossary](docs/GLOSSARY_EXPANDED.md)** — Bayesian, AWS IAM, and CCPF terminology
+- **[Contributing Guide](CONTRIBUTING.md)** — Pre-contribution requirements and PR checklist
+- **[Security Policy](SECURITY.md)** — Vulnerability reporting instructions
+- **[Changelog](CHANGELOG.md)** — Version history and milestone tracking
