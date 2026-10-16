@@ -76,6 +76,15 @@ On a 4-account AWS fixture (14 principals, 16 edges, 2 SCPs, 2 trust conditions)
 
 All four edges governed by the same SCP. Naive independence: 0.74² ≈ 55%. With correlation: the representative's observed DENY propagates to all edges → 1.2%. A 46× reduction from a single structural insight.
 
+## Theoretical Foundations
+
+ARF-RT formulates attack path discovery through Bayesian experimental design and Shannon information theory:
+
+- **Path Entropy:** For candidate path distribution $\mathcal{P}$, path uncertainty is $H(\mathcal{P}) = - \sum_{\pi} P(\pi) \ln P(\pi)$.
+- **Expected Information Gain:** For candidate probe edge $e$:
+  $$\text{EIG}(e) = H(\mathcal{P}) - \sum_{o \in \{0, 1\}} P(e=o) H(\mathcal{P} \mid e=o)$$
+- **Structural Equivalence Partitioning:** Disjoint-set union models joint failure across paths governed by identical SCPs or permission boundaries, collapsing combinatorial path explosion into minimal correlated equivalence classes.
+
 ## Developer Tooling & Automation Scripts
 
 ARF-RT provides a suite of developer utilities in `scripts/`:
