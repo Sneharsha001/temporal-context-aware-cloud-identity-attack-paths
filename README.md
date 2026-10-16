@@ -98,6 +98,9 @@ ARF-RT provides a suite of developer utilities in `scripts/`:
 | `compare_benchmarks.py` | Detects performance regressions against baseline runs | `python scripts/compare_benchmarks.py base.json cand.json` |
 | `health_check.py` | Validates interpreter, Git configuration, and tool availability | `python scripts/health_check.py` |
 | `generate_report.py` | Builds research artifact reports with codebase and git metrics | `python scripts/generate_report.py` |
+| `check_scenario.py` | Validates JSON scenario syntax, nodes, and reachability objectives | `python scripts/check_scenario.py scenario.json` |
+| `plot_entropy_reduction.py` | Visualizes Shannon entropy collapse across sequential probing steps | `python scripts/plot_entropy_reduction.py` |
+| `format_docs.py` | Strips trailing whitespace and checks markdown documentation formatting | `python scripts/format_docs.py --fix` |
 
 ## Quick Start
 
