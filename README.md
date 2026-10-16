@@ -372,11 +372,19 @@ arf_rt/
     retry.py                     Retry decorator with exponential back-off
     text.py                      Text normalization, slugify, and formatting
     structures.py                Dictionary flattening, deep merge, chunking
+    network.py                   CIDR containment and IP validation helpers
+    hashing.py                   Deterministic canonical JSON and SHA-256 digests
+    datetime_helpers.py          ISO-8601 parsing and temporal window checkers
+    config_loader.py             Runtime configuration profiles and env overrides
 ```
 
 ## Documentation Index
 
 - **[System Architecture](docs/ARCHITECTURE.md)** — Core subsystems, data flow, and belief network design
+- **[Mathematical Foundations](docs/MATHEMATICAL_FOUNDATIONS.md)** — Shannon entropy, EIG equations, and Bayesian belief updates
+- **[Threat Model & Adversary Capabilities](docs/THREAT_MODEL.md)** — Compromise tiers and safety boundaries
+- **[Evaluation & Baseline Framework](docs/EVALUATION_FRAMEWORK.md)** — Comparison against PMapper, BloodHound, and naive models
+- **[Scenario Schema Reference](docs/DATA_SCHEMAS.md)** — Attribute reference and JSON models
 - **[CCPF Path-Level Integration Design](docs/CCPF_PATH_LEVEL_INTEGRATION_DESIGN.md)** — Multi-hop feasibility specification
 - **[CCPF API Reference](docs/CCPF_API_REFERENCE.md)** — Data contracts and evaluator interface
 - **[Benchmark Methodology](docs/BENCHMARK_METHODOLOGY.md)** — Empirical performance standards and p95/p99 controls
