@@ -29,6 +29,10 @@ Identity Attack-Path Analysis (CCPF)
 | Prompt 4 | Semantic Validation & Counterexample Suite (CE1â€“CE6, FM1â€“FM10) | COMPLETE (Subject to evidence) |
 | Prompt 4A | Final Report Reconciliation & Stage Sequence Alignment | COMPLETE |
 | Prompt 5 | Independent Code Review & Soundness Audit | COMPLETE (Defects Identified; NOT READY) |
+| Prompt 6 / 6A / 6B | CCPF Integration Design & Authorization Correction | COMPLETE (Passive Only) |
+| Prompt 7 / 7A / 7B / 7C | CCPF Passive Audit Bridge Implementation & Audits | COMPLETE (Zero Pruning) |
+| Prompt 8 | CCPF Path-Level Integration Architecture Design Gate | COMPLETE (Design Only) |
+| Prompt 8A | Independent CCPF Architecture Consistency & Proof-Obligation Review | COMPLETE (Audited) |
 
 ---
 
@@ -418,3 +422,19 @@ Independent code re-review of the remediated evaluator and test suite, followed 
 - **Active pruning remains strictly prohibited.** PathContextSnapshot UNSAT verdicts go
   to the audit sink only. No edge expansion is skipped. No heap insertion is withheld.
 - **No source code modified in Prompt 8.** Document-only phase.
+
+
+### Prompt 8A Completion -- Independent CCPF Architecture Consistency & Proof-Obligation Review (AUDITED)
+- **Phase:** Design Consistency & Proof-Obligation Audit (Mode B Architecture Review).
+- **Branch:** `temporal-context-dev`.
+- **Commit at start:** `1d636f7`.
+- **Deliverables:** `docs/CCPF_PATH_LEVEL_INTEGRATION_DESIGN.md` (reconciled v1.1.0), `RESEARCH_STATUS.md`.
+- **Primary Review Outcomes:**
+  - **Solver & Tracker Capabilities Disambiguated:** Proved from `research/ccpf/rdce.py` that RDCE has NO incremental solver interface (`push`/`pop`). Option B in its current design is a **Full-Prefix Reference Evaluator** ($O(k)$ per candidate extension, $O(L^2)$ along path length $L$), not an incremental solver. Re-evaluation is only avoided on `UNSAT` short-circuits.
+  - **Heap Ordering Safety (PO-1):** Proved that the proposed 11-element heap tuple is fragile because at search root (path length 0), all start nodes tie on positions 0-2 (`-Q8, 0, ""`), falling through to position 3 (`cur_node`). Furthermore, positions 4, 8, and 9 contain `frozenset` which raises `TypeError` on comparison, and `PathContextSnapshot` is un-ordered. Recommended structural separation into `(PathSearchPriority, PathSearchPayload)` to guarantee `PathContextSnapshot` never participates in heap comparison.
+  - **Absorbing-UNSAT Invariant Bounded (PO-3):** Formally proved that absorbing-UNSAT holds strictly for monotonic conjunctive constraints under static origin IP. Explicitly bounded: `UNKNOWN`, timeouts, and evaluator exceptions are **non-absorbing**. Hop-local parameters (CONFIG `sts:ExternalId`) and identity resets (`sts:AssumeRole`) must maintain strict scope boundaries.
+  - **Transition Rules Audit (TR-1 through TR-5):** Reconciled proposed vs. established RDCE behavior. Distinguished explicit fixture assumptions (`static_origin_assumption: True`) from dynamic multi-origin reality. Verified hop-locality of CONFIG (`sts:ExternalId`).
+  - **Proof Obligations & Test Specifications Reconciled:** Reconciled PO-1 through PO-5 and T-B-01 through T-B-10 into strict evidence states (`PROVEN`, `TESTED`, `OPEN`, `BLOCKED`). Clarified that T-B-01 through T-B-10 are specifications, not yet implemented.
+  - **Performance Plan & Complexity Claims Corrected:** Reclassified unmeasured claims ("5x cost") as hypotheses. Clarified that the intermediate 20% milestone is an interim engineering checkpoint, while `< 15.0%` remains the binding gate. Established a 4-tier benchmark matrix.
+  - **Smallest Justified Next Implementation Step:** Compared Option A (post-search annotation), Option B (offline reference harness), and Option C (true incremental solver). Recommended a two-step progression: (1) Offline Full-Prefix Reference Test Harness; (2) Post-Search Top-K Feasibility Annotation Layer in `search_and_store_top_k()` at $< 1\%$ overhead.
+- **Safety Invariant Maintained:** Zero production source code modified, zero active pruning enabled, zero Q8/ranking changes.
