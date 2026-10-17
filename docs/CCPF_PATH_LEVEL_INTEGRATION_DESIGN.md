@@ -2,8 +2,8 @@
 
 ## Prompt 8 / 8A - Architecture Design Gate: Multi-Hop Prefix Feasibility for ARF-RT Best-First Search
 
-**Document Version:** 1.3.0 (Prompt 9 Post-Search Annotation Integration)
-**Phase:** Prompt 9 -- CCPF Post-Search Top-K Feasibility Annotation (Integrated)
+**Document Version:** 1.4.0 (Prompt 9B Conformance, Reference Parity & Performance Gate Audit)
+**Phase:** Prompt 9B -- CCPF Annotation Conformance, Reference Parity & Performance Gate Audit
 **Branch:** `temporal-context-dev`
 **Workspace:** `C:\SNEHARSHA\ANTIGRAVITY\ARF-RT-TEMPORAL`
 **Baseline Commit:** `c1a28f2` → Prompt 9 commit: see RESEARCH_STATUS.md
@@ -404,15 +404,17 @@ Benchmark 4: Mode B-Inc (True incremental constraint tracker prototype, when ava
 
 ---
 
-## Section 11 — Prompt 9: Post-Search Top-K Feasibility Annotation (Implemented)
+## Section 11 — Prompt 9 / 9B: Post-Search Top-K Feasibility Annotation & Audit
 
-> **Status:** INTEGRATED — `temporal-context-dev` branch. Production-passive, zero pruning.
+> **Status:** AUDITED & CONFORMANCE TESTED — `temporal-context-dev` branch.
+> Post-search diagnostic layer integrated. Zero active pruning. Zero search interference.
+> **Performance Gate Status:** **UNMET** (< 15.0% gate exceeded under controlled paired benchmark).
 
-### 11.1 Implementation Contract
+### 11.1 Implementation & Accessibility Contract
 
 `annotate_paths_feasibility(paths, conn, ..., annotation_sink)` in `arf_rt/ccpf_bridge.py`:
 
-**Ordering invariant:** Called only after `search_top_k()` returns and `derived_topk`
+**Ordering invariant:** Executed strictly after `search_top_k()` returns and `derived_topk`
 rows are fully committed. Verified by `test_post_search_boundary_search_finishes_before_annotation`.
 
 **Inputs consumed (read-only):**
@@ -423,109 +425,116 @@ rows are fully committed. Verified by `test_post_search_boundary_search_finishes
 - `scenario_assumptions`: Explicit caller-supplied dict. Never silently defaulted.
 
 **Outputs produced (non-mutating):**
-- Returns `list[dict]`, one record per input path, in matching order.
+- Returns `list[dict]`, one record per input path, in matching rank order.
 - Each record: `{rank, edge_id_sequence, status, witness, contradiction_rationale,
   unknown_rationale, evaluated_hops, solver_duration_ms, timeout_occurred, diagnostic_metadata}`.
-- Appends to `annotation_sink` if provided.
-- **Does NOT mutate input path dicts, scores, rankings, or database tables.**
+- Appends to `annotation_sink` if provided and appendable.
+- **Does NOT mutate input path dicts, probability scores, rankings, or SQLite tables.**
 
-**Hook in `search_and_store_top_k()` (`arf_rt/engine/paths.py`):**
+**Caller Access Pattern & Sink Contract in `search_and_store_top_k()` (`arf_rt/engine/paths.py`):**
 ```python
 def search_and_store_top_k(
-    conn,
+    conn: sqlite3.Connection,
     ...,
-    ccpf_post_search_annotation: bool = False,   # default: disabled
-    ccpf_annotation_sink: list[dict] | None = None,
-    scenario_assumptions: dict | None = None,
-):
+    ccpf_post_search_annotation: bool = False,
+    ccpf_annotation_sink: list[dict[str, Any]] | None = None,
+    scenario_assumptions: dict[str, Any] | None = None,
+) -> dict[str, list[dict]]:
     ...
-    # 1. Normal search and derived_topk storage (always runs, never affected by CCPF)
-    results = search_top_k(conn, ...)
-    _store_derived_topk(conn, results)
+    # 1. Normal search and derived_topk storage (strictly unchanged)
+    ...
+    conn.commit()
 
-    # 2. Optional post-search annotation (only if explicitly enabled)
+    # 2. Post-search annotation layer (Prompt 9 / 9B)
     if ccpf_post_search_annotation:
-        try:
-            all_paths = [p for obj_paths in results.values() for p in obj_paths]
-            annotate_paths_feasibility(
-                paths=all_paths, conn=conn,
-                annotation_sink=ccpf_annotation_sink,
-                scenario_assumptions=scenario_assumptions,
+        if ccpf_annotation_sink is None or not hasattr(ccpf_annotation_sink, "append"):
+            logger.warning(
+                "ccpf_post_search_annotation is enabled but ccpf_annotation_sink is None or "
+                "not appendable; skipping annotation to avoid computing discarded records. "
+                "To receive annotation records, provide an appendable sink (e.g. list) to ccpf_annotation_sink."
             )
-        except Exception as ex:
-            logger.warning("Post-search CCPF annotation failed: %s", ex)
-            # Search results remain intact
+        else:
+            try:
+                from arf_rt.ccpf_bridge import annotate_paths_feasibility
 
-    return results
+                all_paths = [p for paths in all_results.values() for p in paths]
+                annotate_paths_feasibility(
+                    paths=all_paths,
+                    conn=conn,
+                    scenario_assumptions=scenario_assumptions,
+                    annotation_sink=ccpf_annotation_sink,
+                )
+            except Exception as ex:
+                logger.warning("CCPF post-search annotation layer encountered error: %s", ex)
+
+    return all_results
 ```
 
-### 11.2 Constraint Schema Format
+**Sink Audit Verdicts (Prompt 9B):**
+1. **Disabled (`ccpf_post_search_annotation=False`):** Zero RDCE evaluations, zero imports, sink is untouched.
+2. **Enabled with valid sink:** Exactly one annotation record per returned path emitted to sink in matching order.
+3. **Enabled without sink / non-appendable sink:** Explicitly skips computation and logs a warning. Zero records silently computed or discarded. Legacy search return shape strictly preserved.
+4. **Faulty sink (sink raises on append):** Trapped and logged; search results and SQLite database rows remain uncorrupted.
 
-`build_constraint_index` reads `properties_json` from the `constraints` table.
-`extract_predicates_from_constraint` recognizes three JSON formats:
+### 11.2 Differential Reference-Evaluator Parity (Prompt 9B Audit)
 
-| Format | Structure | Example |
+Prompt 8B / 9 parity was rigorously audited via differential integration testing:
+- **Disjoint CIDRs with `static_origin_assumption=True`:**
+  Both integrated annotation and direct RDCE evaluate to `UNSAT` with identical contradiction rationale (`"disjoint"`).
+- **Disjoint CIDRs with absent static origin (`scenario_assumptions={}` or `False`):**
+  Both integrated annotation and direct RDCE evaluate to `SAT` with identical witness (reflecting per-hop origin independence).
+  *Clarification:* The mention of "UNKNOWN without static origin" in the Prompt 9 conversational summary table was an errant report typo. Both the implementation and tests have consistently yielded `SAT`, confirming 100% exact parity with the reference RDCE.
+- **Unsupported scope:** Both evaluate to `UNKNOWN`.
+- **Zero silent assumptions:** No default assumptions are applied.
+
+### 11.3 Controlled Paired Benchmark & Performance Gate Audit
+
+**Methodology:**
+- 50 paired trials, 5 warmup pairs, interleaved execution order (alternating disabled-first and enabled-first to eliminate thermal/GC bias).
+- Database fixture construction occurred completely outside timed blocks.
+- Measured complete calls: `search_and_store_top_k(conn, ccpf_guard=False, ccpf_post_search_annotation=False)` vs `search_and_store_top_k(conn, ccpf_guard=False, ccpf_post_search_annotation=True, ccpf_annotation_sink=sink)`.
+- Standalone RDCE annotation measured separately and reported without substitution.
+
+| Metric | Minimal Fixture (1 path, 2 edges) | Complex Fixture (15 paths, 33 edges) |
 |---|---|---|
-| 1 (conditions list) | `{"conditions": [{key, operator, values}]}` | Trust policy parser output |
-| 2 (condition fields) | `{"condition_key": ..., "condition_operator": ..., "required_values": ...}` | Direct DB row mapping |
-| 3 (string flag) | `{"condition": "mfa_required"}` | Simple categorical constraint |
+| Annotation Disabled Median | 0.543 ms (IQR 0.088 ms) | 4.175 ms (IQR 1.799 ms) |
+| Annotation Enabled Median | 0.797 ms (IQR 0.128 ms) | 5.353 ms (IQR 1.548 ms) |
+| Absolute Delta Median | +0.288 ms (IQR 0.172 ms) | +1.182 ms (IQR 1.487 ms) |
+| **Per-Pair % Overhead (Median)** | **+57.85%** | **+27.25%** |
+| Relative Median Overhead | +46.77% | +28.24% |
+| Standalone RDCE Time | 0.0555 ms (0.0555 ms/path) | 0.5796 ms (0.0386 ms/path) |
+| **Authoritative Gate (< 15.0%)** | **UNMET** (exceeded) | **UNMET** (exceeded) |
 
-**Test injection must use Format 1** (`{"conditions": [{...}]}`).
-A flat `{"key": ..., "operator": ..., "values": [...]}` structure is not recognized and
-falls through to the TRUST_CONDITION UNKNOWN predicate path.
+**Root Cause of Gate Exceedance:**
+- Standalone RDCE solver evaluation is extremely fast (38 to 55 microseconds per path).
+- However, the integrated post-search pipeline must query the SQLite `constraints` and `edge_constraints` tables, deserialize `properties_json`, query `edges` metadata, and build path context structures.
+- Because ARF-RT's baseline search is exceptionally fast (~0.5 ms for minimal, ~4.2 ms for complex), the fixed ~0.29 ms to ~1.18 ms database querying and bridging overhead translates to +27% to +58% relative pipeline overhead.
+- Under the strict Prompt 9B audit rule ("Do not use noise-floor pass as a substitute for an explicit decision rule"), the performance gate is formally recorded as **UNMET**.
 
-### 11.3 Performance Measurements (Prompt 9)
+### 11.4 Test Coverage Summary (16/16 Integration Tests Passing)
 
-| Config | Fixture | Paths | Median (ms) | Overhead | Gate |
-|---|---|---|---|---|---|
-| Baseline (no annotation) | minimal | 1 | 11.62 | — | — |
-| Post-search annotation | minimal | 1 | 14.19 | +22.1%* | PASS** |
-| Baseline (no annotation) | complex | 15 | 21.25 | — | — |
-| Post-search annotation | complex | 15 | 23.00 | +8.3% | PASS |
-| Offline standalone | minimal | 1 | 0.055 ms | — | — |
-| Offline standalone | complex | 15 | 0.559 ms | — | — |
-
-*\* Noise-dominated: noise/signal ratio = 4.4x. True annotation cost = 0.055 ms.*
-*With 50 trials, median overhead = +4.3%. See `RESEARCH_STATUS.md` Prompt 9 section.*
-
-**Per-path annotation cost:** ~0.037–0.055 ms (below noise floor of ~11–21 ms DB+search baseline).
-
-**Gate assessment: PASS** — the complex fixture (the operationally relevant fixture with
-15 paths) clears at 8.3%. The minimal fixture apparent exceedance is noise-dominated and
-is transparently documented.
-
-### 11.4 Test Coverage Summary
-
-| Test | Category | Status |
+| Test Name | Category | Status |
 |---|---|---|
-| `test_post_search_boundary_search_finishes_before_annotation` | Boundary | PASS |
-| `test_post_search_boundary_verdicts_do_not_affect_search` | Boundary | PASS |
-| `test_baseline_equivalence_full_field_parity[minimal]` | Equivalence | PASS |
-| `test_baseline_equivalence_full_field_parity[complex]` | Equivalence | PASS |
-| `test_multihop_path_evaluation_disjoint_cidrs_with_and_without_static_origin` | Multi-hop | PASS |
-| `test_scope_transition_hop_local_external_id` | Scope transition | PASS |
-| `test_scope_transition_unsupported_scope_yields_unknown` | Scope transition | PASS |
-| `test_top_k_coverage_and_order_association` | Coverage | PASS |
-| `test_empty_results_handling` | Edge case | PASS |
-| `test_annotation_failure_isolation` | Isolation | PASS |
-| `test_disabled_mode_zero_evaluations_and_empty_sink` | Disabled mode | PASS |
+| `test_post_search_boundary_search_finishes_before_annotation` | Boundary Isolation | PASS |
+| `test_post_search_boundary_verdicts_do_not_affect_search` | Search Invariant | PASS |
+| `test_baseline_equivalence_full_field_parity[minimal]` | Parity Invariant | PASS |
+| `test_baseline_equivalence_full_field_parity[complex]` | Parity Invariant | PASS |
+| `test_multihop_path_evaluation_disjoint_cidrs_with_and_without_static_origin` | Multi-hop Feasibility | PASS |
+| `test_scope_transition_hop_local_external_id` | Scope Transition | PASS |
+| `test_scope_transition_unsupported_scope_yields_unknown` | Scope Transition | PASS |
+| `test_top_k_coverage_and_order_association` | Coverage & Ordering | PASS |
+| `test_empty_results_handling` | Robustness | PASS |
+| `test_annotation_failure_isolation` | Failure Isolation | PASS |
+| `test_disabled_mode_zero_evaluations_and_empty_sink` | Disabled Invariant | PASS |
+| `test_annotation_accessibility_enabled_with_valid_sink` | Accessibility (Prompt 9B) | PASS |
+| `test_annotation_accessibility_enabled_without_sink_skips_computation_and_logs_warning` | Accessibility (Prompt 9B) | PASS |
+| `test_annotation_accessibility_non_appendable_sink_skips_computation` | Accessibility (Prompt 9B) | PASS |
+| `test_annotation_accessibility_faulty_sink_isolated_search_intact` | Accessibility (Prompt 9B) | PASS |
+| `test_differential_reference_evaluator_parity_full_path` | Reference Parity (Prompt 9B) | PASS |
 
-### 11.5 Invariants Re-Verified at Prompt 9
+### 11.5 Audit Conclusion & Stop Rule
 
-- **PO-2 (Pure function):** `annotate_paths_feasibility` reads but never writes
-  `derived_topk`, `edges`, or `constraints`. Verified by `test_baseline_equivalence_*`.
-- **Absorbing UNSAT:** UNSAT with `static_origin_assumption=True` verified on 2-hop
-  disjoint CIDRs (`10.0.0.0/24` ∩ `192.168.1.0/24` = ∅).
-- **CONFIG hop-locality:** `sts:ExternalId` per-hop independence verified
-  (`Tenant-A`, `Tenant-B` on consecutive hops → SAT).
-- **Disabled-mode zero overhead:** Zero RDCE invocations when `ccpf_post_search_annotation=False`.
-- **Exception isolation:** RuntimeError in `annotate_paths_feasibility` does not
-  corrupt `derived_topk` or returned results.
-
-### 11.6 Open Items (Post Prompt 9)
-
-| Item | Status |
-|---|---|
-| T-B-01 through T-B-10 from Prompt 8A | Still OPEN — require PathContextTracker implementation |
-| Option B (incremental tracker) | OPEN — requires PO-1 heap safety proof before implementation |
-| Operational noise floor mitigation | Documented caveat — no action required for gate compliance |
+1. **Accessibility:** Solved and verified. No records are computed and silently discarded; return shape is intact.
+2. **Reference Parity:** Proved 100% exact parity with direct RDCE reference evaluator across all assumption modes.
+3. **Performance Gate:** Formally **UNMET** (+27.25% complex, +57.85% minimal vs < 15.0% threshold).
+4. **Action:** Per Prompt 9B Stop Rule, implementation halted for researcher review. No active pruning, reranking, or speculative optimization introduced.

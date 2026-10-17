@@ -308,21 +308,29 @@ def search_and_store_top_k(
 
     conn.commit()
 
-    # Post-Search CCPF Top-K Feasibility Annotation Layer (Prompt 9)
+    # Post-Search CCPF Top-K Feasibility Annotation Layer (Prompt 9 / 9B)
     # Strictly isolated from search: executes ONLY AFTER normal search and storage finish.
     # When disabled (default False), zero RDCE imports, evaluations, or overhead occur.
     if ccpf_post_search_annotation:
-        try:
-            from arf_rt.ccpf_bridge import annotate_paths_feasibility
-            for oid, paths in all_results.items():
+        if ccpf_annotation_sink is None or not hasattr(ccpf_annotation_sink, "append"):
+            logger.warning(
+                "ccpf_post_search_annotation is enabled but ccpf_annotation_sink is None or "
+                "not appendable; skipping annotation to avoid computing discarded records. "
+                "To receive annotation records, provide an appendable sink (e.g. list) to ccpf_annotation_sink."
+            )
+        else:
+            try:
+                from arf_rt.ccpf_bridge import annotate_paths_feasibility
+
+                all_paths = [p for paths in all_results.values() for p in paths]
                 annotate_paths_feasibility(
-                    paths=paths,
+                    paths=all_paths,
                     conn=conn,
                     scenario_assumptions=scenario_assumptions,
                     annotation_sink=ccpf_annotation_sink,
                 )
-        except Exception as ex:
-            logger.warning("CCPF post-search annotation layer encountered error: %s", ex)
+            except Exception as ex:
+                logger.warning("CCPF post-search annotation layer encountered error: %s", ex)
 
     return all_results
 

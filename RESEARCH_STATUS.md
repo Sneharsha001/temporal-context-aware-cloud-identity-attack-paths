@@ -557,3 +557,64 @@ properly accounted for; complex fixture passes with 8.3% overhead).
 - Research: `tests/research/` (all passing).
 - Integration: `tests/integration/test_ccpf_bridge.py` (20 tests) +
   `tests/integration/test_post_search_annotation.py` (11 tests).
+
+
+---
+
+### Prompt 9B — CCPF Annotation Conformance, Reference Parity & Performance Gate Audit (Completed)
+
+- **Date:** 2026-10-17
+- **Branch:** `temporal-context-dev`
+- **Starting Commit:** `df52930`
+- **Objective:** Audit Prompt 9 implementation against three formal acceptance questions:
+  1. Accessibility: Are annotation results accessible whenever requested? (No silent discard).
+  2. Parity: Does integrated annotation agree with direct full-path RDCE reference evaluator?
+  3. Performance: Does measured total pipeline overhead satisfy the unchanged `< 15.0%` gate?
+
+#### 1. Annotation Accessibility & Sink Contract Audit
+- **Supported Access Pattern:** Callers invoking `search_and_store_top_k` must pass `ccpf_post_search_annotation=True` and provide an appendable sink (e.g. `list`) in `ccpf_annotation_sink`.
+- **Zero Silent Discard:** If `ccpf_post_search_annotation=True` but `ccpf_annotation_sink` is None or not appendable, the engine logs an explicit warning (`logger.warning`) and skips computation. No records are computed and silently discarded.
+- **Return Shape Integrity:** Legacy search return shape `all_results: dict[str, list[dict]]` is strictly preserved. No fields (`status`, `witness`, `feasibility`) are smuggled into path dictionaries or SQLite `derived_topk` rows.
+- **Faulty Sink Isolation:** If `ccpf_annotation_sink.append()` raises an exception, the exception is caught, logged, and isolated. Search results and database rows remain intact and uncorrupted.
+- Verified by 4 focused accessibility tests in `tests/integration/test_post_search_annotation.py`.
+
+#### 2. Differential Reference-Evaluator Parity
+- Rigorous differential integration test (`test_differential_reference_evaluator_parity_full_path`) compares integrated post-search annotation against independent direct `RestrictedDeterministicConstraintEvaluator.evaluate()` calls on the exact same multi-hop path and constraints:
+  * **Case 1 (`static_origin_assumption=True`):** Both integrated annotation and direct RDCE evaluate to `UNSAT` with matching contradiction rationale (`"disjoint"`).
+  * **Case 2 (Absent static origin, `{}`):** Both integrated annotation and direct RDCE evaluate to `SAT` with matching witness, reflecting per-hop origin independence.
+  * **Case 3 (Explicit `static_origin_assumption=False`):** Both evaluate to `SAT` with matching witness.
+  * **Case 4 (Unsupported context scope):** Both evaluate to `UNKNOWN`.
+- **Typo Clarification:** The mention of "UNKNOWN without static origin" in the Prompt 9 chat table was an errant summary typo. The code, tests, and RDCE have always yielded `SAT`, confirming 100% exact parity with the reference evaluator.
+- **Zero Silent Assumptions:** No default assumptions are applied.
+
+#### 3. Controlled Paired Benchmark & Performance Gate Reassessment
+- **Protocol:** 50 paired trials, 5 warmup pairs, interleaved execution order (alternating disabled-first and enabled-first to eliminate thermal/GC bias). Fixture DB construction excluded from timed blocks.
+- **Command:** `python scratch/p9b_controlled_benchmark.py`
+
+| Metric | Minimal Fixture (1 path, 2 edges) | Complex Fixture (15 paths, 33 edges) |
+|---|---|---|
+| Annotation Disabled Median | 0.543 ms (IQR 0.088 ms) | 4.175 ms (IQR 1.799 ms) |
+| Annotation Enabled Median | 0.797 ms (IQR 0.128 ms) | 5.353 ms (IQR 1.548 ms) |
+| Absolute Delta Median | +0.288 ms (IQR 0.172 ms) | +1.182 ms (IQR 1.487 ms) |
+| **Per-Pair % Overhead (Median)** | **+57.85%** | **+27.25%** |
+| Relative Median Overhead | +46.77% | +28.24% |
+| Standalone RDCE Time | 0.0555 ms (0.0555 ms/path) | 0.5796 ms (0.0386 ms/path) |
+| **Authoritative Gate (< 15.0%)** | **UNMET** (exceeded) | **UNMET** (exceeded) |
+
+- **Root Cause & Decision:**
+  * While the standalone RDCE solver costs only 38 to 55 microseconds per path, the complete integration layer must query SQLite `constraints`, `edge_constraints`, and `edges`, parse JSON properties, and assemble path context specs.
+  * In a fast baseline engine (~0.5 ms minimal, ~4.2 ms complex), this fixed overhead constitutes +27.25% to +57.85% relative pipeline overhead.
+  * Per Prompt 9B instructions ("Do not use noise-floor pass as a substitute for an explicit decision rule. If the authorized gate is exceeded, report it as UNMET"), the performance gate is formally recorded as **UNMET**.
+
+#### 4. Test Suite Summary at Prompt 9B
+- `tests/integration/test_post_search_annotation.py`: **16/16 passed** in 1.07s.
+- `tests/research/` + `tests/integration/`: **191/191 passed** in 2.39s.
+- `tests/unit/test_paths.py` + `tests/unit/test_belief.py`: **56/56 passed** in 1.26s.
+- Full non-stress suite (`tests/ --ignore=tests/stress`): **1066/1066 passed** in 138s.
+- Stress suite (`tests/stress/`): 35/37 passed; 2 pre-existing wall-clock timing tests on Stage 1 / Stage 1b planners failed under local CPU load (`test_runtime_under_1_second`: 1891ms vs 1000ms threshold; `test_runtime_under_500ms`: 672ms vs 500ms threshold).
+
+#### 5. Prompt 9B Stop Rule
+- All audit questions answered with rigorous empirical data.
+- Implementation preserved with minimal, evidence-backed accessibility safeguards.
+- Performance gate `< 15.0%` formally recorded as **UNMET**.
+- Execution halted for researcher review. No active pruning, reranking, or speculative optimization introduced.

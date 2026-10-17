@@ -42,6 +42,7 @@ from research.ccpf.rdce import (
     ContextScope,
     FeasibilityStatus,
     HopContextSpec,
+    PathEvaluationInput,
     ProducedStateModification,
     RestrictedDeterministicConstraintEvaluator,
 )
@@ -365,3 +366,215 @@ def test_disabled_mode_zero_evaluations_and_empty_sink():
         assert mock_eval.call_count == 0, "No RDCE evaluations must occur when disabled"
         assert len(sink) == 0, "Annotation sink must remain empty"
         assert len(results) > 0, "Search results must be returned normally"
+
+
+# ============================================================================
+# G. Annotation Accessibility & Sink Contract Audit (Prompt 9B)
+# ============================================================================
+
+def test_annotation_accessibility_enabled_with_valid_sink():
+    """Verify that annotation records are emitted to a valid sink and return shape is preserved."""
+    conn = _build_pipeline_db(MINIMAL)
+    sink: list[dict] = []
+
+    results = search_and_store_top_k(
+        conn,
+        ccpf_post_search_annotation=True,
+        ccpf_annotation_sink=sink,
+    )
+
+    # 1. Legacy search return shape is preserved: dict[str, list[dict]]
+    assert isinstance(results, dict)
+    total_paths = sum(len(paths) for paths in results.values())
+    assert total_paths > 0
+
+    # 2. Path dictionaries are NOT mutated with smuggled fields
+    for paths in results.values():
+        for p in paths:
+            assert "status" not in p
+            assert "witness" not in p
+            assert "feasibility" not in p
+
+    # 3. Exactly one annotation record per returned path emitted to sink
+    assert len(sink) == total_paths
+    for record in sink:
+        assert "rank" in record
+        assert "edge_id_sequence" in record
+        assert "status" in record
+        assert "witness" in record
+        assert "contradiction_rationale" in record
+        assert "unknown_rationale" in record
+        assert "evaluated_hops" in record
+        assert "solver_duration_ms" in record
+        assert "timeout_occurred" in record
+        assert "diagnostic_metadata" in record
+
+
+def test_annotation_accessibility_enabled_without_sink_skips_computation_and_logs_warning(caplog):
+    """Verify that enabling annotation without a sink skips computation and does not discard records."""
+    conn = _build_pipeline_db(MINIMAL)
+
+    with patch("arf_rt.ccpf_bridge.annotate_paths_feasibility") as mock_ann:
+        results = search_and_store_top_k(
+            conn,
+            ccpf_post_search_annotation=True,
+            ccpf_annotation_sink=None,
+        )
+
+        # Computation must be skipped to avoid computing and silently discarding records
+        assert mock_ann.call_count == 0, "annotate_paths_feasibility must not be called when sink is None"
+        assert len(results) > 0, "Search results must be returned normally"
+
+    # Warning must be emitted to inform the caller
+    assert any("skipping annotation" in record.message for record in caplog.records)
+
+
+def test_annotation_accessibility_non_appendable_sink_skips_computation(caplog):
+    """Verify that passing a non-appendable sink safely skips computation."""
+    conn = _build_pipeline_db(MINIMAL)
+
+    with patch("arf_rt.ccpf_bridge.annotate_paths_feasibility") as mock_ann:
+        results = search_and_store_top_k(
+            conn,
+            ccpf_post_search_annotation=True,
+            ccpf_annotation_sink="not_a_valid_list",  # non-appendable
+        )
+
+        assert mock_ann.call_count == 0, "annotate_paths_feasibility must not be called for unusable sink"
+        assert len(results) > 0
+
+
+def test_annotation_accessibility_faulty_sink_isolated_search_intact():
+    """Verify that if the sink itself raises an exception on append, search results are uncorrupted."""
+    conn = _build_pipeline_db(MINIMAL)
+
+    class FaultySink:
+        def append(self, item):
+            raise IOError("Synthetic disk full on sink.append()")
+
+    faulty_sink = FaultySink()
+
+    results = search_and_store_top_k(
+        conn,
+        ccpf_post_search_annotation=True,
+        ccpf_annotation_sink=faulty_sink,
+    )
+
+    # Search results and database rows must remain intact despite sink append failure
+    assert len(results) > 0
+    cur = conn.execute("SELECT COUNT(*) FROM derived_topk")
+    assert cur.fetchone()[0] > 0
+
+
+# ============================================================================
+# H. Differential Reference-Evaluator Parity (Prompt 9B)
+# ============================================================================
+
+def test_differential_reference_evaluator_parity_full_path():
+    """Differential integration test proving exact parity between integrated annotation and direct RDCE.
+
+    For the identical multi-hop path and constraints:
+    1. Extracts exact ordered hops and predicates.
+    2. Constructs independent PathEvaluationInput with identical values.
+    3. Runs reference RDCE directly under identical scenario assumptions.
+    4. Compares direct and integrated verdicts across True, absent, and False static origin.
+    """
+    conn = _build_pipeline_db(MINIMAL)
+
+    # Obtain returned Top-K path
+    res = search_and_store_top_k(conn, ccpf_post_search_annotation=False)
+    target_path = res[next(iter(res.keys()))][0]
+    edge_ids = json.loads(target_path["edge_id_sequence"])
+    assert len(edge_ids) >= 2, "Path must have at least 2 hops for multi-hop differential test"
+    e1, e2 = edge_ids[0], edge_ids[1]
+
+    # Inject disjoint CIDR constraints on consecutive hops
+    conn.execute(
+        """INSERT INTO constraints (constraint_id, constraint_key, provider, constraint_type,
+                                   scope_type, scope_id, region, properties_json, properties_fp, status)
+           VALUES ('c_diff_1', 'k_diff_1', 'aws', 'TRUST_CONDITION', 'ROLE', 'r1', 'global',
+                   '{"conditions": [{"key": "aws:SourceIp", "operator": "IpAddress", "values": ["10.0.0.0/24"]}]}',
+                   'fp_diff1', 'ACTIVE')"""
+    )
+    conn.execute(
+        """INSERT INTO constraints (constraint_id, constraint_key, provider, constraint_type,
+                                   scope_type, scope_id, region, properties_json, properties_fp, status)
+           VALUES ('c_diff_2', 'k_diff_2', 'aws', 'TRUST_CONDITION', 'ROLE', 'r2', 'global',
+                   '{"conditions": [{"key": "aws:SourceIp", "operator": "IpAddress", "values": ["192.168.1.0/24"]}]}',
+                   'fp_diff2', 'ACTIVE')"""
+    )
+    conn.execute("INSERT INTO edge_constraints (edge_id, constraint_id) VALUES (?, 'c_diff_1')", (e1,))
+    conn.execute("INSERT INTO edge_constraints (edge_id, constraint_id) VALUES (?, 'c_diff_2')", (e2,))
+    conn.commit()
+
+    c_idx = build_constraint_index(conn)
+    evaluator = RestrictedDeterministicConstraintEvaluator()
+
+    # Retrieve edge metadata to construct exact direct RDCE input
+    cur = conn.execute("SELECT edge_id, edge_type, src_node_id, dst_node_id FROM edges WHERE edge_id IN (?, ?)", (e1, e2))
+    ed_map = {r["edge_id"]: r for r in cur.fetchall()}
+
+    direct_hops = [
+        HopContextSpec(
+            hop=1,
+            edge_type=ed_map[e1]["edge_type"],
+            src_node_id=ed_map[e1]["src_node_id"],
+            dst_node_id=ed_map[e1]["dst_node_id"],
+            required_context=c_idx.get(e1, []),
+        ),
+        HopContextSpec(
+            hop=2,
+            edge_type=ed_map[e2]["edge_type"],
+            src_node_id=ed_map[e2]["src_node_id"],
+            dst_node_id=ed_map[e2]["dst_node_id"],
+            required_context=c_idx.get(e2, []),
+        ),
+    ]
+
+    scenarios = [
+        ("explicit_static_origin_true", {"static_origin_assumption": True}, FeasibilityStatus.UNSAT),
+        ("absent_static_origin", {}, FeasibilityStatus.SAT),
+        ("explicit_static_origin_false", {"static_origin_assumption": False}, FeasibilityStatus.SAT),
+    ]
+
+    for scenario_name, assumptions, expected_status in scenarios:
+        # A. Integrated post-search annotation
+        ann_sink: list[dict] = []
+        annotate_paths_feasibility(
+            paths=[target_path],
+            conn=conn,
+            constraint_index=c_idx,
+            evaluator=evaluator,
+            scenario_assumptions=assumptions,
+            annotation_sink=ann_sink,
+        )
+        assert len(ann_sink) == 1
+        integrated_record = ann_sink[0]
+
+        # B. Direct reference RDCE evaluation
+        direct_input = PathEvaluationInput(
+            path_id=f"diff_{scenario_name}",
+            hops=direct_hops,
+            scenario_assumptions=assumptions,
+        )
+        direct_result = evaluator.evaluate(direct_input)
+
+        # C. Differential assertion
+        msg = (
+            f"Differential mismatch in {scenario_name}: "
+            f"integrated={integrated_record['status']}, direct={direct_result.status.value}\n"
+            f"Integrated record: {integrated_record}\n"
+            f"Direct result: {direct_result}\n"
+            f"Direct hops: {direct_hops}"
+        )
+        assert integrated_record["status"] == direct_result.status.value, msg
+        assert integrated_record["status"] == expected_status.value, msg
+
+        if expected_status == FeasibilityStatus.UNSAT:
+            assert integrated_record["contradiction_rationale"] == direct_result.contradiction_rationale
+            assert "disjoint" in integrated_record["contradiction_rationale"].lower()
+            assert integrated_record["witness"] is None
+        elif expected_status == FeasibilityStatus.SAT:
+            assert integrated_record["witness"] == direct_result.witness
+            assert integrated_record["witness"] is not None
+            assert integrated_record["contradiction_rationale"] is None
