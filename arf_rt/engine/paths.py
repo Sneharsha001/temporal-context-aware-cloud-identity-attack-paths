@@ -251,11 +251,25 @@ def search_and_store_top_k(
     correlation: dict[str, Any] | None = None,
     ccpf_guard: bool | None = None,
     ccpf_audit_sink: list[dict[str, Any]] | None = None,
+    ccpf_post_search_annotation: bool = False,
+    ccpf_annotation_sink: list[dict[str, Any]] | None = None,
+    scenario_assumptions: dict[str, Any] | None = None,
 ) -> dict[str, list[dict]]:
     """Search Top-K for all objectives and store in derived_topk.
 
+    Args:
+        conn: DB connection with fully updated beliefs.
+        correlation: Pre-computed correlation result. If None, computes it.
+        ccpf_guard: Optional boolean to enable/disable candidate-level passive audit (Mode A).
+        ccpf_audit_sink: Optional list sink for candidate-level passive audit records.
+        ccpf_post_search_annotation: Optional boolean (default False) to enable post-search
+                                     full-path feasibility annotation on returned Top-K paths.
+        ccpf_annotation_sink: Optional list sink for post-search path annotation records.
+        scenario_assumptions: Optional explicit scenario assumptions for full-path evaluation
+                              (e.g., {"static_origin_assumption": True}).
+
     Returns:
-        Dict mapping objective_id â†’ list of path results.
+        Dict mapping objective_id -> list of path results.
     """
     if correlation is None:
         correlation = compute_correlation(conn)
@@ -293,6 +307,23 @@ def search_and_store_top_k(
             )
 
     conn.commit()
+
+    # Post-Search CCPF Top-K Feasibility Annotation Layer (Prompt 9)
+    # Strictly isolated from search: executes ONLY AFTER normal search and storage finish.
+    # When disabled (default False), zero RDCE imports, evaluations, or overhead occur.
+    if ccpf_post_search_annotation:
+        try:
+            from arf_rt.ccpf_bridge import annotate_paths_feasibility
+            for oid, paths in all_results.items():
+                annotate_paths_feasibility(
+                    paths=paths,
+                    conn=conn,
+                    scenario_assumptions=scenario_assumptions,
+                    annotation_sink=ccpf_annotation_sink,
+                )
+        except Exception as ex:
+            logger.warning("CCPF post-search annotation layer encountered error: %s", ex)
+
     return all_results
 
 

@@ -539,3 +539,179 @@ def evaluate_candidate_hop(
             logger.debug("Failed to append diagnostic to audit sink: %s", sink_ex)
 
     return result
+
+
+
+def annotate_paths_feasibility(
+    paths: list[dict[str, Any]],
+    conn: sqlite3.Connection,
+    constraint_index: dict[str, list[ContextPredicate]] | ConstraintIndex | None = None,
+    evaluator: RestrictedDeterministicConstraintEvaluator | None = None,
+    scenario_assumptions: dict[str, Any] | None = None,
+    annotation_sink: list[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
+    """Evaluate full-path logical feasibility for a list of Top-K search paths.
+
+    Strictly Post-Search Diagnostic Layer (Prompt 9):
+    - Reconstructs complete, ordered sequences of hops for each returned path.
+    - Preserves hop boundaries and sequence order.
+    - Evaluates each full path jointly via RestrictedDeterministicConstraintEvaluator.
+    - Does NOT mutate the input path dictionaries.
+    - Does NOT alter baseline Q8 probability scores, ranking, or ordering.
+    - Does NOT prune edges or discard paths.
+    - Isolates evaluation failures so search results remain untouched.
+
+    Args:
+        paths: List of path dicts as returned by search_top_k() or search_and_store_top_k().
+        conn: SQLite connection to retrieve edge metadata and active constraints.
+        constraint_index: Optional pre-built ConstraintIndex. If None, built from conn.
+        evaluator: Optional RDCE instance. If None, instantiates a new one.
+        scenario_assumptions: Optional caller-supplied assumptions (e.g. static_origin_assumption).
+                              MUST NOT be silently defaulted or assumed.
+        annotation_sink: Optional list to append annotation records to for caller inspection.
+
+    Returns:
+        List of path annotation dictionaries, one per input path in matching order:
+          [{rank, edge_id_sequence, status, witness, contradiction_rationale,
+            unknown_rationale, evaluated_hops, solver_duration_ms, timeout_occurred,
+            diagnostic_metadata}]
+    """
+    if not paths:
+        return []
+
+    # 1. Parse edge sequences from paths
+    parsed_paths: list[tuple[dict[str, Any], list[str]]] = []
+    all_eids: set[str] = set()
+
+    for p in paths:
+        seq_raw = p.get("edge_id_sequence")
+        if isinstance(seq_raw, str):
+            try:
+                parsed = json.loads(seq_raw)
+                e_list = [str(x) for x in parsed] if isinstance(parsed, list) else []
+            except Exception:
+                e_list = []
+        elif isinstance(seq_raw, (list, tuple)):
+            e_list = [str(x) for x in seq_raw]
+        else:
+            e_list = []
+        parsed_paths.append((p, e_list))
+        all_eids.update(e_list)
+
+    # 2. Bulk query edge metadata for observed edges
+    edge_map: dict[str, dict[str, Any]] = {}
+    if all_eids:
+        eid_list = list(all_eids)
+        chunk_size = 500
+        for i in range(0, len(eid_list), chunk_size):
+            chunk = eid_list[i : i + chunk_size]
+            placeholders = ",".join("?" for _ in chunk)
+            cur = conn.execute(
+                f"SELECT edge_id, edge_type, src_node_id, dst_node_id FROM edges WHERE edge_id IN ({placeholders})",
+                chunk,
+            )
+            for r in cur.fetchall():
+                edge_map[r["edge_id"]] = {
+                    "edge_type": r["edge_type"],
+                    "src": r["src_node_id"],
+                    "dst": r["dst_node_id"],
+                }
+
+    # 3. Obtain constraint index and evaluator
+    if constraint_index is None:
+        constraint_index = build_constraint_index(conn)
+
+    if evaluator is None:
+        evaluator = RestrictedDeterministicConstraintEvaluator()
+
+    load_error = getattr(constraint_index, "load_error", None)
+
+    annotations: list[dict[str, Any]] = []
+
+    # 4. Evaluate each path in matching order
+    for p, e_list in parsed_paths:
+        rank = p.get("rank")
+        edge_seq_str = p.get("edge_id_sequence")
+        path_id = f"path_rank_{rank}"
+
+        if load_error is not None:
+            record = {
+                "rank": rank,
+                "edge_id_sequence": edge_seq_str,
+                "status": FeasibilityStatus.UNKNOWN.value,
+                "witness": None,
+                "contradiction_rationale": None,
+                "unknown_rationale": f"CONSTRAINT_INDEX_LOAD_FAILURE: {load_error}",
+                "evaluated_hops": 0,
+                "solver_duration_ms": 0.0,
+                "timeout_occurred": False,
+                "diagnostic_metadata": {"load_error": load_error, "index_construction_failed": True},
+            }
+        elif not e_list:
+            record = {
+                "rank": rank,
+                "edge_id_sequence": edge_seq_str,
+                "status": FeasibilityStatus.UNKNOWN.value,
+                "witness": None,
+                "contradiction_rationale": None,
+                "unknown_rationale": "EMPTY_EDGE_SEQUENCE",
+                "evaluated_hops": 0,
+                "solver_duration_ms": 0.0,
+                "timeout_occurred": False,
+                "diagnostic_metadata": {"empty_path": True},
+            }
+        else:
+            hops: list[HopContextSpec] = []
+            for hop_num, eid in enumerate(e_list, start=1):
+                ed = edge_map.get(eid, {})
+                req_ctx = constraint_index.get(eid, [])
+                hops.append(
+                    HopContextSpec(
+                        hop=hop_num,
+                        edge_type=str(ed.get("edge_type", "")),
+                        src_node_id=str(ed.get("src", "")),
+                        dst_node_id=str(ed.get("dst", "")),
+                        required_context=req_ctx,
+                    )
+                )
+
+            eval_input = PathEvaluationInput(
+                path_id=path_id,
+                hops=hops,
+                scenario_assumptions=scenario_assumptions or {},
+            )
+
+            try:
+                eval_result = evaluator.evaluate(eval_input)
+            except Exception as ex:
+                logger.warning("CCPF post-search evaluation failed for path rank %s: %s", rank, ex)
+                eval_result = PathEvaluationResult(
+                    path_id=path_id,
+                    status=FeasibilityStatus.UNKNOWN,
+                    unknown_rationale=f"ANNOTATION_EXCEPTION: {type(ex).__name__}: {str(ex)[:80]}",
+                    evaluated_hops=len(hops),
+                    solver_duration_ms=0.0,
+                    diagnostic_metadata={"exception": str(ex)[:200]},
+                )
+
+            record = {
+                "rank": rank,
+                "edge_id_sequence": edge_seq_str,
+                "status": eval_result.status.value,
+                "witness": eval_result.witness,
+                "contradiction_rationale": eval_result.contradiction_rationale,
+                "unknown_rationale": eval_result.unknown_rationale,
+                "evaluated_hops": eval_result.evaluated_hops,
+                "solver_duration_ms": eval_result.solver_duration_ms,
+                "timeout_occurred": eval_result.timeout_occurred,
+                "diagnostic_metadata": eval_result.diagnostic_metadata,
+            }
+
+        annotations.append(record)
+        if annotation_sink is not None:
+            try:
+                annotation_sink.append(record)
+            except Exception as sink_ex:
+                logger.debug("Failed to append record to annotation_sink: %s", sink_ex)
+
+    return annotations

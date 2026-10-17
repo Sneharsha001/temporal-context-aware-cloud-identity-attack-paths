@@ -2,11 +2,11 @@
 
 ## Prompt 8 / 8A - Architecture Design Gate: Multi-Hop Prefix Feasibility for ARF-RT Best-First Search
 
-**Document Version:** 1.2.0 (Audited & Verified under Prompt 8B Offline Reference Harness)
-**Phase:** Prompt 8B -- CCPF Offline Full-Prefix Reference Harness
+**Document Version:** 1.3.0 (Prompt 9 Post-Search Annotation Integration)
+**Phase:** Prompt 9 -- CCPF Post-Search Top-K Feasibility Annotation (Integrated)
 **Branch:** `temporal-context-dev`
 **Workspace:** `C:\SNEHARSHA\ANTIGRAVITY\ARF-RT-TEMPORAL`
-**Baseline Commit:** `2fc604a`
+**Baseline Commit:** `c1a28f2` → Prompt 9 commit: see RESEARCH_STATUS.md
 **Date:** 2026-10-17
 **Status:** **AUDITED DESIGN SPECIFICATION -- Production source changes and active pruning strictly prohibited**
 
@@ -400,3 +400,132 @@ Benchmark 4: Mode B-Inc (True incremental constraint tracker prototype, when ava
 *Document audited and updated under Prompt 8A.*
 *Zero production source code modified. Zero active pruning enabled.*
 *All implementation work remains blocked pending researcher authorization.*
+
+
+---
+
+## Section 11 — Prompt 9: Post-Search Top-K Feasibility Annotation (Implemented)
+
+> **Status:** INTEGRATED — `temporal-context-dev` branch. Production-passive, zero pruning.
+
+### 11.1 Implementation Contract
+
+`annotate_paths_feasibility(paths, conn, ..., annotation_sink)` in `arf_rt/ccpf_bridge.py`:
+
+**Ordering invariant:** Called only after `search_top_k()` returns and `derived_topk`
+rows are fully committed. Verified by `test_post_search_boundary_search_finishes_before_annotation`.
+
+**Inputs consumed (read-only):**
+- `paths`: List of path dicts with `edge_id_sequence` (JSON-encoded list of edge IDs).
+- `conn`: SQLite connection for bulk edge metadata and constraint queries.
+- `constraint_index`: Optional pre-built `ConstraintIndex` (built from `conn` if not supplied).
+- `evaluator`: Optional `RestrictedDeterministicConstraintEvaluator` instance.
+- `scenario_assumptions`: Explicit caller-supplied dict. Never silently defaulted.
+
+**Outputs produced (non-mutating):**
+- Returns `list[dict]`, one record per input path, in matching order.
+- Each record: `{rank, edge_id_sequence, status, witness, contradiction_rationale,
+  unknown_rationale, evaluated_hops, solver_duration_ms, timeout_occurred, diagnostic_metadata}`.
+- Appends to `annotation_sink` if provided.
+- **Does NOT mutate input path dicts, scores, rankings, or database tables.**
+
+**Hook in `search_and_store_top_k()` (`arf_rt/engine/paths.py`):**
+```python
+def search_and_store_top_k(
+    conn,
+    ...,
+    ccpf_post_search_annotation: bool = False,   # default: disabled
+    ccpf_annotation_sink: list[dict] | None = None,
+    scenario_assumptions: dict | None = None,
+):
+    ...
+    # 1. Normal search and derived_topk storage (always runs, never affected by CCPF)
+    results = search_top_k(conn, ...)
+    _store_derived_topk(conn, results)
+
+    # 2. Optional post-search annotation (only if explicitly enabled)
+    if ccpf_post_search_annotation:
+        try:
+            all_paths = [p for obj_paths in results.values() for p in obj_paths]
+            annotate_paths_feasibility(
+                paths=all_paths, conn=conn,
+                annotation_sink=ccpf_annotation_sink,
+                scenario_assumptions=scenario_assumptions,
+            )
+        except Exception as ex:
+            logger.warning("Post-search CCPF annotation failed: %s", ex)
+            # Search results remain intact
+
+    return results
+```
+
+### 11.2 Constraint Schema Format
+
+`build_constraint_index` reads `properties_json` from the `constraints` table.
+`extract_predicates_from_constraint` recognizes three JSON formats:
+
+| Format | Structure | Example |
+|---|---|---|
+| 1 (conditions list) | `{"conditions": [{key, operator, values}]}` | Trust policy parser output |
+| 2 (condition fields) | `{"condition_key": ..., "condition_operator": ..., "required_values": ...}` | Direct DB row mapping |
+| 3 (string flag) | `{"condition": "mfa_required"}` | Simple categorical constraint |
+
+**Test injection must use Format 1** (`{"conditions": [{...}]}`).
+A flat `{"key": ..., "operator": ..., "values": [...]}` structure is not recognized and
+falls through to the TRUST_CONDITION UNKNOWN predicate path.
+
+### 11.3 Performance Measurements (Prompt 9)
+
+| Config | Fixture | Paths | Median (ms) | Overhead | Gate |
+|---|---|---|---|---|---|
+| Baseline (no annotation) | minimal | 1 | 11.62 | — | — |
+| Post-search annotation | minimal | 1 | 14.19 | +22.1%* | PASS** |
+| Baseline (no annotation) | complex | 15 | 21.25 | — | — |
+| Post-search annotation | complex | 15 | 23.00 | +8.3% | PASS |
+| Offline standalone | minimal | 1 | 0.055 ms | — | — |
+| Offline standalone | complex | 15 | 0.559 ms | — | — |
+
+*\* Noise-dominated: noise/signal ratio = 4.4x. True annotation cost = 0.055 ms.*
+*With 50 trials, median overhead = +4.3%. See `RESEARCH_STATUS.md` Prompt 9 section.*
+
+**Per-path annotation cost:** ~0.037–0.055 ms (below noise floor of ~11–21 ms DB+search baseline).
+
+**Gate assessment: PASS** — the complex fixture (the operationally relevant fixture with
+15 paths) clears at 8.3%. The minimal fixture apparent exceedance is noise-dominated and
+is transparently documented.
+
+### 11.4 Test Coverage Summary
+
+| Test | Category | Status |
+|---|---|---|
+| `test_post_search_boundary_search_finishes_before_annotation` | Boundary | PASS |
+| `test_post_search_boundary_verdicts_do_not_affect_search` | Boundary | PASS |
+| `test_baseline_equivalence_full_field_parity[minimal]` | Equivalence | PASS |
+| `test_baseline_equivalence_full_field_parity[complex]` | Equivalence | PASS |
+| `test_multihop_path_evaluation_disjoint_cidrs_with_and_without_static_origin` | Multi-hop | PASS |
+| `test_scope_transition_hop_local_external_id` | Scope transition | PASS |
+| `test_scope_transition_unsupported_scope_yields_unknown` | Scope transition | PASS |
+| `test_top_k_coverage_and_order_association` | Coverage | PASS |
+| `test_empty_results_handling` | Edge case | PASS |
+| `test_annotation_failure_isolation` | Isolation | PASS |
+| `test_disabled_mode_zero_evaluations_and_empty_sink` | Disabled mode | PASS |
+
+### 11.5 Invariants Re-Verified at Prompt 9
+
+- **PO-2 (Pure function):** `annotate_paths_feasibility` reads but never writes
+  `derived_topk`, `edges`, or `constraints`. Verified by `test_baseline_equivalence_*`.
+- **Absorbing UNSAT:** UNSAT with `static_origin_assumption=True` verified on 2-hop
+  disjoint CIDRs (`10.0.0.0/24` ∩ `192.168.1.0/24` = ∅).
+- **CONFIG hop-locality:** `sts:ExternalId` per-hop independence verified
+  (`Tenant-A`, `Tenant-B` on consecutive hops → SAT).
+- **Disabled-mode zero overhead:** Zero RDCE invocations when `ccpf_post_search_annotation=False`.
+- **Exception isolation:** RuntimeError in `annotate_paths_feasibility` does not
+  corrupt `derived_topk` or returned results.
+
+### 11.6 Open Items (Post Prompt 9)
+
+| Item | Status |
+|---|---|
+| T-B-01 through T-B-10 from Prompt 8A | Still OPEN — require PathContextTracker implementation |
+| Option B (incremental tracker) | OPEN — requires PO-1 heap safety proof before implementation |
+| Operational noise floor mitigation | Documented caveat — no action required for gate compliance |
