@@ -374,11 +374,18 @@ def extract_predicates_from_constraint(
     return []
 
 
-def build_constraint_index(conn: sqlite3.Connection) -> ConstraintIndex:
-    """Build pre-search in-memory index mapping edge_id to list of ContextPredicates.
+def build_constraint_index(
+    conn: sqlite3.Connection,
+    edge_ids: Any = None,
+) -> ConstraintIndex:
+    """Build in-memory index mapping edge_id to list of ContextPredicates.
 
     Loads active constraints linked via edge_constraints and translates them
     into ContextPredicate objects.
+
+    If edge_ids is provided, loads constraints only for the specified edges
+    (Opportunity A: query scoping), preserving chunking limits, ordering independence,
+    and explicit load-error diagnostics.
 
     Returns:
         ConstraintIndex mapping edge_id to list[ContextPredicate], with explicit
@@ -388,17 +395,42 @@ def build_constraint_index(conn: sqlite3.Connection) -> ConstraintIndex:
     predicates_by_edge: dict[str, list[ContextPredicate]] = {}
     malformed_count = 0
 
+    if edge_ids is not None:
+        e_list = list(set(edge_ids))
+        if not e_list:
+            return ConstraintIndex(predicates_by_edge={}, load_error=None, malformed_count=0)
+    else:
+        e_list = None
+
     try:
-        cur = conn.execute(
-            """
-            SELECT ec.edge_id, c.constraint_id, c.constraint_type, c.properties_json
-            FROM edge_constraints ec
-            JOIN constraints c ON ec.constraint_id = c.constraint_id
-            WHERE c.status = 'ACTIVE'
-            ORDER BY ec.edge_id COLLATE BINARY, c.constraint_id COLLATE BINARY
-            """
-        )
-        rows = cur.fetchall()
+        rows = []
+        if e_list is not None:
+            chunk_size = 500
+            for i in range(0, len(e_list), chunk_size):
+                chunk = e_list[i : i + chunk_size]
+                placeholders = ",".join("?" for _ in chunk)
+                cur = conn.execute(
+                    f"""
+                    SELECT ec.edge_id, c.constraint_id, c.constraint_type, c.properties_json
+                    FROM edge_constraints ec
+                    JOIN constraints c ON ec.constraint_id = c.constraint_id
+                    WHERE c.status = 'ACTIVE' AND ec.edge_id IN ({placeholders})
+                    ORDER BY ec.edge_id COLLATE BINARY, c.constraint_id COLLATE BINARY
+                    """,
+                    chunk,
+                )
+                rows.extend(cur.fetchall())
+        else:
+            cur = conn.execute(
+                """
+                SELECT ec.edge_id, c.constraint_id, c.constraint_type, c.properties_json
+                FROM edge_constraints ec
+                JOIN constraints c ON ec.constraint_id = c.constraint_id
+                WHERE c.status = 'ACTIVE'
+                ORDER BY ec.edge_id COLLATE BINARY, c.constraint_id COLLATE BINARY
+                """
+            )
+            rows = cur.fetchall()
     except Exception as ex:
         err_msg = f"{type(ex).__name__}: {ex}"
         logger.warning("CCPF bridge: constraint index query failed: %s", err_msg)
@@ -552,7 +584,7 @@ def annotate_paths_feasibility(
 ) -> list[dict[str, Any]]:
     """Evaluate full-path logical feasibility for a list of Top-K search paths.
 
-    Strictly Post-Search Diagnostic Layer (Prompt 9):
+    Strictly Post-Search Diagnostic Layer (Prompt 9 / 9B / 9C):
     - Reconstructs complete, ordered sequences of hops for each returned path.
     - Preserves hop boundaries and sequence order.
     - Evaluates each full path jointly via RestrictedDeterministicConstraintEvaluator.
@@ -560,6 +592,11 @@ def annotate_paths_feasibility(
     - Does NOT alter baseline Q8 probability scores, ranking, or ordering.
     - Does NOT prune edges or discard paths.
     - Isolates evaluation failures so search results remain untouched.
+
+    Optimizations (Prompt 9C):
+    - Scopes constraint and edge queries strictly to unique edges on returned paths (Opportunity A).
+    - Merges edge metadata and constraint retrieval into a single LEFT JOIN query when index is None.
+    - Precomputes hop prototype tuples for unique edges across paths to eliminate duplicate lookups (Opportunity B).
 
     Args:
         paths: List of path dicts as returned by search_top_k() or search_and_store_top_k().
@@ -598,37 +635,133 @@ def annotate_paths_feasibility(
         parsed_paths.append((p, e_list))
         all_eids.update(e_list)
 
-    # 2. Bulk query edge metadata for observed edges
+    if not all_eids:
+        # All paths are empty or malformed
+        annotations: list[dict[str, Any]] = []
+        for p, _ in parsed_paths:
+            rec = {
+                "rank": p.get("rank"),
+                "edge_id_sequence": p.get("edge_id_sequence"),
+                "status": FeasibilityStatus.UNKNOWN.value,
+                "witness": None,
+                "contradiction_rationale": None,
+                "unknown_rationale": "EMPTY_EDGE_SEQUENCE",
+                "evaluated_hops": 0,
+                "solver_duration_ms": 0.0,
+                "timeout_occurred": False,
+                "diagnostic_metadata": {"empty_path": True},
+            }
+            annotations.append(rec)
+            if annotation_sink is not None:
+                try:
+                    annotation_sink.append(rec)
+                except Exception as sink_ex:
+                    logger.warning("Failed to append record to annotation_sink: %s", sink_ex)
+        return annotations
+
+    eid_list = list(all_eids)
     edge_map: dict[str, dict[str, Any]] = {}
-    if all_eids:
-        eid_list = list(all_eids)
+    predicates_by_edge: dict[str, list[ContextPredicate]] = {}
+    malformed_count = 0
+    load_error = None
+
+    # 2. Combined edge metadata & constraint index resolution (Opportunity A & B)
+    if constraint_index is None:
         chunk_size = 500
         for i in range(0, len(eid_list), chunk_size):
             chunk = eid_list[i : i + chunk_size]
             placeholders = ",".join("?" for _ in chunk)
-            cur = conn.execute(
-                f"SELECT edge_id, edge_type, src_node_id, dst_node_id FROM edges WHERE edge_id IN ({placeholders})",
-                chunk,
-            )
-            for r in cur.fetchall():
-                edge_map[r["edge_id"]] = {
-                    "edge_type": r["edge_type"],
-                    "src": r["src_node_id"],
-                    "dst": r["dst_node_id"],
-                }
-
-    # 3. Obtain constraint index and evaluator
-    if constraint_index is None:
-        constraint_index = build_constraint_index(conn)
+            try:
+                cur = conn.execute(
+                    f"""
+                    SELECT e.edge_id, e.edge_type, e.src_node_id, e.dst_node_id,
+                           c.constraint_id, c.constraint_type, c.properties_json
+                    FROM edges e
+                    LEFT JOIN edge_constraints ec ON e.edge_id = ec.edge_id
+                    LEFT JOIN constraints c ON ec.constraint_id = c.constraint_id AND c.status = 'ACTIVE'
+                    WHERE e.edge_id IN ({placeholders})
+                    ORDER BY e.edge_id COLLATE BINARY, c.constraint_id COLLATE BINARY
+                    """,
+                    chunk,
+                )
+                for r in cur.fetchall():
+                    eid = r["edge_id"]
+                    if eid not in edge_map:
+                        edge_map[eid] = {
+                            "edge_type": str(r["edge_type"] or ""),
+                            "src": str(r["src_node_id"] or ""),
+                            "dst": str(r["dst_node_id"] or ""),
+                        }
+                    cid = r["constraint_id"]
+                    if cid is not None:
+                        ctype = r["constraint_type"]
+                        pjson = r["properties_json"]
+                        try:
+                            if isinstance(pjson, str):
+                                props = json.loads(pjson)
+                            elif isinstance(pjson, dict):
+                                props = pjson
+                            elif pjson is None:
+                                props = {}
+                            else:
+                                props = {"__malformed_type__": type(pjson).__name__}
+                        except Exception as json_err:
+                            props = {"__malformed_json_error__": str(json_err)}
+                            malformed_count += 1
+                        preds = extract_predicates_from_constraint(cid, ctype, props)
+                        if preds:
+                            if eid not in predicates_by_edge:
+                                predicates_by_edge[eid] = []
+                            predicates_by_edge[eid].extend(preds)
+            except Exception as ex:
+                load_error = f"{type(ex).__name__}: {ex}"
+                logger.warning("CCPF post-search combined edge/constraint query failed: %s", load_error)
+                break
+        c_idx: Any = ConstraintIndex(
+            predicates_by_edge=predicates_by_edge,
+            load_error=load_error,
+            malformed_count=malformed_count,
+        )
+    else:
+        c_idx = constraint_index
+        load_error = getattr(c_idx, "load_error", None)
+        chunk_size = 500
+        for i in range(0, len(eid_list), chunk_size):
+            chunk = eid_list[i : i + chunk_size]
+            placeholders = ",".join("?" for _ in chunk)
+            try:
+                cur = conn.execute(
+                    f"SELECT edge_id, edge_type, src_node_id, dst_node_id FROM edges WHERE edge_id IN ({placeholders})",
+                    chunk,
+                )
+                for r in cur.fetchall():
+                    edge_map[r["edge_id"]] = {
+                        "edge_type": str(r["edge_type"] or ""),
+                        "src": str(r["src_node_id"] or ""),
+                        "dst": str(r["dst_node_id"] or ""),
+                    }
+            except Exception as ex:
+                logger.warning("CCPF post-search edge query failed: %s", ex)
 
     if evaluator is None:
         evaluator = RestrictedDeterministicConstraintEvaluator()
 
-    load_error = getattr(constraint_index, "load_error", None)
+    # 3. Pre-build hop prototype tuples for observed unique edges
+    edge_hop_proto = {
+        eid: (
+            ed.get("edge_type", ""),
+            ed.get("src", ""),
+            ed.get("dst", ""),
+            c_idx.get(eid, []),
+        )
+        for eid in all_eids
+        if (ed := edge_map.get(eid)) is not None
+    }
 
-    annotations: list[dict[str, Any]] = []
+    annotations = []
+    assumptions = scenario_assumptions or {}
 
-    # 4. Evaluate each path in matching order
+    # 4. Evaluate each path in matching rank order
     for p, e_list in parsed_paths:
         rank = p.get("rank")
         edge_seq_str = p.get("edge_id_sequence")
@@ -661,24 +794,22 @@ def annotate_paths_feasibility(
                 "diagnostic_metadata": {"empty_path": True},
             }
         else:
-            hops: list[HopContextSpec] = []
-            for hop_num, eid in enumerate(e_list, start=1):
-                ed = edge_map.get(eid, {})
-                req_ctx = constraint_index.get(eid, [])
-                hops.append(
-                    HopContextSpec(
-                        hop=hop_num,
-                        edge_type=str(ed.get("edge_type", "")),
-                        src_node_id=str(ed.get("src", "")),
-                        dst_node_id=str(ed.get("dst", "")),
-                        required_context=req_ctx,
-                    )
+            hops = [
+                HopContextSpec(
+                    hop=hop_num,
+                    edge_type=proto[0],
+                    src_node_id=proto[1],
+                    dst_node_id=proto[2],
+                    required_context=proto[3],
                 )
+                for hop_num, eid in enumerate(e_list, start=1)
+                if (proto := edge_hop_proto.get(eid)) is not None
+            ]
 
             eval_input = PathEvaluationInput(
                 path_id=path_id,
                 hops=hops,
-                scenario_assumptions=scenario_assumptions or {},
+                scenario_assumptions=assumptions,
             )
 
             try:
@@ -712,6 +843,6 @@ def annotate_paths_feasibility(
             try:
                 annotation_sink.append(record)
             except Exception as sink_ex:
-                logger.debug("Failed to append record to annotation_sink: %s", sink_ex)
+                logger.warning("Failed to append record to annotation_sink: %s", sink_ex)
 
     return annotations

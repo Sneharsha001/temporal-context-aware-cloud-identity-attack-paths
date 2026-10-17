@@ -2,8 +2,8 @@
 
 ## Prompt 8 / 8A - Architecture Design Gate: Multi-Hop Prefix Feasibility for ARF-RT Best-First Search
 
-**Document Version:** 1.4.0 (Prompt 9B Conformance, Reference Parity & Performance Gate Audit)
-**Phase:** Prompt 9B -- CCPF Annotation Conformance, Reference Parity & Performance Gate Audit
+**Document Version:** 1.5.0 (Prompt 9C Post-Search Annotation Performance Remediation)
+**Phase:** Prompt 9C -- CCPF Post-Search Annotation Performance Remediation
 **Branch:** `temporal-context-dev`
 **Workspace:** `C:\SNEHARSHA\ANTIGRAVITY\ARF-RT-TEMPORAL`
 **Baseline Commit:** `c1a28f2` → Prompt 9 commit: see RESEARCH_STATUS.md
@@ -404,11 +404,11 @@ Benchmark 4: Mode B-Inc (True incremental constraint tracker prototype, when ava
 
 ---
 
-## Section 11 — Prompt 9 / 9B: Post-Search Top-K Feasibility Annotation & Audit
+## Section 11 — Prompt 9 / 9B / 9C: Post-Search Top-K Feasibility Annotation & Performance Remediation
 
-> **Status:** AUDITED & CONFORMANCE TESTED — `temporal-context-dev` branch.
-> Post-search diagnostic layer integrated. Zero active pruning. Zero search interference.
-> **Performance Gate Status:** **UNMET** (< 15.0% gate exceeded under controlled paired benchmark).
+> **Status:** REMEDIATED & PROFILED — `temporal-context-dev` branch.
+> Post-search diagnostic layer integrated with scoped queries and prototype caching.
+> **Performance Gate Status:** **UNMET** (< 15.0% gate exceeded; database query fixed-cost boundary documented).
 
 ### 11.1 Implementation & Accessibility Contract
 
@@ -531,6 +531,46 @@ Prompt 8B / 9 parity was rigorously audited via differential integration testing
 | `test_annotation_accessibility_non_appendable_sink_skips_computation` | Accessibility (Prompt 9B) | PASS |
 | `test_annotation_accessibility_faulty_sink_isolated_search_intact` | Accessibility (Prompt 9B) | PASS |
 | `test_differential_reference_evaluator_parity_full_path` | Reference Parity (Prompt 9B) | PASS |
+
+### 11.6 Prompt 9C: Performance Profiling & Optimization Remediation
+
+#### Component Timing Breakdown (Fresh Connection Profiling)
+To locate the exact source of overhead, every sub-operation of `annotate_paths_feasibility` was timed across 100 trials:
+
+| Component | Minimal Fixture (1 path, 2 edges) | Complex Fixture (15 paths, 20 unique edges) |
+|---|---|---|
+| 1. Path JSON parse (`edge_id_sequence`) | 0.009 ms | 0.071 ms |
+| 2. Edges table SQL lookup | 0.058 ms | 0.143 ms |
+| 3. Constraints table SQL lookup | 0.094 ms | 0.158 ms |
+| 4. Constraint properties JSON parsing | 0.024 ms | 0.085 ms |
+| 5. RDCE Evaluator instantiation | 0.001 ms | 0.001 ms |
+| 6. HopContextSpec path construction | 0.023 ms | 0.201 ms |
+| 7. RDCE logical evaluation (`evaluate()`) | 0.015 ms | 0.123 ms |
+| 8. Diagnostic record dictionary formatting | 0.005 ms | 0.025 ms |
+| **Total standalone annotation cost** | **0.230 ms** | **0.807 ms** |
+
+#### Safe Optimizations Implemented (Prompt 9C)
+1. **Opportunity A (Scoped Query Loading):** Updated `build_constraint_index(conn, edge_ids=all_eids)` to accept optional `edge_ids`, scoping the query only to edges present on returned paths rather than scanning the full graph.
+2. **Opportunity A/B (Single Combined LEFT JOIN):** When building the index dynamically, merged the `edges` metadata query and `constraints` query into a single query (`edges LEFT JOIN edge_constraints LEFT JOIN constraints`), eliminating one entire SQLite query execution and reducing round-trips by 25-28%.
+3. **Opportunity B (Hop Prototype Caching):** Precomputed immutable `(edge_type, src, dst, req_ctx)` tuples for each unique edge in `all_eids`, eliminating redundant dictionary lookups and string casts across multi-hop paths.
+4. **Opportunity D (Preserve Semantic Authority):** Kept the full-path RDCE solver strictly intact as the semantic authority.
+
+#### Before / After Controlled Paired Benchmark (50 Paired Trials, Interleaved)
+
+| Metric | Minimal Fixture (Pre -> Post) | Complex Fixture (Pre -> Post) |
+|---|---|---|
+| Standalone RDCE Time | 0.0555 ms -> **0.0417 ms/path** (-25%) | 0.5796 ms -> **0.4843 ms** (-16%) |
+| Absolute Pipeline Delta | 0.288 ms -> **0.178 ms** (-38%) | 1.182 ms -> **0.809 ms** (-32%) |
+| Baseline Median Latency | 0.543 ms -> **0.360 ms** | 4.175 ms -> **2.767 ms** |
+| Annotated Median Latency | 0.797 ms -> **0.525 ms** | 5.353 ms -> **3.717 ms** |
+| Relative Median Overhead | +46.77% -> **+45.71%** | +28.24% -> **+34.33%** |
+| Per-Pair Median Overhead | +57.85% -> **+52.25%** | +27.25% -> **+28.07%** |
+| **Authoritative Gate (< 15.0%)** | **UNMET** (exceeded) | **UNMET** (exceeded) |
+
+#### Remaining Bottleneck Analysis & Stop Rule
+- **The Micro-Scenario Budget Problem:** The baseline search latency is extremely low (0.360 ms for minimal, 2.767 ms for complex). A strict 15% budget allocates only **0.054 ms (54 microseconds)** on minimal and **0.415 ms** on complex.
+- **SQLite Parameterized Query Floor:** Executing even a single indexed SQLite parameterized query with row retrieval in Python takes ~0.08–0.12 ms on a fresh connection. Thus, any post-search layer performing database I/O to inspect edge endpoints and constraints inherently exceeds a 54 $\mu	ext{s}$ budget on micro-fixtures.
+- **Rule Enforcement:** As instructed by Prompt 9C, the gate status is recorded as **UNMET**. Speculative optimization and active pruning remain strictly prohibited. Work is stopped for researcher review.
 
 ### 11.5 Audit Conclusion & Stop Rule
 

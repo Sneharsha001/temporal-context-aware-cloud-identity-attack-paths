@@ -618,3 +618,73 @@ properly accounted for; complex fixture passes with 8.3% overhead).
 - Implementation preserved with minimal, evidence-backed accessibility safeguards.
 - Performance gate `< 15.0%` formally recorded as **UNMET**.
 - Execution halted for researcher review. No active pruning, reranking, or speculative optimization introduced.
+
+
+---
+
+### Prompt 9C — CCPF Post-Search Annotation Performance Remediation (Completed)
+
+- **Date:** 2026-10-17
+- **Branch:** `temporal-context-dev`
+- **Starting Commit:** `77f005f`
+- **Objective:** Profile annotation components, implement minimal evidence-backed optimizations (Opportunities A, B, C), re-evaluate controlled paired benchmark against the strictly unchanged `< 15.0%` gate, and report results honestly.
+
+#### 1. Component Timing Breakdown (Fresh Connection Profiling across 100 trials)
+- **Minimal Fixture (1 path, 2 edges, baseline = 0.360 ms):**
+  * Path JSON parse: 0.009 ms
+  * Edges table SQL lookup: 0.058 ms
+  * Constraints table SQL lookup: 0.094 ms
+  * Properties JSON parse: 0.024 ms
+  * Evaluator init: 0.001 ms
+  * HopContextSpec building: 0.023 ms
+  * Evaluator evaluate(): 0.015 ms
+  * Record formatting: 0.005 ms
+  * Total standalone annotation: **0.230 ms**
+- **Complex Fixture (15 paths, 20 unique edges, baseline = 2.767 ms):**
+  * Path JSON parse: 0.071 ms
+  * Edges table SQL lookup: 0.143 ms
+  * Constraints table SQL lookup: 0.158 ms
+  * Properties JSON parse: 0.085 ms
+  * Evaluator init: 0.001 ms
+  * HopContextSpec building: 0.201 ms
+  * Evaluator evaluate(): 0.123 ms
+  * Record formatting: 0.025 ms
+  * Total standalone annotation: **0.807 ms**
+
+#### 2. Optimizations Implemented (`arf_rt/ccpf_bridge.py`)
+1. **Opportunity A (Query Scoping):** `build_constraint_index` updated with optional `edge_ids`, scoping the SQL query strictly to unique edges on returned paths rather than loading the entire graph.
+2. **Opportunity A/B (Single Combined Query):** Merged edge metadata and constraint retrieval into a single `LEFT JOIN` query (`edges LEFT JOIN edge_constraints LEFT JOIN constraints`), eliminating one entire SQLite query execution and reducing round-trips by 25-28% (~40-72 microseconds saved per invocation).
+3. **Opportunity B (Hop Prototype Caching):** Precomputed `(edge_type, src, dst, req_ctx)` prototype tuples for unique edges across paths, eliminating repeated dictionary lookups and string typecasts across multi-hop paths.
+4. **Opportunity D (Preserve Semantic Authority):** Kept the full-path RDCE solver strictly intact as the semantic authority.
+
+#### 3. Controlled Paired Benchmark Results (50 Paired Trials, Interleaved)
+- **Methodology:** 50 paired trials, 5 warmup pairs, interleaved execution order. Fixture DB construction excluded from timed blocks.
+- **Metric:** `100 * (enabled_median / disabled_median - 1)`
+
+| Fixture | Paths | Baseline Median | Annotated Median | Delta Median | Standalone RDCE | Relative Overhead | Gate Status |
+|---|---|---|---|---|---|---|---|
+| **Minimal** | 1 | 0.360 ms | 0.525 ms | +0.178 ms | 0.0417 ms/path | **+45.71%** (per-pair +52.25%) | **UNMET** (>= 15.0%) |
+| **Complex** | 15 | 2.767 ms | 3.717 ms | +0.809 ms | 0.0323 ms/path | **+34.33%** (per-pair +28.07%) | **UNMET** (>= 15.0%) |
+
+- **Before -> After Remediation Delta Comparison:**
+  * Minimal fixture delta: 0.288 ms -> **0.178 ms** (-38.2% reduction).
+  * Complex fixture delta: 1.182 ms -> **0.809 ms** (-31.6% reduction).
+  * Standalone RDCE time: 0.0555 ms/path -> **0.0417 ms/path** (minimal), 0.0386 ms/path -> **0.0323 ms/path** (complex).
+
+#### 4. Remaining Bottleneck Analysis & Honest Gate Decision
+- **The Micro-Scenario Budget Constraint:**
+  * Baseline search is extremely fast: 0.360 ms on minimal and 2.767 ms on complex.
+  * A strict 15% budget allocates only **0.054 ms (54 microseconds)** on minimal and **0.415 ms** on complex.
+  * In Python with SQLite, executing even a single indexed parameterized query with row retrieval requires ~0.08–0.12 ms on a fresh connection.
+  * Any post-search layer performing database I/O to inspect edge endpoints and constraints inherently exceeds a 54 microsecond budget on micro-fixtures.
+- **Formal Gate Verdict:** Formally recorded as **UNMET**. As mandated by Prompt 9C, no speculative optimizations or retroactive threshold changes are introduced.
+
+#### 5. Test Suite Status at Prompt 9C
+- `tests/integration/test_post_search_annotation.py`: **16/16 passed** in 0.68s.
+- `tests/research/` + `tests/integration/`: **191/191 passed** in 1.35s.
+- `tests/unit/test_paths.py` + `tests/unit/test_belief.py`: **56/56 passed** in 0.65s.
+- Full non-stress suite (`tests/ --ignore=tests/stress`): **1066/1066 passed** in 82.66s.
+- Pre-existing stress suite wall-clock tests noted (`test_stage1.py::test_runtime_under_1_second`, `test_stage1b.py::test_runtime_under_500ms`).
+
+#### 6. Stop Rule in Effect
+- Remediation complete. Work halted for researcher review before any further progression.
