@@ -378,3 +378,43 @@ Independent code re-review of the remediated evaluator and test suite, followed 
   - Measured relative overhead across 30 paired repetitions: **+30.8%** (`minimal_scenario`), **+27.9%** (`complex_scenario`).
   - Gate remains recorded as **UNMET**. Absolute overhead is $+0.12$ ms to $+1.36$ ms.
 - **Design Gap Documented:** Documented Section 13.5 outlining requirements for multi-hop prefix propagation, incremental solving, and context inheritance scoping. Active pruning remains strictly deferred.
+
+
+### Prompt 8 Completion -- CCPF Path-Level Integration Architecture Design Gate (DESIGN ONLY)
+- **Phase:** Architecture Design Gate (Multi-Hop Prefix Feasibility).
+- **Branch:** `temporal-context-dev`.
+- **Commit at start:** `86b2947`.
+- **Deliverable:** `docs/CCPF_PATH_LEVEL_INTEGRATION_DESIGN.md` (v1.0.0).
+- **Primary Research Question Addressed:**
+  > How can CCPF maintain sound path-prefix feasibility state across multi-hop attack paths
+  > without changing baseline Q8 scores, path ranking, or Top-K behavior, and without
+  > incurring unacceptable computational overhead?
+- **Architecture Analysis:**
+  - **Option A (Full Prefix Re-evaluation):** Architecturally correct; FAIL on performance
+    (approx. 5x Mode A overhead for avg depth d=5 -- Mode A already UNMET at +28-31%).
+  - **Option B (Incremental PathContextTracker):** **RECOMMENDED.** Same evaluator call
+    count as Mode A; O(k) input size growth per call; performance depends on constraint
+    density (empirical profiling required). PathContextSnapshot carried at heap tuple
+    position 10 (does not affect ordering due to edge_seq_str uniqueness at position 2).
+  - **Option C (Deferred Post-Search Annotation):** Appropriate as Phase 1 diagnostic tool;
+    does not prevent UNSAT prefix paths from outranking SAT paths during search.
+- **Six Non-Negotiable Correctness Invariants Documented:** INV-1 through INV-6.
+  All require: zero Q8 modification, zero heap reordering, identical Top-K under passive
+  mode, exception isolation, disabled-mode zero overhead, and observational-only verdicts.
+- **Five Scope Transition Invariants Documented:** TR-1 through TR-5.
+  Govern inheritance semantics for REQUEST, SESSION, CONFIG, PRINCIPAL, and UNKNOWN scope
+  context variables across consecutive hops.
+- **Five Formal Proof Obligations:** PO-1 (heap ordering safety, [BLOCKER]), PO-2 (pure
+  function invariant, [BLOCKER]), PO-3 (absorbing UNSAT soundness), PO-4 (transition
+  relation correctness), PO-5 (observational equivalence of passive Mode B vs. disabled).
+- **Ten New Test Specifications:** T-B-01 through T-B-10 formally defined in the design
+  document. Not yet implemented -- test implementation is gated on proof obligation
+  discharge.
+- **Phased Overhead Reduction Plan:** Phase 1 (Option C annotation, zero overhead);
+  Phase 2 (Option B prototype + benchmarking); Phase 3 (S2 lightweight clash detection);
+  Phase 4 (full integration if and only if overhead < 15%).
+- **Mode A Baseline Test Suite:** 785 tests passing at 86b2947 (625 unit, 141 research,
+  19 integration). No tests were added or modified in Prompt 8.
+- **Active pruning remains strictly prohibited.** PathContextSnapshot UNSAT verdicts go
+  to the audit sink only. No edge expansion is skipped. No heap insertion is withheld.
+- **No source code modified in Prompt 8.** Document-only phase.
