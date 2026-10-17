@@ -386,6 +386,9 @@ arf_rt/
     hashing.py                   Deterministic canonical JSON and SHA-256 digests
     datetime_helpers.py          ISO-8601 parsing and temporal window checkers
     config_loader.py             Runtime configuration profiles and env overrides
+    objective_helpers.py         Scenario objective schemas and node reference validators
+    graph_traversal.py           Simple path enumerators and cycle detectors
+    math_stats.py                Shannon entropy, normalization, and KL divergence
 ```
 
 ## Documentation Index
@@ -394,6 +397,11 @@ arf_rt/
 - **[Mathematical Foundations](docs/MATHEMATICAL_FOUNDATIONS.md)** — Shannon entropy, EIG equations, and Bayesian belief updates
 - **[Threat Model & Adversary Capabilities](docs/THREAT_MODEL.md)** — Compromise tiers and safety boundaries
 - **[Evaluation & Baseline Framework](docs/EVALUATION_FRAMEWORK.md)** — Comparison against PMapper, BloodHound, and naive models
+- **[Enterprise Defense Case Study](docs/CASE_STUDY_ENTERPRISE.md)** — 46x correlation collapse in multi-account AWS topologies
+- **[Performance Scaling & Benchmarks](docs/PERFORMANCE_SCALING.md)** — Memory profile and graph scaling across 25k nodes
+- **[CCPF Integration Roadmap](docs/CCPF_INTEGRATION_ROADMAP.md)** — Production milestones and Prompt phase tracking
+- **[Telemetry & Logging Specification](docs/TELEMETRY_SPECIFICATION.md)** — Structured audit event schema
+- **[Operational Readiness Playbook](docs/OPERATIONAL_PLAYBOOK.md)** — Deployment checklists and incident triage
 - **[Scenario Schema Reference](docs/DATA_SCHEMAS.md)** — Attribute reference and JSON models
 - **[CCPF Path-Level Integration Design](docs/CCPF_PATH_LEVEL_INTEGRATION_DESIGN.md)** — Multi-hop feasibility specification
 - **[CCPF API Reference](docs/CCPF_API_REFERENCE.md)** — Data contracts and evaluator interface
