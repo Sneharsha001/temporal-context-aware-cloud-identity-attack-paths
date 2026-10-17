@@ -2,11 +2,11 @@
 
 ## Prompt 8 / 8A - Architecture Design Gate: Multi-Hop Prefix Feasibility for ARF-RT Best-First Search
 
-**Document Version:** 1.1.0 (Audited & Reconciled under Prompt 8A Independent Review)
-**Phase:** Prompt 8A -- Independent CCPF Architecture Consistency & Proof-Obligation Review
+**Document Version:** 1.2.0 (Audited & Verified under Prompt 8B Offline Reference Harness)
+**Phase:** Prompt 8B -- CCPF Offline Full-Prefix Reference Harness
 **Branch:** `temporal-context-dev`
 **Workspace:** `C:\SNEHARSHA\ANTIGRAVITY\ARF-RT-TEMPORAL`
-**Baseline Commit:** `1d636f7`
+**Baseline Commit:** `2fc604a`
 **Date:** 2026-10-17
 **Status:** **AUDITED DESIGN SPECIFICATION -- Production source changes and active pruning strictly prohibited**
 
@@ -34,6 +34,7 @@
 | **Section 6 / 9** | **Reconciled Performance Plan & Complexity:** Reclassified speculative overhead claims (e.g., "5x cost") as unverified hypotheses. Clarified that the intermediate 20% milestone is an interim checkpoint, while `< 15%` remains the binding gate. Defined 4-tier benchmark matrix. | Aligns performance claims with authoritative governance targets. |
 | **Section 7 / 8** | **Proof Obligations & Test Specifications Reconciled:** Reconciled PO-1 through PO-5 and T-B-01 through T-B-10 into strict evidence states (`PROVEN`, `TESTED`, `OPEN`, `BLOCKED`). Clarified that T-B-01 through T-B-10 are specifications, not yet implemented. | Resolves conflicting terminology and unsubstantiated verification claims. |
 | **Section 10** | **Smallest Justified Next Implementation Step:** Compared Option A (post-search annotation), Option B (offline reference harness), and Option C (true incremental solver). Recommended a provably-safe two-step milestone (Test Reference Harness + Post-Search Annotation Layer). | Provides a defensible, non-disruptive implementation path. |
+| **Prompt 8B / Harness** | **Offline Full-Prefix Reference Harness Built:** Implemented `tests/research/test_reference_harness.py` validating 15 test cases against RDCE. Formally verified multi-hop CIDR contradiction, non-inheritance without assumptions, hop-local ExternalId, AssumeRole boundaries, malformed context, and differential oracle. | Establishes authoritative offline correctness reference without touching production search. |
 
 ---
 
@@ -311,7 +312,7 @@ The absorbing-UNSAT invariant holds strictly under the following proven conditio
 | **PO-1** | Prove `PathContextSnapshot` cannot alter Python tuple comparison or heap ordering. | Mode B Design | **BLOCKED on 11-tuple; PROVEN under Decoupled Representation** | 11-tuple contains `frozenset` at index 4, 8, 9 which crash on tie. Separation into `(PathSearchPriority, PathSearchPayload)` completely isolates payload from comparison. |
 | **PO-2** | Prove `advance_tracker()` is a pure function without in-place mutations. | Mode B Implementation | **OPEN** | Specification defined in design; requires unit verification upon implementation. |
 | **PO-3** | Prove Absorbing-UNSAT invariant soundness across multi-hop extensions. | Mode B Implementation | **PROVEN (Bounded)** | Monotonicity proven for conjunctive constraints under static origin; explicitly bounded: UNKNOWN/exceptions non-absorbing. |
-| **PO-4** | Prove TR-1 through TR-5 transition invariants against RDCE semantics. | Mode B Implementation | **TESTED (Batch RDCE) / OPEN (Tracker)** | Verified in RDCE research tests (`test_rdce.py`); tracker bridge integration not yet implemented. |
+| **PO-4** | Prove TR-1 through TR-5 transition invariants against RDCE semantics. | Mode B Implementation | **TESTED (Batch RDCE & Reference Harness) / OPEN (Tracker)** | Verified in RDCE research tests (`test_rdce.py`) and offline reference harness (`test_reference_harness.py`); tracker bridge integration not yet implemented. |
 | **PO-5** | Prove observational equivalence between passive Mode B and disabled baseline (`ccpf_guard=False`). | Mode B Integration | **OPEN** | Requires passing baseline equivalence test `test_mode_b_baseline_equivalence`. |
 
 ### 8.2 Test Specifications Status Matrix (T-B-01 through T-B-10)
@@ -323,13 +324,13 @@ The absorbing-UNSAT invariant holds strictly under the following proven conditio
 | **T-B-01** | `PathContextSnapshot.empty()` | Verifies initial root snapshot is SAT with hop_count=0. | **OPEN (SPECIFICATION ONLY)** |
 | **T-B-02** | `advance_tracker()` purity | Verifies unconstrained edge preserves SAT without in-place mutation. | **OPEN (SPECIFICATION ONLY)** |
 | **T-B-03** | Short-circuit evaluation | Verifies UNSAT prefix returns UNSAT snapshot with zero evaluator calls. | **OPEN (SPECIFICATION ONLY)** |
-| **T-B-04** | Disjoint IP multi-hop | Verifies Test 18 scenario produces UNSAT snapshot across 2 hops. | **OPEN (SPECIFICATION ONLY)** |
+| **T-B-04** | Disjoint IP multi-hop | Verifies Test 18 scenario produces UNSAT across 2 hops. | **TESTED (Offline Harness)** |
 | **T-B-05** | Baseline equivalence | Verifies identical Top-K paths and Q8 scores vs `ccpf_guard=False`. | **OPEN (SPECIFICATION ONLY)** |
 | **T-B-06** | Exception isolation | Verifies evaluator crash produces UNKNOWN snapshot and does not abort search. | **OPEN (SPECIFICATION ONLY)** |
 | **T-B-07** | Disabled mode parity | Verifies `ccpf_guard=False` carries None snapshot with zero tracking overhead. | **OPEN (SPECIFICATION ONLY)** |
-| **T-B-08** | Config scope isolation | Verifies `sts:ExternalId` constraints on consecutive hops do not clash. | **OPEN (SPECIFICATION ONLY)** |
-| **T-B-09** | Request CIDR clash | Verifies CIDR contradiction detection under `static_origin_assumption: True`. | **OPEN (SPECIFICATION ONLY)** |
-| **T-B-10** | Session MFA boundary | Verifies MFA persistence and reset across `sts:AssumeRole` transitions. | **OPEN (SPECIFICATION ONLY)** |
+| **T-B-08** | Config scope isolation | Verifies `sts:ExternalId` constraints on consecutive hops do not clash. | **TESTED (Offline Harness)** |
+| **T-B-09** | Request CIDR clash | Verifies CIDR contradiction detection under `static_origin_assumption: True`. | **TESTED (Offline Harness)** |
+| **T-B-10** | Session MFA boundary | Verifies MFA persistence and reset across `sts:AssumeRole` transitions. | **TESTED (Offline Harness)** |
 
 ---
 

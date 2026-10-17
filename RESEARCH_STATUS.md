@@ -33,6 +33,7 @@ Identity Attack-Path Analysis (CCPF)
 | Prompt 7 / 7A / 7B / 7C | CCPF Passive Audit Bridge Implementation & Audits | COMPLETE (Zero Pruning) |
 | Prompt 8 | CCPF Path-Level Integration Architecture Design Gate | COMPLETE (Design Only) |
 | Prompt 8A | Independent CCPF Architecture Consistency & Proof-Obligation Review | COMPLETE (Audited) |
+| Prompt 8B | CCPF Offline Full-Prefix Reference Harness | COMPLETE (15/15 Tests Passed) |
 
 ---
 
@@ -438,3 +439,30 @@ Independent code re-review of the remediated evaluator and test suite, followed 
   - **Performance Plan & Complexity Claims Corrected:** Reclassified unmeasured claims ("5x cost") as hypotheses. Clarified that the intermediate 20% milestone is an interim engineering checkpoint, while `< 15.0%` remains the binding gate. Established a 4-tier benchmark matrix.
   - **Smallest Justified Next Implementation Step:** Compared Option A (post-search annotation), Option B (offline reference harness), and Option C (true incremental solver). Recommended a two-step progression: (1) Offline Full-Prefix Reference Test Harness; (2) Post-Search Top-K Feasibility Annotation Layer in `search_and_store_top_k()` at $< 1\%$ overhead.
 - **Safety Invariant Maintained:** Zero production source code modified, zero active pruning enabled, zero Q8/ranking changes.
+
+
+### Prompt 8B Completion -- CCPF Offline Full-Prefix Reference Harness (VERIFIED)
+- **Phase:** Offline Full-Prefix Correctness Reference (Harness Verification).
+- **Branch:** `temporal-context-dev`.
+- **Commit at start:** `2fc604a`.
+- **Deliverables:**
+  - `tests/research/test_reference_harness.py` (15 reference test cases, 100% passing).
+  - `docs/CCPF_PATH_LEVEL_INTEGRATION_DESIGN.md` (updated v1.2.0).
+  - `RESEARCH_STATUS.md`.
+- **Primary Harness Verification Outcomes:**
+  - **10 Core Reference Cases Verified (15 tests total, 0.20s):**
+    1. *Joint Two-Hop CIDR Contradiction (Case 1):* Verified that `10.0.0.0/24` on hop 1 and `192.168.1.0/24` on hop 2 evaluate to `UNSAT` under `static_origin_assumption: True` with explicit disjointness rationale.
+    2. *Non-Inheritance without Static Origin (Case 2):* Verified that when `static_origin_assumption` is absent, RDCE treats hop IPs as independent request origins, evaluating to `SAT` with distinct `hop_1_SourceIp` and `hop_2_SourceIp` witnesses.
+    3. *Differential & Oracle Strategy (Case 3 / Oracle):* Formally demonstrated that isolated single-hop evaluation yields `SAT && SAT` while joint multi-hop evaluation yields `UNSAT`, proving that single-hop feasibility conjunction is an insufficient feasibility oracle ($igwedge_i Feasible(e_i)
+ot\implies Feasible(\pi)$).
+    4. *Compatible Persistent Context (Case 4):* Verified that overlapping CIDRs (`10.0.0.0/16` and `10.0.1.0/24`) under static origin evaluate to `SAT` with witness in the intersection subnet (`10.0.1.0/24`).
+    5. *Hop-Local CONFIG Independence (Case 5):* Verified that distinct `sts:ExternalId` parameters (`Client-Alpha-123` and `Client-Beta-456`) on consecutive hops do not clash, correctly evaluating to `SAT`.
+    6. *AssumeRole Scope Boundaries (Case 6):* Verified that caller principal tags and session tokens reset across `sts:AssumeRole` transitions, and target role attached tags produced during the transition correctly become active principal tags.
+    7. *Unsupported Scope Fallback (Case 7):* Verified that `ContextScope.UNKNOWN` strictly yields `FeasibilityStatus.UNKNOWN` with `UNSUPPORTED_OR_UNKNOWN_SCOPE` rationale.
+    8. *Missing and Malformed Inputs (Case 8):* Verified that empty paths, unconstrained hops, malformed CIDRs, unsupported operators, and wildcards in `StringLike` safely yield `UNKNOWN` and are never promoted to `SAT` or `UNSAT`.
+    9. *Repeated Evaluation Determinism (Case 9):* Verified that 20 repeated evaluations of both `SAT` and `UNSAT` paths produce bitwise identical statuses, witnesses, and contradiction rationales.
+    10. *Witness, Rationale, and Timeout Integrity (Case 10):* Verified that SAT results carry valid witnesses without probability multipliers; UNSAT results carry non-empty contradiction proofs; UNKNOWN results carry explanatory rationales; and iteration ceiling breaches cleanly set `timeout_occurred=True`.
+- **Safety Invariants Maintained:**
+  - Zero modifications to production search (`arf_rt/engine/paths.py`), Q8 probability scoring, or active pruning.
+  - Test suite status: **175 research + integration tests passing (1.27s)**, **56 unit tests passing (0.69s)**.
+  - Offline reference harness established as authoritative ground truth prior to any runtime annotation or search engine modifications.
