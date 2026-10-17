@@ -108,6 +108,9 @@ ARF-RT provides a suite of developer utilities in `scripts/`:
 | `check_scenario.py` | Validates JSON scenario syntax, nodes, and reachability objectives | `python scripts/check_scenario.py scenario.json` |
 | `plot_entropy_reduction.py` | Visualizes Shannon entropy collapse across sequential probing steps | `python scripts/plot_entropy_reduction.py` |
 | `format_docs.py` | Strips trailing whitespace and checks markdown documentation formatting | `python scripts/format_docs.py --fix` |
+| `generate_diamond_scenario.py` | Synthesizes multi-account diamond topologies with shared SCP constraints | `python scripts/generate_diamond_scenario.py` |
+| `policy_diff.py` | Compares edge and constraint rules across two scenario configurations | `python scripts/policy_diff.py scen_a.json scen_b.json` |
+| `simulate_probe_sequence.py` | Simulates step-by-step entropy collapse during active probing | `python scripts/simulate_probe_sequence.py` |
 
 ## Quick Start
 
