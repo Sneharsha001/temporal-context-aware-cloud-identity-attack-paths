@@ -13,6 +13,10 @@ Re-exports the most commonly used utilities for convenient import:
         load_profile,
         find_all_simple_paths,
         shannon_entropy,
+        match_wildcard_pattern,
+        topological_sort,
+        export_to_dot,
+        export_to_cytoscape,
     )
 """
 
@@ -25,6 +29,9 @@ from arf_rt.util.datetime_helpers import parse_iso8601, format_iso8601, is_withi
 from arf_rt.util.config_loader import load_profile, RuntimeProfile
 from arf_rt.util.graph_traversal import find_all_simple_paths, detect_cycles
 from arf_rt.util.math_stats import shannon_entropy, normalize_distribution, kl_divergence
+from arf_rt.util.policy_patterns import match_wildcard_pattern, match_any_pattern, sanitize_arn_pattern
+from arf_rt.util.dag import topological_sort, get_ancestors
+from arf_rt.util.visualization import export_to_dot, export_to_cytoscape
 
 __all__ = [
     "retry",
@@ -50,4 +57,11 @@ __all__ = [
     "shannon_entropy",
     "normalize_distribution",
     "kl_divergence",
+    "match_wildcard_pattern",
+    "match_any_pattern",
+    "sanitize_arn_pattern",
+    "topological_sort",
+    "get_ancestors",
+    "export_to_dot",
+    "export_to_cytoscape",
 ]
