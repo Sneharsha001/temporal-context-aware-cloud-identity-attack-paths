@@ -118,6 +118,9 @@ ARF-RT provides a suite of developer utilities in `scripts/`:
 | `generate_diamond_scenario.py` | Synthesizes multi-account diamond topologies with shared SCP constraints | `python scripts/generate_diamond_scenario.py` |
 | `policy_diff.py` | Compares edge and constraint rules across two scenario configurations | `python scripts/policy_diff.py scen_a.json scen_b.json` |
 | `simulate_probe_sequence.py` | Simulates step-by-step entropy collapse during active probing | `python scripts/simulate_probe_sequence.py` |
+| `export_dot_graph.py` | Exports scenario nodes and edges into Graphviz DOT syntax | `python scripts/export_dot_graph.py scen.json -o graph.dot` |
+| `profile_scenario.py` | Profiles graph branching factors, asset convergence, and topology metrics | `python scripts/profile_scenario.py scen.json` |
+| `generate_chain_scenario.py` | Generates linear and branching attack chains of length N for scale tests | `python scripts/generate_chain_scenario.py --length 6` |
 
 ## Quick Start
 
