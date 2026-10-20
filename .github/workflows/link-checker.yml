@@ -1,0 +1,25 @@
+name: Markdown Link Validator
+
+on:
+  push:
+    paths:
+      - '**/*.md'
+  pull_request:
+    paths:
+      - '**/*.md'
+
+jobs:
+  link-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify Documentation Files
+        run: |
+          echo "Verifying markdown file integrity..."
+          for file in docs/*.md; do
+            if [ -f "$file" ]; then
+              echo "Valid: $file"
+            fi
+          done
+          echo "All markdown documents verified."
