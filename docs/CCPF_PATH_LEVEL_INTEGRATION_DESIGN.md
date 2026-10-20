@@ -2,8 +2,8 @@
 
 ## Prompt 8 / 8A - Architecture Design Gate: Multi-Hop Prefix Feasibility for ARF-RT Best-First Search
 
-**Document Version:** 1.5.0 (Prompt 9C Post-Search Annotation Performance Remediation)
-**Phase:** Prompt 9C -- CCPF Post-Search Annotation Performance Remediation
+**Document Version:** 1.6.0 (Prompt 9D Performance Feasibility & Research Decision Gate)
+**Phase:** Prompt 9D -- CCPF Performance Feasibility and Research Decision Gate
 **Branch:** `temporal-context-dev`
 **Workspace:** `C:\SNEHARSHA\ANTIGRAVITY\ARF-RT-TEMPORAL`
 **Baseline Commit:** `c1a28f2` → Prompt 9 commit: see RESEARCH_STATUS.md
@@ -404,7 +404,7 @@ Benchmark 4: Mode B-Inc (True incremental constraint tracker prototype, when ava
 
 ---
 
-## Section 11 — Prompt 9 / 9B / 9C: Post-Search Top-K Feasibility Annotation & Performance Remediation
+## Section 11 — Prompt 9 / 9B / 9C / 9D: Post-Search Top-K Feasibility Annotation & Decision Gate
 
 > **Status:** REMEDIATED & PROFILED — `temporal-context-dev` branch.
 > Post-search diagnostic layer integrated with scoped queries and prototype caching.
@@ -532,9 +532,11 @@ Prompt 8B / 9 parity was rigorously audited via differential integration testing
 | `test_annotation_accessibility_faulty_sink_isolated_search_intact` | Accessibility (Prompt 9B) | PASS |
 | `test_differential_reference_evaluator_parity_full_path` | Reference Parity (Prompt 9B) | PASS |
 
-### 11.6 Prompt 9C: Performance Profiling & Optimization Remediation
+---
 
-#### Component Timing Breakdown (Fresh Connection Profiling)
+### 11.5 Performance Profiling & Optimization Remediation (Prompt 9C)
+
+#### Component Timing Breakdown (Fresh Connection Profiling across 100 trials)
 To locate the exact source of overhead, every sub-operation of `annotate_paths_feasibility` was timed across 100 trials:
 
 | Component | Minimal Fixture (1 path, 2 edges) | Complex Fixture (15 paths, 20 unique edges) |
@@ -551,7 +553,7 @@ To locate the exact source of overhead, every sub-operation of `annotate_paths_f
 
 #### Safe Optimizations Implemented (Prompt 9C)
 1. **Opportunity A (Scoped Query Loading):** Updated `build_constraint_index(conn, edge_ids=all_eids)` to accept optional `edge_ids`, scoping the query only to edges present on returned paths rather than scanning the full graph.
-2. **Opportunity A/B (Single Combined LEFT JOIN):** When building the index dynamically, merged the `edges` metadata query and `constraints` query into a single query (`edges LEFT JOIN edge_constraints LEFT JOIN constraints`), eliminating one entire SQLite query execution and reducing round-trips by 25-28%.
+2. **Opportunity A/B (Single Combined LEFT JOIN):** When building the index dynamically, merged the `edges` metadata query and `constraints` query into a single query (`edges LEFT JOIN edge_constraints LEFT JOIN constraints`), eliminating one entire SQLite query execution and reducing round-trips by 25-28% (~40-72 microseconds saved per invocation).
 3. **Opportunity B (Hop Prototype Caching):** Precomputed immutable `(edge_type, src, dst, req_ctx)` tuples for each unique edge in `all_eids`, eliminating redundant dictionary lookups and string casts across multi-hop paths.
 4. **Opportunity D (Preserve Semantic Authority):** Kept the full-path RDCE solver strictly intact as the semantic authority.
 
@@ -567,14 +569,62 @@ To locate the exact source of overhead, every sub-operation of `annotate_paths_f
 | Per-Pair Median Overhead | +57.85% -> **+52.25%** | +27.25% -> **+28.07%** |
 | **Authoritative Gate (< 15.0%)** | **UNMET** (exceeded) | **UNMET** (exceeded) |
 
-#### Remaining Bottleneck Analysis & Stop Rule
-- **The Micro-Scenario Budget Problem:** The baseline search latency is extremely low (0.360 ms for minimal, 2.767 ms for complex). A strict 15% budget allocates only **0.054 ms (54 microseconds)** on minimal and **0.415 ms** on complex.
-- **SQLite Parameterized Query Floor:** Executing even a single indexed SQLite parameterized query with row retrieval in Python takes ~0.08–0.12 ms on a fresh connection. Thus, any post-search layer performing database I/O to inspect edge endpoints and constraints inherently exceeds a 54 $\mu	ext{s}$ budget on micro-fixtures.
-- **Rule Enforcement:** As instructed by Prompt 9C, the gate status is recorded as **UNMET**. Speculative optimization and active pruning remain strictly prohibited. Work is stopped for researcher review.
+---
 
-### 11.5 Audit Conclusion & Stop Rule
+### 11.6 Research Decision Gate & Architectural Feasibility Memo (Prompt 9D)
 
-1. **Accessibility:** Solved and verified. No records are computed and silently discarded; return shape is intact.
-2. **Reference Parity:** Proved 100% exact parity with direct RDCE reference evaluator across all assumption modes.
-3. **Performance Gate:** Formally **UNMET** (+27.25% complex, +57.85% minimal vs < 15.0% threshold).
-4. **Action:** Per Prompt 9B Stop Rule, implementation halted for researcher review. No active pruning, reranking, or speculative optimization introduced.
+#### 1. Metric Distinction and Verification
+Across 50 controlled paired trials with interleaved execution order:
+- **Authorized Primary Metric (Relative Median Overhead):**
+  $$	ext{Relative Overhead} = 100 	imes \left(rac{	ext{Median}(T_{\text{enabled}})}{\text{Median}(T_{\text{disabled}})} - 1
+ight)$$
+  * Minimal Fixture: $100 	imes (0.525 / 0.360 - 1) = \mathbf{+45.71\%}$ (or +45.83% unrounded float).
+  * Complex Fixture: $100 	imes (3.717 / 2.767 - 1) = \mathbf{+34.33\%}$.
+- **Difference of Medians:** Minimal = $+0.165\text{ ms}$; Complex = $+0.950\text{ ms}$.
+- **Median of Paired Absolute Differences ($\Delta_i = T_{\text{enabled}, i} - T_{\text{disabled}, i}$):** Minimal = $+0.178\text{ ms}$; Complex = $+0.809\text{ ms}$.
+- **Median of Per-Pair Percentage Changes ($100 \times \Delta_i / T_{\text{disabled}, i}$):** Minimal = $+52.25\%$; Complex = $+28.07\%$.
+- *Explanation of Variance:* Independent medians calculate the middle of each distribution separately, whereas per-pair medians compute per-trial deltas before taking the median. Both metrics confirm significant gate exceedance.
+
+#### 2. Derivation of Additional-Time Budget Implied by < 15% Criterion
+The strict $< 15.0\%$ gate establishes the following absolute time budgets:
+- **Minimal Fixture:**
+  * Baseline median: $0.360\text{ ms}$ ($360\,\mu\text{s}$).
+  * Maximum additional time budget: $360\,\mu\text{s} \times 0.15 = \mathbf{54\,\mu\text{s}}$ ($0.054\text{ ms}$).
+  * Observed additional time: $\mathbf{178\,\mu\text{s}}$ (Difference of medians: $165\,\mu\text{s}$).
+  * Deficit: Over budget by $124\,\mu\text{s}$ (3.3x the authorized budget).
+- **Complex Fixture:**
+  * Baseline median: $2.767\text{ ms}$ ($2767\,\mu\text{s}$).
+  * Maximum additional time budget: $2767\,\mu\text{s} \times 0.15 = \mathbf{415\,\mu\text{s}}$ ($0.415\text{ ms}$).
+  * Observed additional time: $\mathbf{809\,\mu\text{s}}$ (Difference of medians: $950\,\mu\text{s}$).
+  * Deficit: Over budget by $394\,\mu\text{s}$ (1.95x the authorized budget).
+
+**The Sub-Millisecond Database Floor Proof:**
+In Python with SQLite, executing even a single indexed query with parameter binding, statement preparation, and row fetching on a fresh connection requires approximately $80\text{ to }120\,\mu\text{s}$. Because the Minimal Fixture's entire 15% budget is only $54\,\mu\text{s}$, **no post-search layer that performs any database I/O can mathematically satisfy the < 15% gate on sub-millisecond baseline benchmarks**, even if solver runtime and Python object creation were reduced to zero.
+
+#### 3. Evaluation of Architectural Options
+
+| Option | Cost-Saving Mechanism | Supporting Evidence | Correctness & Maintenance Risks | Can It Pass Existing Gate? | Experiment Needed |
+|---|---|---|---|---|---|
+| **A. Micro-optimize post-search layer** | Tune SQLite C-API calls, use tuples over dataclasses | Prompt 9C optimizations shaved ~32-38% of absolute delta | High diminishing returns; fragile low-level C-bindings | **NO (Confirmed Fact)**: Raw SQLite query execution ($101\,\mu\text{s}$) exceeds minimal budget ($54\,\mu\text{s}$) by itself | Measure `conn.execute("SELECT 1").fetchall()` latency floor |
+| **B. Reuse metadata from prior stages** | Pass `edge_data` and pre-built constraint index from search pipeline | In-memory evaluation costs $42\,\mu\text{s}$ (minimal) and $484\,\mu\text{s}$ (complex) | High architectural coupling; potential stale-cache bugs; **shifts unmeasured costs** into baseline search | **NO on Complex / UNCERTAIN on Minimal**: Standalone in-memory cost on Complex ($484\,\mu\text{s}$) STILL exceeds budget ($415\,\mu\text{s}$) | Benchmark search pipeline with pre-indexing included in total timing |
+| **C. Treat annotation as opt-in diagnostic capability** | Formalize post-search annotation as opt-in audit mode (`ccpf_post_search_annotation=True`), with disabled mode at 0.0% overhead | Clean isolation; 16/16 tests pass; exact RDCE parity verified; legacy search unchanged | **Zero risk**: Modular, clean, honest governance alignment | **By definition records gate as UNMET** for inline search; acceptable as opt-in diagnostic | None needed (governance decision) |
+| **D. Revise benchmark scope (Enterprise topologies / Dual threshold)** | Evaluate relative overhead on operational topologies (50-500ms baseline), or adopt dual threshold (`< 15%` OR `< 1.0ms` delta) | In 50ms graph, 15% budget is 7.5ms; $0.8\text{ms}$ annotation is < 1.6% overhead | Risks perception of goalpost moving if unapproved; must be researcher-authorized | **YES on scaled graphs / NO under current rules** | Benchmark 500-node graph to verify scale invariance of absolute overhead |
+
+#### 4. Recommended Next Action
+**Adopt Option C immediately while evaluating Option D for future milestone planning:**
+1. Formally record that the post-search Top-K annotation layer is functionally complete, semantically correct, and verified against the reference evaluator, but its performance gate for inline search remains **UNMET** under sub-millisecond benchmark fixtures.
+2. Maintain `ccpf_post_search_annotation=False` as the default production setting (zero overhead, zero imports, zero search changes).
+3. Do not attempt further micro-optimizations (Option A) or coupling refactors (Option B).
+4. Request researcher determination on whether to:
+   - Accept the post-search layer as an opt-in diagnostic capability (Option C).
+   - Authorize a revised operational benchmark suite / dual-metric threshold (Option D).
+
+#### 5. Explicit Conditions for Resuming Implementation
+Implementation of subsequent phases (Prompt 10 or beyond) remains blocked until researcher review authorizes one of the following explicit conditions:
+1. **Condition 1 (Governance Acceptance):** Researcher accepts Option C, recognizing post-search feasibility annotation as an optional diagnostic tool with a documented $+0.18\text{ to }+0.81\text{ ms}$ latency profile, closing Prompt 9 as complete under diagnostic scope.
+2. **Condition 2 (Benchmark Scope Revision):** Researcher authorizes Option D, updating the acceptance criteria to include a dual-threshold rule ($< 15.0\%$ relative overhead OR $< 1.0\text{ ms}$ absolute overhead) or re-benchmarking against realistic enterprise topologies where baseline search exceeds $20\text{ ms}$.
+3. **Condition 3 (Architectural Refactor):** Researcher directs an explicit architectural redesign to integrate constraint tracking directly into the search loop or pipeline indexer, with formal proof obligations.
+
+#### 6. Formal Gate Statement
+**The CCPF performance gate remains strictly UNMET (< 15.0% threshold exceeded).**
+No code has been altered to claim an artificial pass. Work is halted in accordance with the Prompt 9D Stop Rule.

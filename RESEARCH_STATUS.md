@@ -688,3 +688,59 @@ properly accounted for; complex fixture passes with 8.3% overhead).
 
 #### 6. Stop Rule in Effect
 - Remediation complete. Work halted for researcher review before any further progression.
+
+
+---
+
+### Prompt 9D — CCPF Performance Feasibility and Research Decision Gate (Completed)
+
+- **Date:** 2026-10-20
+- **Branch:** `temporal-context-dev`
+- **Starting Commit:** `5ddbea5`
+- **Objective:** Evaluate architectural feasibility of achieving strictly < 15.0% total pipeline overhead, distinguish empirical metrics, derive mathematical budget constraints, compare defensible architectural options, and formulate a formal decision memo.
+
+#### 1. Performance Evidence & Metric Distinction
+Across 50 controlled paired trials with interleaved execution order:
+- **Authorized Relative Median Overhead:**
+  * Minimal Fixture: **+45.71%** (Baseline median 0.360 ms vs Annotated median 0.525 ms).
+  * Complex Fixture: **+34.33%** (Baseline median 2.767 ms vs Annotated median 3.717 ms).
+- **Difference of Medians:** Minimal = +0.165 ms; Complex = +0.950 ms.
+- **Median of Paired Absolute Deltas:** Minimal = +0.178 ms; Complex = +0.809 ms.
+- **Median of Per-Pair % Changes:** Minimal = +52.25%; Complex = +28.07%.
+- *Metric Consistency Note:* Differences between median difference (+0.165 ms) and paired median delta (+0.178 ms) stem from independent sample ordering in skewed latency distributions. Both measures confirm substantial exceedance of the 15% threshold.
+
+#### 2. Derived Additional-Time Budget Implied by < 15% Gate
+- **Minimal Fixture:**
+  * Baseline median: 0.360 ms (360 us).
+  * Maximum allowed overhead (15%): **0.054 ms (54 us)**.
+  * Observed additional time: **0.178 ms (178 us)**.
+  * Overrun: 3.3x the authorized budget.
+- **Complex Fixture:**
+  * Baseline median: 2.767 ms (2767 us).
+  * Maximum allowed overhead (15%): **0.415 ms (415 us)**.
+  * Observed additional time: **0.809 ms (809 us)**.
+  * Overrun: 1.95x the authorized budget.
+- **The Sub-Millisecond SQLite Floor:** Executing even a single indexed SQLite parameterized query with row retrieval in Python takes ~80 to 120 us on a fresh connection. Because the entire 15% budget on Minimal is only 54 us, no post-search layer executing database I/O can mathematically clear the 15% gate on sub-millisecond baseline benchmarks, even if solver time and Python object allocation were zero.
+
+#### 3. Evaluation of Architectural Options
+1. **Option A (Micro-optimize post-search layer):**
+   - Further SQLite C-API tuning, replacing dataclasses with tuples.
+   - *Verdict:* **Infeasible (Confirmed Fact)**. The raw SQL query cost alone (101 us) exceeds the 54 us budget on Minimal.
+2. **Option B (Reuse metadata from prior search stages):**
+   - Pass pre-queried `edge_data` and pre-built constraint index from `search_top_k`.
+   - *Verdict:* **Infeasible / Violates Safeguards**. In-memory evaluation alone on Complex is 484 us, which STILL exceeds the 415 us budget. Furthermore, pre-building indices during pipeline execution shifts unmeasured costs into the baseline, violating Prompt 9D safeguards.
+3. **Option C (Treat annotation as opt-in diagnostic capability - RECOMMENDED):**
+   - Formally document post-search annotation as an opt-in diagnostic capability (`ccpf_post_search_annotation=True`), with production default disabled (0.0% overhead).
+   - Preserves 100% reference parity, modularity, and error isolation without hacky coupling or hidden cost shifting.
+   - *Verdict:* **Sound, honest, and defensible**. Acknowledges the gate as UNMET for inline search while preserving full diagnostic value.
+4. **Option D (Revise benchmark scope under researcher authorization):**
+   - Evaluate relative overhead on realistic enterprise topologies (50-500 ms baseline where 0.8 ms annotation represents < 1.6% overhead), or adopt a dual-criteria gate (< 15% relative OR < 1.0 ms absolute).
+   - *Verdict:* **Scientifically justified, but requires explicit researcher authorization**. Not adopted unilaterally.
+
+#### 4. Recommended Action & Implementation Conditions
+- **Recommendation:** Adopt Option C. Retain post-search Top-K annotation as an opt-in diagnostic capability with verified 100% reference parity and documented +0.18 to +0.81 ms latency characteristics.
+- **Resumption Conditions:** Prompt 10 and further active-pruning or incremental-solver implementation remain blocked until researcher review authorizes one of:
+  * *Condition 1:* Accept Option C and approve diagnostic-mode scope.
+  * *Condition 2:* Authorize Option D (dual-metric gate or enterprise topology benchmarks).
+  * *Condition 3:* Direct an explicit architectural redesign with formal proof obligations.
+- **Formal Gate Verdict:** The CCPF performance gate remains strictly **UNMET** (< 15.0% threshold exceeded). Work is halted per the Stop Rule.
