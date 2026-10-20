@@ -399,15 +399,23 @@ arf_rt/
     objective_helpers.py         Scenario objective schemas and node reference validators
     graph_traversal.py           Simple path enumerators and cycle detectors
     math_stats.py                Shannon entropy, normalization, and KL divergence
+    policy_patterns.py           IAM policy wildcard and condition key evaluators
+    dag.py                       Topological sorting and ancestor set resolvers
+    visualization.py             Graphviz DOT and Cytoscape.js export formats
 ```
 
 ## Documentation Index
 
 - **[System Architecture](docs/ARCHITECTURE.md)** — Core subsystems, data flow, and belief network design
 - **[Mathematical Foundations](docs/MATHEMATICAL_FOUNDATIONS.md)** — Shannon entropy, EIG equations, and Bayesian belief updates
+- **[Factor Graph Representation](docs/FACTOR_GRAPH_SPECIFICATION.md)** — Bipartite factor graphs and linear-time belief propagation
+- **[Asymptotic Complexity Bounds](docs/ASYMPTOTIC_COMPLEXITY.md)** — Worst-case and average runtime bounds for Best-First search
+- **[Statistical Power & Testing Protocol](docs/STATISTICAL_TESTING_PROTOCOL.md)** — Wilcoxon signed-rank hypothesis validation
 - **[Threat Model & Adversary Capabilities](docs/THREAT_MODEL.md)** — Compromise tiers and safety boundaries
 - **[Evaluation & Baseline Framework](docs/EVALUATION_FRAMEWORK.md)** — Comparison against PMapper, BloodHound, and naive models
 - **[Enterprise Defense Case Study](docs/CASE_STUDY_ENTERPRISE.md)** — 46x correlation collapse in multi-account AWS topologies
+- **[Cross-Account Federation Case Study](docs/CASE_STUDY_FEDERATION.md)** — Lateral escalation across OIDC/SAML trust boundaries
+- **[Data Management & Reproducibility Policy](docs/DATA_MANAGEMENT_POLICY.md)** — Anonymization rules and artifact retention
 - **[Performance Scaling & Benchmarks](docs/PERFORMANCE_SCALING.md)** — Memory profile and graph scaling across 25k nodes
 - **[CCPF Integration Roadmap](docs/CCPF_INTEGRATION_ROADMAP.md)** — Production milestones and Prompt phase tracking
 - **[Telemetry & Logging Specification](docs/TELEMETRY_SPECIFICATION.md)** — Structured audit event schema
