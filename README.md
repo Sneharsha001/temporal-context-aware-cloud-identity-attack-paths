@@ -92,6 +92,13 @@ In real-world multi-account AWS topologies (e.g., Security, Core, Workload, and 
 - **Probing Speedup:** EIG path prioritization achieves optimal entropy collapse **19.8× faster** than unguided random exploration.
 - **Exact Calibration:** Exact probability calibration ($0.0000$ error under deterministic replay) ensures security teams investigate genuine identity threats first.
 
+## Graph Visualization & Topological DAG Analysis
+
+ARF-RT provides native algorithms for inspecting and visualizing identity graphs:
+- **Cycle & Loop Detection:** Identifies mutual trust loops and circular assume-role configurations using depth-first recursion.
+- **Topological Sorting:** Computes valid execution and traversal orderings via Kahn's algorithm with $O(|\mathcal{V}| + |\mathcal{E}|)$ performance.
+- **Visual Export Formats:** Directly serializes scenario graphs to Graphviz DOT markup and Cytoscape.js JSON structures for interactive UI rendering.
+
 ## Developer Tooling & Automation Scripts
 
 ARF-RT provides a suite of developer utilities in `scripts/`:
