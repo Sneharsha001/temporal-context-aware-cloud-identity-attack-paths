@@ -39,6 +39,29 @@ This repository hosts active research extending ARF-RT with **Context-Conditione
 
 ---
 
+## Temporal Context Integration
+
+ARF-RT now includes a **Temporal Context Module** that enriches path feasibility scoring with time-aware reasoning:
+
+- **Session-Window Detection:** Identifies attack paths that span impossible time windows (e.g., assume-role transitions faster than realistic human latency bounds).
+- **Credential Lifetime Awareness:** Tracks STS credential expiry intervals and flags paths requiring expired or revoked tokens.
+- **Multi-Hop Timestamp Ordering:** Enforces causal ordering constraints across multi-hop privilege escalation chains — if `AssumeRole(A→B)` must precede `AssumeRole(B→C)`, timestamps are validated against CloudTrail event ordering.
+- **Time-Conditioned Probabilities:** Incorporates temporal prior distributions into Bayesian belief updates, reducing confidence on stale credential hypotheses.
+
+### Temporal Constraint Types
+
+| Constraint | Description | Source |
+|---|---|---|
+| `SESSION_EXPIRY` | Role session exceeds `MaxSessionDuration` | STS metadata |
+| `CAUSAL_ORDER` | Hop B occurs before Hop A in CloudTrail | CloudTrail timestamps |
+| `WINDOW_TOO_NARROW` | Multi-hop path completes in < 1s (bot threshold) | Velocity analysis |
+| `STALE_CREDENTIAL` | Credential last used > 90 days ago | IAM last-used data |
+| `CONCURRENT_SESSION` | Overlapping sessions suggest credential sharing | Session ID correlation |
+
+> **Status:** Temporal context module is in active development on `temporal-context-dev`. Integration with the production CCPF evaluator is planned for Prompt 10+.
+
+---
+
 ## The Problem
 
 Static graph tools find attack paths but ignore policy constraints. This produces false positives — paths that look viable but are blocked by SCPs, trust conditions, or permission boundaries. When multiple edges share the same constraint, their failures are correlated, but naive analysis treats them as independent.
