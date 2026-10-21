@@ -425,6 +425,14 @@ arf_rt/
     policy_patterns.py           IAM policy wildcard and condition key evaluators
     dag.py                       Topological sorting and ancestor set resolvers
     visualization.py             Graphviz DOT and Cytoscape.js export formats
+  temporal/
+    hints.py                     TemporalHint frozen dataclass with CloudTrail timestamp metadata
+    config.py                    TemporalConfig with strict/permissive presets
+    verdict.py                   TemporalVerdict + VerdictKind (FEASIBLE / INFEASIBLE / UNKNOWN)
+    evaluator.py                 TemporalEvaluator — TC-1…TC-5 constraint checks
+    cloudtrail_parser.py         AssumeRole event → TemporalHint extraction
+    window_analyzer.py           Concurrency, burst, and cross-account reuse detectors
+    sts_metadata.py              SessionSpec and causal session-chain validation
 ```
 
 ## Documentation Index
@@ -450,6 +458,9 @@ arf_rt/
 - **[Frequently Asked Questions](docs/FAQ.md)** — Common questions and operational guidance
 - **[Troubleshooting Guide](docs/TROUBLESHOOTING.md)** — Common runtime issues and resolutions
 - **[Domain Glossary](docs/GLOSSARY_EXPANDED.md)** — Bayesian, AWS IAM, and CCPF terminology
+- **[Temporal Context Design Specification](docs/TEMPORAL_CONTEXT_DESIGN.md)** — Constraint model, CCPF integration pipeline, and proof obligations
+- **[Temporal Context FAQ](docs/TEMPORAL_CONTEXT_FAQ.md)** — Configuration options, constraint explanations, and CloudTrail integration guide
+- **[Temporal Module Research Status](docs/TEMPORAL_RESEARCH_STATUS.md)** — Per-component implementation status, test coverage, and next steps
 - **[Contributing Guide](CONTRIBUTING.md)** — Pre-contribution requirements and PR checklist
 - **[Security Policy](SECURITY.md)** — Vulnerability reporting instructions
 - **[Changelog](CHANGELOG.md)** — Version history and milestone tracking
