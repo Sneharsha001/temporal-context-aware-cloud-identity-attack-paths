@@ -1,0 +1,133 @@
+{
+  "fixture_id": "CE9",
+  "name": "Partial Coverage with Unknown Types Mixed with SAT-Compatible",
+  "research_question": "Does the CSP evaluator return SAT when a 3-hop path mixes supported constraints (SAT-compatible) with unsupported constraints (UNKNOWN types), and the supported subset is satisfiable?",
+  "scenario_file": "ce9_partial_unknown.scenario.json",
+  "path_under_evaluation": [
+    {
+      "hop": 1,
+      "edge_type": "sts:AssumeRole",
+      "src": {"provider": "aws", "node_type": "IAMUser", "provider_id": "AttackerOrigin", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "JumpRole", "region": "us-east-1"}
+    },
+    {
+      "hop": 2,
+      "edge_type": "app:Invoke",
+      "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "JumpRole", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "Service", "provider_id": "CustomAppBackend", "region": "us-east-1"}
+    },
+    {
+      "hop": 3,
+      "edge_type": "s3:GetObject",
+      "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "JumpRole", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "S3Bucket", "provider_id": "TargetData", "region": "us-east-1"}
+    }
+  ],
+  "context_variables": [
+    {
+      "key": "aws:SourceIp",
+      "scope": "request",
+      "persistence_model": "persistent_under_static_origin_assumption",
+      "data_type": "ipv4_cidr"
+    },
+    {
+      "key": "vendor:CustomAuthToken",
+      "scope": "unknown",
+      "persistence_model": "unspecified",
+      "data_type": "proprietary_token"
+    },
+    {
+      "key": "aws:MultiFactorAuthPresent",
+      "scope": "session",
+      "persistence_model": "reset_on_role_assumption_unless_propagated",
+      "data_type": "boolean"
+    }
+  ],
+  "edge_context_specifications": [
+    {
+      "hop": 1,
+      "required_context": [
+        {
+          "key": "aws:SourceIp",
+          "operator": "IpAddress",
+          "values": ["10.0.0.0/8"],
+          "scope": "request"
+        },
+        {
+          "key": "aws:MultiFactorAuthPresent",
+          "operator": "Bool",
+          "values": ["true"],
+          "scope": "session"
+        }
+      ],
+      "produced_context": [
+        {
+          "key": "active_principal",
+          "operation": "SET",
+          "value": "arn:aws:iam::123456789012:role/JumpRole"
+        },
+        {
+          "key": "aws:MultiFactorAuthPresent",
+          "operation": "SET",
+          "value": "true"
+        }
+      ]
+    },
+    {
+      "hop": 2,
+      "required_context": [
+        {
+          "key": "aws:SourceIp",
+          "operator": "IpAddress",
+          "values": ["10.1.0.0/16"],
+          "scope": "request"
+        },
+        {
+          "key": "vendor:CustomAuthToken",
+          "operator": "UnsupportedFuzzyMatch",
+          "values": ["token:abc123..."],
+          "scope": "unknown",
+          "support_status": "UNSUPPORTED_OPERATOR_AND_KEY"
+        }
+      ],
+      "produced_context": []
+    },
+    {
+      "hop": 3,
+      "required_context": [
+        {
+          "key": "aws:SourceIp",
+          "operator": "IpAddress",
+          "values": ["10.1.10.0/24"],
+          "scope": "request"
+        }
+      ],
+      "produced_context": []
+    }
+  ],
+  "transition_constraints": [
+    {
+      "from_hop": 1,
+      "to_hop": 2,
+      "variable": "aws:SourceIp",
+      "relation": "EQUAL",
+      "formula": "SourceIp(hop1) == SourceIp(hop2)",
+      "rationale": "Static origin assumption for request-scoped IP"
+    },
+    {
+      "from_hop": 2,
+      "to_hop": 3,
+      "variable": "aws:SourceIp",
+      "relation": "EQUAL",
+      "formula": "SourceIp(hop2) == SourceIp(hop3)",
+      "rationale": "Static origin assumption for request-scoped IP"
+    }
+  ],
+  "complete_constraint_system": "(SourceIp(hop1) in 10.0.0.0/8) AND (MFA(hop1) == true) AND (SourceIp(hop2) in 10.1.0.0/16) AND UNKNOWN_PREDICATE(vendor:CustomAuthToken) AND (SourceIp(hop3) in 10.1.10.0/24) AND (SourceIp(hop1) == SourceIp(hop2) == SourceIp(hop3))",
+  "expected_csp_outcome": "UNKNOWN",
+  "witness": null,
+  "expected_feasibility_multiplier": 1.0,
+  "expected_path_score_effect": "PRESERVED_FALLBACK",
+  "formal_rationale": "This fixture tests partial coverage: the path contains both supported constraints (IP subnet and Boolean MFA) and an unsupported constraint (vendor:CustomAuthToken with UnsupportedFuzzyMatch operator). Per the formal contract (Section 3.1), unsupported operators and unknown scopes must immediately yield UNKNOWN. The evaluator correctly returns UNKNOWN upon encountering the unsupported operator 'UnsupportedFuzzyMatch' on key 'vendor:CustomAuthToken' with unknown scope. The fallback multiplier of 1.0 preserves baseline scoring. The supported constraints (IP subnet chain 10.0.0.0/8 -> 10.1.0.0/16 -> 10.1.10.0/24, and MFA=true) are mutually satisfiable, but the presence of an unsupported constraint prevents a definitive SAT/UNSAT verdict per the contract's conservative fallback.",
+  "falsification_criteria": "The feasibility hypothesis is falsified if the evaluator outputs SAT (failing to conservatively reject unsupported operators) or UNSAT (incorrectly treating UNKNOWN as contradiction). The evaluator must return UNKNOWN with rationale citing the unsupported operator/key, and apply the 1.0 fallback multiplier."
+}

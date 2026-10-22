@@ -1,0 +1,141 @@
+{
+  "fixture_id": "CE7",
+  "name": "Multi-Hop Chain Contradiction at Hop 4",
+  "research_question": "Does the CSP evaluator return UNSAT when a chain of >= 4 hops accumulates compatible constraints for the first 3 hops but introduces a contradicting constraint at hop 4 under a static-origin assumption?",
+  "scenario_file": "ce7_multihop_chain.scenario.json",
+  "path_under_evaluation": [
+    {
+      "hop": 1,
+      "edge_type": "sts:AssumeRole",
+      "src": {"provider": "aws", "node_type": "IAMUser", "provider_id": "AttackerOrigin", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "JumpRole1", "region": "us-east-1"}
+    },
+    {
+      "hop": 2,
+      "edge_type": "sts:AssumeRole",
+      "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "JumpRole1", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "JumpRole2", "region": "us-east-1"}
+    },
+    {
+      "hop": 3,
+      "edge_type": "sts:AssumeRole",
+      "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "JumpRole2", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "JumpRole3", "region": "us-east-1"}
+    },
+    {
+      "hop": 4,
+      "edge_type": "s3:GetObject",
+      "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "JumpRole3", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "S3Bucket", "provider_id": "TargetData", "region": "us-east-1"}
+    }
+  ],
+  "context_variables": [
+    {
+      "key": "aws:SourceIp",
+      "scope": "request",
+      "persistence_model": "persistent_under_static_origin_assumption",
+      "data_type": "ipv4_cidr"
+    }
+  ],
+  "edge_context_specifications": [
+    {
+      "hop": 1,
+      "required_context": [
+        {
+          "key": "aws:SourceIp",
+          "operator": "IpAddress",
+          "values": ["10.0.0.0/8"],
+          "scope": "request"
+        }
+      ],
+      "produced_context": [
+        {
+          "key": "active_principal",
+          "operation": "SET",
+          "value": "arn:aws:iam::123456789012:role/JumpRole1"
+        }
+      ]
+    },
+    {
+      "hop": 2,
+      "required_context": [
+        {
+          "key": "aws:SourceIp",
+          "operator": "IpAddress",
+          "values": ["10.10.0.0/16"],
+          "scope": "request"
+        }
+      ],
+      "produced_context": [
+        {
+          "key": "active_principal",
+          "operation": "SET",
+          "value": "arn:aws:iam::123456789012:role/JumpRole2"
+        }
+      ]
+    },
+    {
+      "hop": 3,
+      "required_context": [
+        {
+          "key": "aws:SourceIp",
+          "operator": "IpAddress",
+          "values": ["10.10.10.0/24"],
+          "scope": "request"
+        }
+      ],
+      "produced_context": [
+        {
+          "key": "active_principal",
+          "operation": "SET",
+          "value": "arn:aws:iam::123456789012:role/JumpRole3"
+        }
+      ]
+    },
+    {
+      "hop": 4,
+      "required_context": [
+        {
+          "key": "aws:SourceIp",
+          "operator": "IpAddress",
+          "values": ["192.168.0.0/16"],
+          "scope": "request"
+        }
+      ],
+      "produced_context": []
+    }
+  ],
+  "transition_constraints": [
+    {
+      "from_hop": 1,
+      "to_hop": 2,
+      "variable": "aws:SourceIp",
+      "relation": "EQUAL",
+      "formula": "SourceIp(hop1) == SourceIp(hop2)",
+      "rationale": "Static origin assumption: attacker operates from fixed origin across sequential role assumptions."
+    },
+    {
+      "from_hop": 2,
+      "to_hop": 3,
+      "variable": "aws:SourceIp",
+      "relation": "EQUAL",
+      "formula": "SourceIp(hop2) == SourceIp(hop3)",
+      "rationale": "Static origin assumption continues across role chain."
+    },
+    {
+      "from_hop": 3,
+      "to_hop": 4,
+      "variable": "aws:SourceIp",
+      "relation": "EQUAL",
+      "formula": "SourceIp(hop3) == SourceIp(hop4)",
+      "rationale": "Static origin assumption persists to final action."
+    }
+  ],
+  "complete_constraint_system": "(SourceIp(hop1) in 10.0.0.0/8) AND (SourceIp(hop2) in 10.10.0.0/16) AND (SourceIp(hop3) in 10.10.10.0/24) AND (SourceIp(hop4) in 192.168.0.0/16) AND (SourceIp(hop1) == SourceIp(hop2) == SourceIp(hop3) == SourceIp(hop4))",
+  "expected_csp_outcome": "UNSAT",
+  "witness": null,
+  "expected_feasibility_multiplier": 0.0,
+  "expected_path_score_effect": "ELIMINATED",
+  "formal_rationale": "The first three hops impose compatible CIDR constraints: 10.0.0.0/8 contains 10.10.0.0/16 contains 10.10.10.0/24. Their intersection is 10.10.10.0/24, which is non-empty. However, hop 4 introduces 192.168.0.0/16, which is disjoint from the accumulated intersection 10.10.10.0/24. Under the static-origin assumption (EQUAL transitions enforcing SourceIp equality across all four hops), the constraint system requires a single IP address to simultaneously belong to 10.10.10.0/24 and 192.168.0.0/16. These CIDRs are disjoint. Therefore, the complete constraint system is unsatisfiable. The evaluator must return UNSAT at hop 4 where the contradiction is introduced.",
+  "falsification_criteria": "The feasibility hypothesis is falsified if the evaluator outputs SAT (failing to detect the hop-4 contradiction) or UNKNOWN (failing to evaluate the complete chain under static origin). The evaluator must detect the contradiction specifically at hop 4, not earlier, as the first three hops are mutually compatible."
+}

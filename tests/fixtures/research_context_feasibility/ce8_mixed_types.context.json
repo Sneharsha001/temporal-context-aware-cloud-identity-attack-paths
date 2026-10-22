@@ -1,0 +1,143 @@
+{
+  "fixture_id": "CE8",
+  "name": "Mixed Constraint Types Contradiction at Hop 2",
+  "research_question": "Does the CSP evaluator return UNSAT when a 3-hop path mixes IP subnet and Boolean MFA constraints that contradict at hop 2 under their respective scope models?",
+  "scenario_file": "ce8_mixed_types.scenario.json",
+  "path_under_evaluation": [
+    {
+      "hop": 1,
+      "edge_type": "sts:AssumeRole",
+      "src": {"provider": "aws", "node_type": "IAMUser", "provider_id": "AttackerOrigin", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "JumpRole", "region": "us-east-1"}
+    },
+    {
+      "hop": 2,
+      "edge_type": "sts:AssumeRole",
+      "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "JumpRole", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "TargetRole", "region": "us-east-1"}
+    },
+    {
+      "hop": 3,
+      "edge_type": "secretsmanager:GetSecretValue",
+      "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "TargetRole", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "SecretsManagerSecret", "provider_id": "ProductionSecret", "region": "us-east-1"}
+    }
+  ],
+  "context_variables": [
+    {
+      "key": "aws:SourceIp",
+      "scope": "request",
+      "persistence_model": "persistent_under_static_origin_assumption",
+      "data_type": "ipv4_cidr"
+    },
+    {
+      "key": "aws:MultiFactorAuthPresent",
+      "scope": "session",
+      "persistence_model": "reset_on_role_assumption_unless_propagated",
+      "data_type": "boolean"
+    }
+  ],
+  "edge_context_specifications": [
+    {
+      "hop": 1,
+      "required_context": [
+        {
+          "key": "aws:SourceIp",
+          "operator": "IpAddress",
+          "values": ["10.0.0.0/8"],
+          "scope": "request"
+        },
+        {
+          "key": "aws:MultiFactorAuthPresent",
+          "operator": "Bool",
+          "values": ["true"],
+          "scope": "session",
+          "description": "Initial AssumeRole requires MFA"
+        }
+      ],
+      "produced_context": [
+        {
+          "key": "active_principal",
+          "operation": "SET",
+          "value": "arn:aws:iam::123456789012:role/JumpRole"
+        },
+        {
+          "key": "aws:MultiFactorAuthPresent",
+          "operation": "SET",
+          "value": "true",
+          "description": "MFA authenticated session established"
+        }
+      ]
+    },
+    {
+      "hop": 2,
+      "required_context": [
+        {
+          "key": "aws:SourceIp",
+          "operator": "IpAddress",
+          "values": ["10.1.0.0/16"],
+          "scope": "request"
+        },
+        {
+          "key": "aws:MultiFactorAuthPresent",
+          "operator": "Bool",
+          "values": ["false"],
+          "scope": "session",
+          "description": "Second AssumeRole requires MFA=false (contradicts hop 1 session MFA=true)"
+        }
+      ],
+      "produced_context": [
+        {
+          "key": "active_principal",
+          "operation": "SET",
+          "value": "arn:aws:iam::123456789012:role/TargetRole"
+        }
+      ]
+    },
+    {
+      "hop": 3,
+      "required_context": [
+        {
+          "key": "aws:SourceIp",
+          "operator": "IpAddress",
+          "values": ["10.1.10.0/24"],
+          "scope": "request"
+        }
+      ],
+      "produced_context": []
+    }
+  ],
+  "transition_constraints": [
+    {
+      "from_hop": 1,
+      "to_hop": 2,
+      "variable": "aws:SourceIp",
+      "relation": "EQUAL",
+      "formula": "SourceIp(hop1) == SourceIp(hop2)",
+      "rationale": "Static origin assumption for request-scoped IP"
+    },
+    {
+      "from_hop": 1,
+      "to_hop": 2,
+      "variable": "aws:MultiFactorAuthPresent",
+      "relation": "IDENTITY_DERIVATION",
+      "formula": "MFA(hop2) == ProducedContext(hop1)[MFA]",
+      "rationale": "Session MFA state carries across AssumeRole unless reset by explicit trust policy prohibition"
+    },
+    {
+      "from_hop": 2,
+      "to_hop": 3,
+      "variable": "aws:SourceIp",
+      "relation": "EQUAL",
+      "formula": "SourceIp(hop2) == SourceIp(hop3)",
+      "rationale": "Static origin assumption for request-scoped IP"
+    }
+  ],
+  "complete_constraint_system": "(SourceIp(hop1) in 10.0.0.0/8) AND (MFA(hop1) == true) AND (SourceIp(hop2) in 10.1.0.0/16) AND (MFA(hop2) == false) AND (MFA(hop2) == MFA(hop1)) AND (SourceIp(hop3) in 10.1.10.0/24) AND (SourceIp(hop3) == SourceIp(hop2) == SourceIp(hop1))",
+  "expected_csp_outcome": "UNSAT",
+  "witness": null,
+  "expected_feasibility_multiplier": 0.0,
+  "expected_path_score_effect": "ELIMINATED",
+  "formal_rationale": "This fixture tests mixed constraint types (IP + Boolean) with a contradiction at hop 2. Under static origin assumption, SourceIp constraints are compatible: 10.1.0.0/16 is a subset of 10.0.0.0/8, and 10.1.10.0/24 is a subset of 10.1.0.0/16. The IP intersection is non-empty (10.1.10.0/24). However, the Boolean MFA constraints contradict: hop 1 requires MFA=true (produces MFA=true session state), hop 2 requires MFA=false, and the IDENTITY_DERIVATION transition enforces MFA(hop2) == MFA(hop1). This creates a logical contradiction: true == false. The contradiction is introduced specifically at hop 2 where the MFA=false requirement conflicts with the propagated MFA=true from hop 1. The evaluator must return UNSAT at hop 2. The IP compatibility at hops 1-3 does not mask the Boolean contradiction at hop 2.",
+  "falsification_criteria": "The feasibility hypothesis is falsified if the evaluator outputs SAT (ignoring the MFA contradiction), or if it incorrectly returns UNKNOWN by treating the Boolean constraint as unsupported. The evaluator must correctly model the session-scoped MFA state propagation across the AssumeRole boundary and detect the true/false contradiction at hop 2."
+}
