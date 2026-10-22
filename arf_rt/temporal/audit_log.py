@@ -115,6 +115,11 @@ class TemporalAuditLog:
     def __iter__(self) -> Iterator[AuditEntry]:
         return iter(self._entries)
 
+    @property
+    def entries(self) -> list[AuditEntry]:
+        """Return a copy of all recorded audit entries."""
+        return list(self._entries)
+
     def entries_by_kind(self, kind: VerdictKind) -> list[AuditEntry]:
         """Return all entries matching the given verdict kind."""
         return [e for e in self._entries if e.verdict_kind == kind.name]
