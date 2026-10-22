@@ -37,7 +37,7 @@ class SessionSpec:
     def __post_init__(self) -> None:
         if not (_STS_MIN_DURATION_SECONDS <= self.duration_seconds <= _STS_MAX_DURATION_SECONDS):
             raise ValueError(
-                f"duration_seconds must be between {_STS_MIN_DURATION_SECONDS} "
+                f"duration_seconds out of bounds: must be between {_STS_MIN_DURATION_SECONDS} "
                 f"and {_STS_MAX_DURATION_SECONDS}, got {self.duration_seconds}."
             )
 

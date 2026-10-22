@@ -42,14 +42,14 @@ class TestTemporalPathFilterFilter:
     def _pf(self, **kwargs) -> TemporalPathFilter:
         from datetime import timedelta
         cfg = TemporalConfig(**kwargs) if kwargs else TemporalConfig()
-        return TemporalPathFilter(config=cfg, run_window_checks=False)
+        return TemporalPathFilter(config=cfg, run_window_checks=False, reference_time=REF)
 
     def test_feasible_path_passes(self) -> None:
         hints = {
             "e1": _h("e1", obs_s=0, issued_s=0, expiry_s=3600, last_used_s=0),
             "e2": _h("e2", obs_s=10, issued_s=10, expiry_s=3610, last_used_s=10),
         }
-        pf = TemporalPathFilter(config=TemporalConfig(), run_window_checks=False)
+        pf = TemporalPathFilter(config=TemporalConfig(), run_window_checks=False, reference_time=REF)
         results = pf.filter([["e1", "e2"]], hints)
         assert len(results) == 1
         assert results[0].passed is True

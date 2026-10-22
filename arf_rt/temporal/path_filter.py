@@ -13,6 +13,7 @@ infeasible paths.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Iterable
 
 from arf_rt.temporal.config import TemporalConfig
@@ -74,9 +75,10 @@ class TemporalPathFilter:
         config: TemporalConfig | None = None,
         run_window_checks: bool = True,
         reject_on_window_anomaly: bool = False,
+        reference_time: datetime | None = None,
     ) -> None:
         self._config = config or TemporalConfig()
-        self._ev = TemporalEvaluator(config=self._config)
+        self._ev = TemporalEvaluator(config=self._config, reference_time=reference_time)
         self._run_window = run_window_checks
         self._reject_window = reject_on_window_anomaly
 
