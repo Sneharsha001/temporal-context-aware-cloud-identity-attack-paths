@@ -9,7 +9,7 @@ A Bayesian reasoning engine for cloud identity attack path analysis. ARF-RT inge
 
 **SEMANTICS_VERSION:** 1.0.0  
 **Scope:** Replay-only. No live cloud SDK calls.  
-**Last Updated:** 2026-10-22 — Temporal context module complete (7 modules · 134 tests · 3 docs).
+**Last Updated:** 2026-10-22 — Temporal context framework complete (12 modules · 198 tests · 5 research docs).
 
 ---
 
@@ -431,9 +431,14 @@ arf_rt/
     config.py                    TemporalConfig with strict/permissive presets
     verdict.py                   TemporalVerdict + VerdictKind (FEASIBLE / INFEASIBLE / UNKNOWN)
     evaluator.py                 TemporalEvaluator — TC-1…TC-5 constraint checks
+    path_filter.py               TemporalPathFilter — high-level path filter with window checks
+    audit_log.py                 TemporalAuditLog — structured audit decision logging with JSONL persistence
+    metrics.py                   TemporalMetrics — elimination rate collector and path length histogram
+    scenario_enricher.py         ScenarioEnricher — bridge between graph edges and CloudTrail hints
     cloudtrail_parser.py         AssumeRole event → TemporalHint extraction
     window_analyzer.py           Concurrency, burst, and cross-account reuse detectors
     sts_metadata.py              SessionSpec and causal session-chain validation
+    export.py                    CSV, JSON, and Markdown summary exporters
 ```
 
 ## Documentation Index
@@ -455,6 +460,8 @@ arf_rt/
 - **[Scenario Schema Reference](docs/DATA_SCHEMAS.md)** — Attribute reference and JSON models
 - **[CCPF Path-Level Integration Design](docs/CCPF_PATH_LEVEL_INTEGRATION_DESIGN.md)** — Multi-hop feasibility specification
 - **[CCPF API Reference](docs/CCPF_API_REFERENCE.md)** — Data contracts and evaluator interface
+- **[CCPF Novelty Assessment Report](docs/CCPF_NOVELTY_ASSESSMENT_REPORT.md)** — Literature review and empirical novelty comparison
+- **[CCPF D2 Benchmark Pre-Registration](docs/CCPF_D2_BENCHMARK_PRE_REGISTRATION.md)** — Enterprise-scale performance benchmark protocol under Option C
 - **[Benchmark Methodology](docs/BENCHMARK_METHODOLOGY.md)** — Empirical performance standards and p95/p99 controls
 - **[Frequently Asked Questions](docs/FAQ.md)** — Common questions and operational guidance
 - **[Troubleshooting Guide](docs/TROUBLESHOOTING.md)** — Common runtime issues and resolutions
