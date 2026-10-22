@@ -13,11 +13,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `TemporalVerdict` / `VerdictKind` with FEASIBLE / INFEASIBLE / UNKNOWN outcomes.
   - `TemporalEvaluator` implementing TC-1 (Causal Order), TC-2 (Session Validity),
     TC-3 (Minimum Velocity), TC-4 (Stale Credential), TC-5 (Concurrent Session).
+  - `TemporalPathFilter` wrapping evaluator and window analyzer into high-level filter API.
+  - `TemporalAuditLog` structured decision logging with JSONL persistence and verdict filtering.
+  - `TemporalMetrics` elimination rate collector, constraint violation tallies, and path histograms.
+  - `scenario_enricher` bridging edge IDs to CloudTrail `TemporalHint` metadata with coverage reporting.
   - `cloudtrail_parser` — extracts `TemporalHint` objects from raw AssumeRole events.
   - `window_analyzer` — detects impossible concurrency, burst patterns, and cross-account reuse.
   - `sts_metadata` — `SessionSpec` and causal session-chain validation helpers.
-- **134 new tests**: 126 unit tests + 8 golden tests locking evaluator verdicts.
+  - `export` module — exports metrics and audit logs to CSV, JSON, and Markdown summary tables.
+- **198 automated tests**: comprehensive unit tests + golden tests locking evaluator verdicts.
+- `scripts/filter_paths_temporal.py` — CLI for batch candidate path feasibility filtering.
+- `scripts/temporal_report.py` — CLI generating Markdown audit reports from JSONL logs.
 - `scripts/analyze_cloudtrail.py` — CLI for temporal anomaly detection in CloudTrail exports.
+- `docs/CCPF_NOVELTY_ASSESSMENT_REPORT.md` — literature review and empirical novelty evaluation.
+- `docs/CCPF_D2_BENCHMARK_PRE_REGISTRATION.md` — D2 enterprise-scale benchmark pre-registration protocol.
 - `docs/TEMPORAL_CONTEXT_DESIGN.md` — constraint model, integration design, and proof obligations.
 - `docs/TEMPORAL_CONTEXT_FAQ.md` — operational Q&A for configuration and CloudTrail integration.
 - `docs/TEMPORAL_RESEARCH_STATUS.md` — per-component implementation and test coverage tracker.
