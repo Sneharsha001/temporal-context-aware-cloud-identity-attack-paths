@@ -12,7 +12,7 @@ from arf_rt.temporal.config import TemporalConfig
 from arf_rt.temporal.verdict import TemporalVerdict, VerdictKind
 from arf_rt.temporal.evaluator import TemporalEvaluator
 from arf_rt.temporal.path_filter import FilterResult, TemporalPathFilter
-from arf_rt.temporal.audit_log import AuditRecord, TemporalAuditLog
+from arf_rt.temporal.audit_log import AuditEntry, TemporalAuditLog
 from arf_rt.temporal.metrics import TemporalMetrics
 from arf_rt.temporal.export import (
     export_audit_log_to_csv,
@@ -30,7 +30,7 @@ __all__ = [
     "TemporalPathFilter",
     "FilterResult",
     "TemporalAuditLog",
-    "AuditRecord",
+    "AuditEntry",
     "TemporalMetrics",
     "export_metrics_to_dict",
     "export_metrics_to_csv",

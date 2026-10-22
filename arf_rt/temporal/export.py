@@ -33,17 +33,17 @@ def export_metrics_to_csv(
     """
     rows: list[tuple[str, str, Any]] = [
         ("summary", "total_paths", metrics.total_paths),
-        ("summary", "feasible_paths", metrics.feasible_paths),
-        ("summary", "infeasible_paths", metrics.infeasible_paths),
-        ("summary", "unknown_paths", metrics.unknown_paths),
+        ("summary", "feasible_count", metrics.feasible_count),
+        ("summary", "infeasible_count", metrics.infeasible_count),
+        ("summary", "unknown_count", metrics.unknown_count),
         ("summary", "elimination_rate_pct", round(metrics.elimination_rate * 100, 2)),
     ]
 
     for constraint, count in metrics.constraint_violations.items():
         rows.append(("constraint_violation", constraint, count))
 
-    for length, count in sorted(metrics.path_length_distribution.items()):
-        rows.append(("path_length_distribution", f"length_{length}", count))
+    for length, count in sorted(metrics.path_length_histogram.items()):
+        rows.append(("path_length_histogram", f"length_{length}", count))
 
     if isinstance(target, (str, Path)):
         with open(target, "w", newline="", encoding="utf-8") as f:
@@ -59,17 +59,17 @@ def export_audit_log_to_csv(
     """
     Export audit log records to CSV.
 
-    Columns: EdgeIDs, VerdictKind, Passed, RejectionReason, WindowAnomalies
+    Columns: LoggedAt, Path, VerdictKind, ViolatedConstraint, Reason
     """
-    headers = ["EdgeIDs", "VerdictKind", "Passed", "RejectionReason", "WindowAnomalies"]
+    headers = ["LoggedAt", "Path", "VerdictKind", "ViolatedConstraint", "Reason"]
     rows = []
-    for r in log.records:
+    for entry in log.entries:
         rows.append((
-            " -> ".join(r.edge_ids),
-            r.verdict_kind,
-            str(r.passed),
-            r.rejected_by,
-            "; ".join(r.window_anomalies),
+            entry.logged_at,
+            " -> ".join(entry.path_edge_ids),
+            entry.verdict_kind,
+            entry.violated_constraint or "",
+            entry.reason,
         ))
 
     if isinstance(target, (str, Path)):
@@ -85,9 +85,9 @@ def generate_summary_table(metrics: TemporalMetrics) -> str:
         "| Metric | Count | Ratio |",
         "|---|---|---|",
         f"| Evaluated Paths | {metrics.total_paths} | 100.0% |",
-        f"| Feasible Paths | {metrics.feasible_paths} | {metrics.feasible_paths / max(1, metrics.total_paths):.1%} |",
-        f"| Infeasible (Eliminated) | {metrics.infeasible_paths} | {metrics.elimination_rate:.1%} |",
-        f"| Unknown (Incomplete Data) | {metrics.unknown_paths} | {metrics.unknown_paths / max(1, metrics.total_paths):.1%} |",
+        f"| Feasible Paths | {metrics.feasible_count} | {metrics.feasible_count / max(1, metrics.total_paths):.1%} |",
+        f"| Infeasible (Eliminated) | {metrics.infeasible_count} | {metrics.elimination_rate:.1%} |",
+        f"| Unknown (Incomplete Data) | {metrics.unknown_count} | {metrics.unknown_count / max(1, metrics.total_paths):.1%} |",
     ]
     return "\n".join(lines)
 
