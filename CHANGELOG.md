@@ -16,20 +16,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `TemporalPathFilter` wrapping evaluator and window analyzer into high-level filter API.
   - `TemporalAuditLog` structured decision logging with JSONL persistence and verdict filtering.
   - `TemporalMetrics` elimination rate collector, constraint violation tallies, and path histograms.
+  - `TemporalSummaryReporter` executive summary and detailed constraint breakdown formatter.
+  - `CredentialTimelineBuilder` chronological event extractor and ASCII Gantt chart generator.
+  - `AnomalyClassifier` mapping temporal violations and window findings to standardized severity tiers (CRITICAL, HIGH, MEDIUM, LOW).
+  - `PathFeasibilityBatchRunner` executing multi-scenario feasibility batches with ranking tables.
   - `scenario_enricher` bridging edge IDs to CloudTrail `TemporalHint` metadata with coverage reporting.
   - `cloudtrail_parser` — extracts `TemporalHint` objects from raw AssumeRole events.
   - `window_analyzer` — detects impossible concurrency, burst patterns, and cross-account reuse.
   - `sts_metadata` — `SessionSpec` and causal session-chain validation helpers.
   - `export` module — exports metrics and audit logs to CSV, JSON, and Markdown summary tables.
-- **198 automated tests**: comprehensive unit tests + golden tests locking evaluator verdicts.
-- `scripts/filter_paths_temporal.py` — CLI for batch candidate path feasibility filtering.
-- `scripts/temporal_report.py` — CLI generating Markdown audit reports from JSONL logs.
-- `scripts/analyze_cloudtrail.py` — CLI for temporal anomaly detection in CloudTrail exports.
-- `docs/CCPF_NOVELTY_ASSESSMENT_REPORT.md` — literature review and empirical novelty evaluation.
-- `docs/CCPF_D2_BENCHMARK_PRE_REGISTRATION.md` — D2 enterprise-scale benchmark pre-registration protocol.
-- `docs/TEMPORAL_CONTEXT_DESIGN.md` — constraint model, integration design, and proof obligations.
-- `docs/TEMPORAL_CONTEXT_FAQ.md` — operational Q&A for configuration and CloudTrail integration.
-- `docs/TEMPORAL_RESEARCH_STATUS.md` — per-component implementation and test coverage tracker.
+- **Statistical Utilities** (`arf_rt.util.temporal_stats`):
+  - Inter-arrival time calculations, duration statistics, and z-score timing outlier detection.
+- **CLI Tools**:
+  - `scripts/visualize_path_timeline.py` — CLI for ASCII Gantt and chronological event visualization.
+  - `scripts/run_temporal_diagnostics.py` — Operational diagnostic and health verification suite.
+  - `scripts/filter_paths_temporal.py` — CLI for batch candidate path feasibility filtering.
+  - `scripts/temporal_report.py` — CLI generating Markdown audit reports from JSONL logs.
+  - `scripts/analyze_cloudtrail.py` — CLI for temporal anomaly detection in CloudTrail exports.
+- **Documentation**:
+  - `docs/TEMPORAL_ANOMALY_GUIDE.md` — Anomaly classification matrix and incident response playbooks.
+  - `docs/CREDENTIAL_LIFECYCLE_ANALYSIS.md` — Mathematical chaining bounds and timeline reconstruction.
+  - `docs/CCPF_NOVELTY_ASSESSMENT_REPORT.md` — Literature review and empirical novelty evaluation.
+  - `docs/CCPF_D2_BENCHMARK_PRE_REGISTRATION.md` — D2 enterprise-scale benchmark pre-registration protocol.
+  - `docs/TEMPORAL_CONTEXT_DESIGN.md` — Constraint model, integration design, and proof obligations.
+  - `docs/TEMPORAL_CONTEXT_FAQ.md` — Operational Q&A for configuration and CloudTrail integration.
+  - `docs/TEMPORAL_RESEARCH_STATUS.md` — Per-component implementation and test coverage tracker.
+- **Automated Tests**: 226+ comprehensive tests spanning unit, golden, and end-to-end integration suites.
 - Utility module `arf_rt.util` with `retry`, `text`, and `structures` helpers.
 - Unified test runner `scripts/run_tests.py` with multi-suite selection and coverage reporting.
 - Performance benchmark harness `scripts/benchmark.py` with p95/p99 tracking.
