@@ -14,6 +14,14 @@ from arf_rt.temporal.evaluator import TemporalEvaluator
 from arf_rt.temporal.path_filter import FilterResult, TemporalPathFilter
 from arf_rt.temporal.audit_log import AuditEntry, TemporalAuditLog
 from arf_rt.temporal.metrics import TemporalMetrics
+from arf_rt.temporal.summary import TemporalSummaryReporter
+from arf_rt.temporal.timeline import CredentialTimelineBuilder, TimelineEvent
+from arf_rt.temporal.anomaly_classifier import (
+    AnomalyClassifier,
+    ClassifiedAnomaly,
+    SeverityTier,
+)
+from arf_rt.temporal.batch_runner import PathFeasibilityBatchRunner, ScenarioBatchResult
 from arf_rt.temporal.export import (
     export_audit_log_to_csv,
     export_metrics_to_csv,
@@ -32,6 +40,14 @@ __all__ = [
     "TemporalAuditLog",
     "AuditEntry",
     "TemporalMetrics",
+    "TemporalSummaryReporter",
+    "CredentialTimelineBuilder",
+    "TimelineEvent",
+    "AnomalyClassifier",
+    "ClassifiedAnomaly",
+    "SeverityTier",
+    "PathFeasibilityBatchRunner",
+    "ScenarioBatchResult",
     "export_metrics_to_dict",
     "export_metrics_to_csv",
     "export_audit_log_to_csv",
