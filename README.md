@@ -9,7 +9,7 @@ A Bayesian reasoning engine for cloud identity attack path analysis. ARF-RT inge
 
 **SEMANTICS_VERSION:** 1.0.0  
 **Scope:** Replay-only. No live cloud SDK calls.  
-**Last Updated:** 2026-10-22 — Temporal context framework complete (12 modules · 198 tests · 5 research docs).
+**Last Updated:** 2026-10-23 — Temporal lifecycle analysis, timeline visualization, and anomaly classification framework (15 modules · 204+ tests · 7 research docs).
 
 ---
 
