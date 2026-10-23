@@ -426,6 +426,7 @@ arf_rt/
     policy_patterns.py           IAM policy wildcard and condition key evaluators
     dag.py                       Topological sorting and ancestor set resolvers
     visualization.py             Graphviz DOT and Cytoscape.js export formats
+    temporal_stats.py            Inter-arrival times, duration statistics, and outlier detection
   temporal/
     hints.py                     TemporalHint frozen dataclass with CloudTrail timestamp metadata
     config.py                    TemporalConfig with strict/permissive presets
@@ -435,6 +436,10 @@ arf_rt/
     audit_log.py                 TemporalAuditLog — structured audit decision logging with JSONL persistence
     metrics.py                   TemporalMetrics — elimination rate collector and path length histogram
     scenario_enricher.py         ScenarioEnricher — bridge between graph edges and CloudTrail hints
+    summary.py                   TemporalSummaryReporter — executive summaries and breakdown tables
+    timeline.py                  CredentialTimelineBuilder — chronological event and ASCII Gantt generation
+    anomaly_classifier.py        AnomalyClassifier — severity tiering (CRITICAL..LOW) and remediation actions
+    batch_runner.py              PathFeasibilityBatchRunner — multi-scenario batch execution and ranking
     cloudtrail_parser.py         AssumeRole event → TemporalHint extraction
     window_analyzer.py           Concurrency, burst, and cross-account reuse detectors
     sts_metadata.py              SessionSpec and causal session-chain validation
@@ -468,6 +473,8 @@ arf_rt/
 - **[Domain Glossary](docs/GLOSSARY_EXPANDED.md)** — Bayesian, AWS IAM, and CCPF terminology
 - **[Temporal Context Design Specification](docs/TEMPORAL_CONTEXT_DESIGN.md)** — Constraint model, CCPF integration pipeline, and proof obligations
 - **[Temporal Context FAQ](docs/TEMPORAL_CONTEXT_FAQ.md)** — Configuration options, constraint explanations, and CloudTrail integration guide
+- **[Temporal Anomaly Classification Guide](docs/TEMPORAL_ANOMALY_GUIDE.md)** — Severity matrix, triage playbooks, and SIEM integration
+- **[Credential Lifecycle & Timeline Analysis](docs/CREDENTIAL_LIFECYCLE_ANALYSIS.md)** — Mathematical chaining bounds and timeline reconstruction
 - **[Temporal Module Research Status](docs/TEMPORAL_RESEARCH_STATUS.md)** — Per-component implementation status, test coverage, and next steps
 - **[Contributing Guide](CONTRIBUTING.md)** — Pre-contribution requirements and PR checklist
 - **[Security Policy](SECURITY.md)** — Vulnerability reporting instructions
