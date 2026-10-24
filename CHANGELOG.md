@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.6.0] — 2026-10-24
+### Added
+- **`TemporalGraphAnnotator`** (`arf_rt.temporal.graph_annotator`): Decorates privilege-graph edges with expiry windows, staleness flags, and Graphviz styling attributes.
+- **`PathFeasibilityPruner`** (`arf_rt.temporal.pruner`): Early search-expansion pruner that discards graph branches violating temporal constraints before full evaluation.
+- **`SessionRevocationSimulator`** (`arf_rt.temporal.revocation_simulator`): Computes blast-radius impact for credential revocation events, counting affected and eliminated attack paths.
+- **`CloudTrailSyntheticGenerator`** (`arf_rt.temporal.synthetic_generator`): Generates realistic AWS CloudTrail benchmark logs with configurable anomaly injection for stress-testing.
+- **`TemporalVerdictCache`** (`arf_rt.util.temporal_cache`): Bounded LRU memoization cache for path feasibility verdicts with hit/miss/eviction metrics.
+- **`CredentialScorer`** (`arf_rt.temporal.credential_scorer`): Risk-scores credential edges 0–1 using TTL expiry, rotation staleness, and churn factors with configurable weights and tier labelling (MINIMAL → CRITICAL).
+- **`TemporalExporter`** (`arf_rt.temporal.temporal_exporter`): Multi-format serialiser for `TemporalHint` and `CredentialRiskScore` collections (JSON, NDJSON, CSV, combined summary).
+- **`scripts/score_credentials.py`**: CLI wrapping `CredentialScorer` + `TemporalExporter`; reads CloudTrail logs, scores all credential edges, outputs table/JSON/NDJSON/CSV with top-N filtering.
+- **`scripts/simulate_revocation.py`**: CLI for interactive revocation blast-radius evaluation.
+- **`scripts/generate_synthetic_cloudtrail.py`**: CLI for benchmark data generation and pipeline stress testing.
+### Tests
+- Unit tests for all six new modules (graph annotator, pruner, revocation simulator, synthetic generator, verdict cache, credential scorer, temporal exporter): **117 tests added**.
+
 ### Added
 - **Temporal Context Module** (`arf_rt.temporal`) — time-aware path feasibility post-filter:
   - `TemporalHint` frozen dataclass carrying per-edge CloudTrail timestamp metadata.
