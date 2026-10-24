@@ -9,7 +9,7 @@ A Bayesian reasoning engine for cloud identity attack path analysis. ARF-RT inge
 
 **SEMANTICS_VERSION:** 1.0.0  
 **Scope:** Replay-only. No live cloud SDK calls.  
-**Last Updated:** 2026-10-24 — Temporal graph annotation, prefix pruning, and session revocation simulation subsystem (19 modules · 250+ tests · 9 research docs).
+**Last Updated:** 2026-10-24 — v0.6.0: CredentialScorer, TemporalExporter, score_credentials CLI, verdict cache, graph annotator, pruner, and revocation simulator (22 modules · 280+ tests · 9 research docs).
 
 ---
 
@@ -145,6 +145,11 @@ ARF-RT provides a suite of developer utilities in `scripts/`:
 | `export_dot_graph.py` | Exports scenario nodes and edges into Graphviz DOT syntax | `python scripts/export_dot_graph.py scen.json -o graph.dot` |
 | `profile_scenario.py` | Profiles graph branching factors, asset convergence, and topology metrics | `python scripts/profile_scenario.py scen.json` |
 | `generate_chain_scenario.py` | Generates linear and branching attack chains of length N for scale tests | `python scripts/generate_chain_scenario.py --length 6` |
+| `visualize_path_timeline.py` | ASCII Gantt and chronological event visualization for credential timelines | `python scripts/visualize_path_timeline.py --hints hints.json` |
+| `run_temporal_diagnostics.py` | Automated temporal system health verification and coverage report | `python scripts/run_temporal_diagnostics.py` |
+| `simulate_revocation.py` | Interactive credential revocation blast-radius calculator | `python scripts/simulate_revocation.py --paths paths.json` |
+| `generate_synthetic_cloudtrail.py` | Synthetic AWS CloudTrail log generation with configurable anomaly injection | `python scripts/generate_synthetic_cloudtrail.py --events 500` |
+| `score_credentials.py` | Temporal exploitation risk scoring for credential edges (table/JSON/CSV) | `python scripts/score_credentials.py -i log.json --top 10` |
 
 ## Quick Start
 
