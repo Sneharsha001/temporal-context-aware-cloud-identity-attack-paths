@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] — 2026-10-26
+### Added
+- **`CredentialAlertEngine`** (`arf_rt.temporal.credential_alert_engine`): Evaluates risk scores against configurable threshold rules, emitting deduplicated structured `Alert` events across 4 severity tiers (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`).
+- **`TemporalDriftDetector`** (`arf_rt.temporal.temporal_drift_detector`): Compares baseline and current snapshots of temporal metadata to detect new credentials, removed access, window shrinkage, and staleness regression.
+- **`PolicyWindowValidator`** (`arf_rt.temporal.policy_window_validator`): Enforces organizational credential lifetime constraints, validating session durations, rotation intervals, and TTL thresholds.
+- **`CoverageReporter`** (`arf_rt.temporal.coverage_reporter`): Quantifies temporal metadata coverage across privilege graphs with per-field statistics and gap reporting.
+- **`TemporalDashboard`** (`arf_rt.temporal.temporal_dashboard`): Synthesizes scoring, alerts, policy validation, coverage, and drift into a formatted multi-section ASCII console dashboard.
+- **`TemporalHint.to_dict` / `from_dict`** (`arf_rt.temporal.hints`): Roundtrip dictionary and ISO string serialization for temporal hints.
+- **`scripts/validate_policy_windows.py`**: CLI tool for credential TTL, session duration, and rotation compliance enforcement.
+- **`scripts/detect_temporal_drift.py`**: CLI tool for snapshot-based credential window drift detection.
+- **`scripts/report_temporal_coverage.py`**: CLI tool for analyzing temporal metadata coverage across graph scenarios.
+- **`scripts/run_temporal_dashboard.py`**: CLI tool for unified terminal security dashboard generation.
+### Tests
+- Added 120+ unit and CLI integration tests across the new analytical components. Full test suite now passes with **443 tests**.
+
 ## [0.6.0] — 2026-10-24
 ### Added
 - **`TemporalGraphAnnotator`** (`arf_rt.temporal.graph_annotator`): Decorates privilege-graph edges with expiry windows, staleness flags, and Graphviz styling attributes.

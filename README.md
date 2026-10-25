@@ -9,7 +9,7 @@ A Bayesian reasoning engine for cloud identity attack path analysis. ARF-RT inge
 
 **SEMANTICS_VERSION:** 1.0.0  
 **Scope:** Replay-only. No live cloud SDK calls.  
-**Last Updated:** 2026-10-25 — v0.7.0: credential alert engine, drift detector, temporal dashboard, coverage reporter, and policy window validator (27 modules · 320+ tests · 9 research docs).
+**Last Updated:** 2026-10-26 — v0.7.0: credential alert engine, drift detector, temporal dashboard, coverage reporter, policy window validator, and unified CLI tooling suite (28 temporal modules · 443 passed tests · 9 research docs).
 
 ---
 
@@ -40,14 +40,26 @@ This repository hosts active research extending ARF-RT with **Context-Conditione
 
 ---
 
-## Temporal Context Integration
+## Temporal Context & Analytical Tooling Suite (v0.7.0)
 
-ARF-RT now includes a **Temporal Context Module** that enriches path feasibility scoring with time-aware reasoning:
+ARF-RT features a comprehensive **Temporal Context Subsystem** (`arf_rt/temporal`) with analytical modules and production-grade CLI utilities for time-aware cloud security analysis:
 
-- **Session-Window Detection:** Identifies attack paths that span impossible time windows (e.g., assume-role transitions faster than realistic human latency bounds).
-- **Credential Lifetime Awareness:** Tracks STS credential expiry intervals and flags paths requiring expired or revoked tokens.
-- **Multi-Hop Timestamp Ordering:** Enforces causal ordering constraints across multi-hop privilege escalation chains — if `AssumeRole(A→B)` must precede `AssumeRole(B→C)`, timestamps are validated against CloudTrail event ordering.
-- **Time-Conditioned Probabilities:** Incorporates temporal prior distributions into Bayesian belief updates, reducing confidence on stale credential hypotheses.
+- **Credential Risk Scoring (`CredentialScorer`):** Computes normalized exploitation risk scores based on token validity, expiry countdown, and staleness age.
+- **SIEM & Policy Alerting (`CredentialAlertEngine`):** Configurable rules evaluating risk scores and firing structured, deduplicated security alerts across 4 severity tiers (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`).
+- **Policy Window Enforcement (`PolicyWindowValidator`):** Verifies adherence to organizational IAM governance constraints (max STS session durations, mandatory rotation intervals, and expired credential restrictions).
+- **Snapshot Drift Detection (`TemporalDriftDetector`):** Detects privilege-graph temporal drift across time (new credentials, removed access, contracted validity windows, and staleness regression).
+- **Metadata Coverage Auditing (`CoverageReporter`):** Measures privilege-graph edge hint coverage and flags observation/credential metadata gaps.
+- **Unified Terminal Dashboard (`TemporalDashboard`):** Aggregates scoring, alerts, policy validation, coverage, and drift into an ASCII console dashboard for operator and CI review.
+
+### Temporal CLI Tooling
+
+| CLI Tool | Script | Description |
+|---|---|---|
+| **Score Credentials** | `scripts/score_credentials.py` | Scores CloudTrail or scenario credentials with table/JSON/CSV output. |
+| **Validate Policies** | `scripts/validate_policy_windows.py` | Validates session TTLs, rotation ages, and expired credential rules. |
+| **Detect Drift** | `scripts/detect_temporal_drift.py` | Compares baseline vs. current snapshots to detect window contractions and drift. |
+| **Report Coverage** | `scripts/report_temporal_coverage.py` | Audits temporal hint completeness across graph edges with threshold checks. |
+| **Run Dashboard** | `scripts/run_temporal_dashboard.py` | Unified terminal dashboard synthesizing scores, alerts, policy, and drift. |
 
 ### Temporal Constraint Types
 
@@ -433,7 +445,7 @@ arf_rt/
     visualization.py             Graphviz DOT and Cytoscape.js export formats
     temporal_stats.py            Inter-arrival times, duration statistics, and outlier detection
   temporal/
-    hints.py                     TemporalHint frozen dataclass with CloudTrail timestamp metadata
+    hints.py                     TemporalHint frozen dataclass with serialization and CloudTrail metadata
     config.py                    TemporalConfig with strict/permissive presets
     verdict.py                   TemporalVerdict + VerdictKind (FEASIBLE / INFEASIBLE / UNKNOWN)
     evaluator.py                 TemporalEvaluator — TC-1…TC-5 constraint checks
@@ -449,6 +461,17 @@ arf_rt/
     window_analyzer.py           Concurrency, burst, and cross-account reuse detectors
     sts_metadata.py              SessionSpec and causal session-chain validation
     export.py                    CSV, JSON, and Markdown summary exporters
+    credential_scorer.py         CredentialScorer — weighted credential risk scoring (validity, expiry, staleness)
+    temporal_exporter.py         TemporalExporter — JSON, NDJSON, CSV, and summary serialization
+    credential_alert_engine.py   CredentialAlertEngine — threshold alerting and SIEM event notification
+    temporal_drift_detector.py   TemporalDriftDetector — snapshot drift, window shrinkage, and staleness detection
+    policy_window_validator.py   PolicyWindowValidator — enterprise credential TTL and rotation policy enforcement
+    coverage_reporter.py         CoverageReporter — privilege graph temporal coverage analysis and gap reporting
+    temporal_dashboard.py        TemporalDashboard — unified multi-section terminal dashboard
+    synthetic_generator.py       Synthetic scenario generation with realistic temporal intervals
+    graph_annotator.py           TemporalGraphAnnotator — attaches hints to in-memory graph edges
+    pruner.py                    TemporalPruner — prunes infeasible edges prior to path exploration
+    revocation_simulator.py      RevocationSimulator — simulates credential revocation cascades
 ```
 
 ## Documentation Index
