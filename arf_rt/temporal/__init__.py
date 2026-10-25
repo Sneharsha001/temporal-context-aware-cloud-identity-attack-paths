@@ -28,6 +28,32 @@ from arf_rt.temporal.export import (
     export_metrics_to_dict,
     generate_summary_table,
 )
+from arf_rt.temporal.credential_scorer import CredentialScorer, CredentialRiskScore
+from arf_rt.temporal.temporal_exporter import TemporalExporter
+from arf_rt.temporal.credential_alert_engine import (
+    Alert,
+    AlertRule,
+    AlertSeverity,
+    CredentialAlertEngine,
+)
+from arf_rt.temporal.temporal_drift_detector import (
+    DriftEvent,
+    DriftKind,
+    DriftReport,
+    TemporalDriftDetector,
+)
+from arf_rt.temporal.policy_window_validator import (
+    PolicyConfig,
+    PolicyValidationResult,
+    PolicyViolation,
+    PolicyWindowValidator,
+)
+from arf_rt.temporal.coverage_reporter import (
+    CoverageReport,
+    CoverageReporter,
+    FieldCoverage,
+)
+from arf_rt.temporal.temporal_dashboard import TemporalDashboard
 
 __all__ = [
     "TemporalHint",
@@ -52,4 +78,23 @@ __all__ = [
     "export_metrics_to_csv",
     "export_audit_log_to_csv",
     "generate_summary_table",
+    "CredentialScorer",
+    "CredentialRiskScore",
+    "TemporalExporter",
+    "CredentialAlertEngine",
+    "AlertRule",
+    "Alert",
+    "AlertSeverity",
+    "TemporalDriftDetector",
+    "DriftReport",
+    "DriftEvent",
+    "DriftKind",
+    "PolicyWindowValidator",
+    "PolicyConfig",
+    "PolicyViolation",
+    "PolicyValidationResult",
+    "CoverageReporter",
+    "CoverageReport",
+    "FieldCoverage",
+    "TemporalDashboard",
 ]
