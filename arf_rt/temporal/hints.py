@@ -83,6 +83,39 @@ class TemporalHint:
             return None
         return (reference - self.last_used).total_seconds() / 86_400.0
 
+    def to_dict(self) -> dict:
+        """Serialize the TemporalHint into a dictionary of ISO strings."""
+        return {
+            "edge_id": self.edge_id,
+            "earliest_observed": self.earliest_observed.isoformat() if self.earliest_observed else None,
+            "latest_observed": self.latest_observed.isoformat() if self.latest_observed else None,
+            "credential_issued": self.credential_issued.isoformat() if self.credential_issued else None,
+            "credential_expiry": self.credential_expiry.isoformat() if self.credential_expiry else None,
+            "last_used": self.last_used.isoformat() if self.last_used else None,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> TemporalHint:
+        """Deserialize a dictionary with optional ISO timestamp strings into a TemporalHint."""
+        def _parse(val: object) -> datetime | None:
+            if val is None:
+                return None
+            if isinstance(val, datetime):
+                return val
+            if isinstance(val, str) and val.strip():
+                clean = val.strip().replace("Z", "+00:00")
+                return datetime.fromisoformat(clean)
+            return None
+
+        return cls(
+            edge_id=str(data.get("edge_id", "")),
+            earliest_observed=_parse(data.get("earliest_observed")),
+            latest_observed=_parse(data.get("latest_observed")),
+            credential_issued=_parse(data.get("credential_issued")),
+            credential_expiry=_parse(data.get("credential_expiry")),
+            last_used=_parse(data.get("last_used")),
+        )
+
     def __repr__(self) -> str:  # pragma: no cover
         obs = (
             f"{self.earliest_observed!r}..{self.latest_observed!r}"
@@ -95,3 +128,4 @@ class TemporalHint:
             else "no-cred"
         )
         return f"TemporalHint(edge={self.edge_id!r}, obs={obs}, {cred})"
+

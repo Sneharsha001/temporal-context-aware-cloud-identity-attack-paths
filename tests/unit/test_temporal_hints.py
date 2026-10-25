@@ -166,3 +166,44 @@ class TestDaysSinceLastUse:
         self, empty_hint: TemporalHint
     ) -> None:
         assert empty_hint.days_since_last_use(_dt(12)) is None
+
+
+# ---------------------------------------------------------------------------
+# Serialization (to_dict / from_dict)
+# ---------------------------------------------------------------------------
+
+
+class TestTemporalHintSerialization:
+    def test_roundtrip_full_hint(self, full_hint: TemporalHint) -> None:
+        d = full_hint.to_dict()
+        assert d["edge_id"] == "e1"
+        assert d["earliest_observed"] is not None
+        assert d["credential_expiry"] is not None
+        reconstructed = TemporalHint.from_dict(d)
+        assert reconstructed == full_hint
+
+    def test_roundtrip_empty_hint(self, empty_hint: TemporalHint) -> None:
+        d = empty_hint.to_dict()
+        assert d["edge_id"] == "e_empty"
+        assert d["earliest_observed"] is None
+        reconstructed = TemporalHint.from_dict(d)
+        assert reconstructed == empty_hint
+
+    def test_from_dict_handles_z_suffix(self) -> None:
+        payload = {
+            "edge_id": "role_assume",
+            "earliest_observed": "2025-06-15T10:00:00Z",
+            "credential_expiry": "2025-06-15T11:00:00Z",
+        }
+        hint = TemporalHint.from_dict(payload)
+        assert hint.edge_id == "role_assume"
+        assert hint.earliest_observed == _dt(10, 0, 0)
+        assert hint.credential_expiry == _dt(11, 0, 0)
+        assert hint.last_used is None
+
+    def test_from_dict_preserves_existing_datetime_objects(self) -> None:
+        now = _dt(12, 0, 0)
+        payload = {"edge_id": "e_dt", "last_used": now}
+        hint = TemporalHint.from_dict(payload)
+        assert hint.last_used == now
+
