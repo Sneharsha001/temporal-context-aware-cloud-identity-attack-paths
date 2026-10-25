@@ -9,7 +9,7 @@ A Bayesian reasoning engine for cloud identity attack path analysis. ARF-RT inge
 
 **SEMANTICS_VERSION:** 1.0.0  
 **Scope:** Replay-only. No live cloud SDK calls.  
-**Last Updated:** 2026-10-24 — v0.6.0: CredentialScorer, TemporalExporter, score_credentials CLI, verdict cache, graph annotator, pruner, and revocation simulator (22 modules · 280+ tests · 9 research docs).
+**Last Updated:** 2026-10-25 — v0.7.0: credential alert engine, drift detector, temporal dashboard, coverage reporter, and policy window validator (27 modules · 320+ tests · 9 research docs).
 
 ---
 
