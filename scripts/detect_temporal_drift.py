@@ -26,6 +26,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from arf_rt.temporal.hints import TemporalHint
 from arf_rt.temporal.temporal_drift_detector import (
+    DriftKind,
     DriftReport,
     TemporalDriftDetector,
 )
@@ -35,6 +36,7 @@ from scripts.validate_policy_windows import load_hints
 def render_table(report: DriftReport) -> str:
     """Format DriftReport into an ASCII report table."""
     status_str = "DRIFT DETECTED" if report.has_drift else "STABLE (NO DRIFT)"
+    by_k = report.by_kind
     lines = [
         "=" * 72,
         f"  TEMPORAL CREDENTIAL DRIFT REPORT: [{status_str}]",
@@ -42,10 +44,11 @@ def render_table(report: DriftReport) -> str:
         f"  Baseline Count : {report.baseline_count}",
         f"  Current Count  : {report.current_count}",
         f"  Total Events   : {len(report.events)}",
-        f"    • New Credentials      : {report.new_credentials_count}",
-        f"    • Removed Credentials  : {report.removed_credentials_count}",
-        f"    • Expiry Shifts        : {report.expiry_shifts_count}",
-        f"    • Staleness Changes    : {report.staleness_changes_count}",
+        f"    • New Credentials      : {len(by_k[DriftKind.NEW_CREDENTIAL])}",
+        f"    • Removed Credentials  : {len(by_k[DriftKind.REMOVED_CREDENTIAL])}",
+        f"    • Expiry Extended      : {len(by_k[DriftKind.EXPIRY_EXTENDED])}",
+        f"    • Expiry Advanced      : {len(by_k[DriftKind.EXPIRY_ADVANCED])}",
+        f"    • Staleness Regressed  : {len(by_k[DriftKind.STALENESS_INCREASED])}",
         "-" * 72,
     ]
     if not report.has_drift:
@@ -60,6 +63,31 @@ def render_table(report: DriftReport) -> str:
             lines.append(f"  {ev.kind.value:<22} {ev.edge_id:<20} {detail_str}")
     lines.append("=" * 72)
     return "\n".join(lines)
+
+
+def report_to_dict(report: DriftReport) -> dict:
+    """Serialize DriftReport into a JSON-friendly dict."""
+    by_k = report.by_kind
+    return {
+        "has_drift": report.has_drift,
+        "baseline_count": report.baseline_count,
+        "current_count": report.current_count,
+        "total_events": len(report.events),
+        "new_credentials_count": len(by_k[DriftKind.NEW_CREDENTIAL]),
+        "removed_credentials_count": len(by_k[DriftKind.REMOVED_CREDENTIAL]),
+        "expiry_shifts_count": len(by_k[DriftKind.EXPIRY_EXTENDED]) + len(by_k[DriftKind.EXPIRY_ADVANCED]),
+        "staleness_changes_count": len(by_k[DriftKind.STALENESS_INCREASED]) + len(by_k[DriftKind.STALENESS_DECREASED]),
+        "events": [
+            {
+                "edge_id": ev.edge_id,
+                "kind": ev.kind.value,
+                "baseline_value": ev.baseline_value,
+                "current_value": ev.current_value,
+                "delta_seconds": ev.delta_seconds,
+            }
+            for ev in report.events
+        ],
+    }
 
 
 def main() -> int:
@@ -128,13 +156,13 @@ def main() -> int:
         return 2
 
     detector = TemporalDriftDetector(
-        drift_threshold_seconds=args.drift_threshold,
+        expiry_threshold_seconds=args.drift_threshold,
         staleness_threshold_seconds=args.staleness_threshold,
     )
-    report = detector.detect(baseline_hints, current_hints)
+    report = detector.compare(baseline_hints, current_hints)
 
     if args.format == "json":
-        output_str = json.dumps(report.to_dict(), indent=2)
+        output_str = json.dumps(report_to_dict(report), indent=2)
     else:
         output_str = render_table(report)
 
