@@ -103,7 +103,7 @@ def main() -> int:
     scores = scorer.score_all(hints)
 
     # 2. Alert Engine
-    engine = CredentialAlertEngine.default_engine()
+    engine = CredentialAlertEngine()
     alerts = engine.evaluate(scores)
 
     # 3. Policy Window Validator
