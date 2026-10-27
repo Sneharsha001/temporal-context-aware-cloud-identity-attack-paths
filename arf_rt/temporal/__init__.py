@@ -54,6 +54,36 @@ from arf_rt.temporal.coverage_reporter import (
     FieldCoverage,
 )
 from arf_rt.temporal.temporal_dashboard import TemporalDashboard
+from arf_rt.temporal.risk_aggregator import (
+    AggregationStrategy,
+    PathRiskProfile,
+    TemporalRiskAggregator,
+)
+from arf_rt.temporal.compliance_auditor import (
+    ComplianceAuditReport,
+    ComplianceFinding,
+    Framework,
+    TemporalComplianceAuditor,
+)
+from arf_rt.temporal.correlation_matrix import (
+    PairwiseTemporalOverlap,
+    TemporalCorrelationMatrix,
+)
+from arf_rt.temporal.anomaly_filter import (
+    FilteredAnomaly,
+    MaintenanceWindow,
+    TemporalAnomalyFilter,
+)
+from arf_rt.temporal.session_chain_validator import (
+    ChainValidationResult,
+    ChainViolation,
+    SessionChainValidator,
+)
+from arf_rt.temporal.remediation_planner import (
+    RemediationAction,
+    RemediationActionType,
+    TemporalRemediationPlanner,
+)
 
 __all__ = [
     "TemporalHint",
@@ -97,4 +127,22 @@ __all__ = [
     "CoverageReport",
     "FieldCoverage",
     "TemporalDashboard",
+    "TemporalRiskAggregator",
+    "AggregationStrategy",
+    "PathRiskProfile",
+    "TemporalComplianceAuditor",
+    "ComplianceFinding",
+    "ComplianceAuditReport",
+    "Framework",
+    "TemporalCorrelationMatrix",
+    "PairwiseTemporalOverlap",
+    "TemporalAnomalyFilter",
+    "MaintenanceWindow",
+    "FilteredAnomaly",
+    "SessionChainValidator",
+    "ChainViolation",
+    "ChainValidationResult",
+    "TemporalRemediationPlanner",
+    "RemediationAction",
+    "RemediationActionType",
 ]
