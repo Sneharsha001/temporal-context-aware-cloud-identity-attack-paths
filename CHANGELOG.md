@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] — 2026-10-27
+### Added
+- **`TemporalRiskAggregator`** (`arf_rt.temporal.risk_aggregator`): Multi-hop attack path risk compounding via bottleneck, geometric mean, and probabilistic product models.
+- **`TemporalComplianceAuditor`** (`arf_rt.temporal.compliance_auditor`): Formal mapping and continuous auditing against CIS AWS Foundations Benchmark 1.3/1.4/1.16 and NIST SP 800-53 Rev 5 AC-2/IA-5/SC-10 controls.
+- **`TemporalCorrelationMatrix`** (`arf_rt.temporal.correlation_matrix`): Pairwise session concurrency overlap duration, Jaccard similarity, and synchronization cluster detection.
+- **`TemporalAnomalyFilter`** (`arf_rt.temporal.anomaly_filter`): Statistical z-score outlier detection for edge transit velocity with approved maintenance window alert suppression.
+- **`SessionChainValidator`** (`arf_rt.temporal.session_chain_validator`): Enforces AWS role chaining invariants, 1-hour transitive session duration limits, and causal issuance monotonicity.
+- **`TemporalRemediationPlanner`** (`arf_rt.temporal.remediation_planner`): Prioritized remediation playbook synthesis with ready-to-run AWS CLI command templates and estimated risk reduction metrics.
+- **`scripts/audit_temporal_compliance.py`**: CLI tool for auditing credentials against CIS AWS and NIST 800-53 standards with strict exit code enforcement.
+- **`scripts/generate_remediation_plan.py`**: CLI tool generating prioritized remediation playbooks in table, JSON, or executable bash script formats.
+- **`docs/TEMPORAL_COMPLIANCE_MAPPING.md`**: Comprehensive architectural guide mapping temporal constraints and algorithms to regulatory compliance frameworks.
+### Tests
+- Added 29 new unit and CLI integration tests across the compliance, risk aggregation, session chaining, and remediation suites. Full test suite now passes with **472 tests**.
+
 ## [0.7.0] — 2026-10-26
 ### Added
 - **`CredentialAlertEngine`** (`arf_rt.temporal.credential_alert_engine`): Evaluates risk scores against configurable threshold rules, emitting deduplicated structured `Alert` events across 4 severity tiers (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`).

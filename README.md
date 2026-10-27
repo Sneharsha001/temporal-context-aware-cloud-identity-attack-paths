@@ -9,7 +9,7 @@ A Bayesian reasoning engine for cloud identity attack path analysis. ARF-RT inge
 
 **SEMANTICS_VERSION:** 1.0.0  
 **Scope:** Replay-only. No live cloud SDK calls.  
-**Last Updated:** 2026-10-26 — v0.7.0: credential alert engine, drift detector, temporal dashboard, coverage reporter, policy window validator, and unified CLI tooling suite (28 temporal modules · 443 passed tests · 9 research docs).
+**Last Updated:** 2026-10-27 — v0.8.0: compliance auditor (CIS AWS / NIST 800-53), risk aggregator, session chain validator, remediation planner, and 472 passed tests across 34 temporal modules.
 
 ---
 
@@ -40,10 +40,16 @@ This repository hosts active research extending ARF-RT with **Context-Conditione
 
 ---
 
-## Temporal Context & Analytical Tooling Suite (v0.7.0)
+## Temporal Context & Analytical Tooling Suite (v0.8.0)
 
-ARF-RT features a comprehensive **Temporal Context Subsystem** (`arf_rt/temporal`) with analytical modules and production-grade CLI utilities for time-aware cloud security analysis:
+ARF-RT features a comprehensive **Temporal Context Subsystem** (`arf_rt/temporal`) with analytical modules, enterprise compliance auditing, and production-grade CLI utilities for time-aware cloud security analysis:
 
+- **Temporal Compliance Auditor (`TemporalComplianceAuditor`):** Maps detected temporal anomalies and credential staleness to industry compliance benchmarks (CIS AWS Foundations Benchmark 1.3/1.4/1.16 and NIST SP 800-53 Rev 5 AC-2/IA-5/SC-10).
+- **Multi-Hop Risk Aggregator (`TemporalRiskAggregator`):** Compounds individual credential exposure scores across attack paths using bottleneck, geometric mean, and probabilistic product models.
+- **Session Chain Validator (`SessionChainValidator`):** Enforces AWS role chaining invariants, including the 1-hour transitive session lifetime cap and causal issuance monotonicity.
+- **Automated Remediation Planner (`TemporalRemediationPlanner`):** Synthesizes violations into prioritized, ready-to-run AWS CLI remediation playbooks with estimated risk reductions.
+- **Temporal Correlation Matrix (`TemporalCorrelationMatrix`):** Analyzes concurrency overlap and identifies synchronized credential clusters.
+- **Statistical Anomaly Filter (`TemporalAnomalyFilter`):** Uses statistical z-score velocity outlier detection while suppressing alerts during pre-registered maintenance windows.
 - **Credential Risk Scoring (`CredentialScorer`):** Computes normalized exploitation risk scores based on token validity, expiry countdown, and staleness age.
 - **SIEM & Policy Alerting (`CredentialAlertEngine`):** Configurable rules evaluating risk scores and firing structured, deduplicated security alerts across 4 severity tiers (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`).
 - **Policy Window Enforcement (`PolicyWindowValidator`):** Verifies adherence to organizational IAM governance constraints (max STS session durations, mandatory rotation intervals, and expired credential restrictions).
@@ -55,6 +61,8 @@ ARF-RT features a comprehensive **Temporal Context Subsystem** (`arf_rt/temporal
 
 | CLI Tool | Script | Description |
 |---|---|---|
+| **Audit Compliance** | `scripts/audit_temporal_compliance.py` | Audits credentials against CIS AWS and NIST 800-53 benchmarks with strict exit codes. |
+| **Generate Remediation** | `scripts/generate_remediation_plan.py` | Outputs prioritized AWS CLI remediation playbooks in table, JSON, or bash shell format. |
 | **Score Credentials** | `scripts/score_credentials.py` | Scores CloudTrail or scenario credentials with table/JSON/CSV output. |
 | **Validate Policies** | `scripts/validate_policy_windows.py` | Validates session TTLs, rotation ages, and expired credential rules. |
 | **Detect Drift** | `scripts/detect_temporal_drift.py` | Compares baseline vs. current snapshots to detect window contractions and drift. |
@@ -472,6 +480,12 @@ arf_rt/
     graph_annotator.py           TemporalGraphAnnotator — attaches hints to in-memory graph edges
     pruner.py                    TemporalPruner — prunes infeasible edges prior to path exploration
     revocation_simulator.py      RevocationSimulator — simulates credential revocation cascades
+    risk_aggregator.py           TemporalRiskAggregator — multi-hop attack path risk compounding (bottleneck, geometric)
+    compliance_auditor.py        TemporalComplianceAuditor — CIS AWS and NIST 800-53 temporal compliance mapping
+    correlation_matrix.py        TemporalCorrelationMatrix — pairwise temporal overlap and synchronization clusters
+    anomaly_filter.py            TemporalAnomalyFilter — statistical z-score velocity outlier detection & maintenance windows
+    session_chain_validator.py   SessionChainValidator — transitive STS assume-role depth & 1-hour chaining bounds
+    remediation_planner.py       TemporalRemediationPlanner — prioritized AWS CLI remediation playbook generator
 ```
 
 ## Documentation Index
@@ -504,6 +518,7 @@ arf_rt/
 - **[Temporal Anomaly Classification Guide](docs/TEMPORAL_ANOMALY_GUIDE.md)** — Severity matrix, triage playbooks, and SIEM integration
 - **[Credential Lifecycle & Timeline Analysis](docs/CREDENTIAL_LIFECYCLE_ANALYSIS.md)** — Mathematical chaining bounds and timeline reconstruction
 - **[Temporal Module Research Status](docs/TEMPORAL_RESEARCH_STATUS.md)** — Per-component implementation status, test coverage, and next steps
+- **[Temporal Compliance & Framework Mapping](docs/TEMPORAL_COMPLIANCE_MAPPING.md)** — CIS AWS Foundations Benchmark, NIST SP 800-53, and automated remediation
 - **[Contributing Guide](CONTRIBUTING.md)** — Pre-contribution requirements and PR checklist
 - **[Security Policy](SECURITY.md)** — Vulnerability reporting instructions
 - **[Changelog](CHANGELOG.md)** — Version history and milestone tracking
