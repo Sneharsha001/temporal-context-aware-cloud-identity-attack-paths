@@ -44,7 +44,13 @@ class FilteredAnomaly:
 
     def to_dict(self) -> dict:
         return {
-            "anomaly": self.anomaly.to_dict(),
+            "anomaly": {
+                "anomaly_id": self.anomaly.anomaly_id,
+                "severity": self.anomaly.severity.value,
+                "title": self.anomaly.title,
+                "description": self.anomaly.description,
+                "remediation": self.anomaly.remediation,
+            },
             "is_suppressed": self.is_suppressed,
             "suppression_reason": self.suppression_reason,
         }
@@ -90,7 +96,7 @@ class TemporalAnomalyFilter:
         results: list[FilteredAnomaly] = []
 
         for a in anomalies:
-            ts = timestamps.get(a.edge_id)
+            ts = timestamps.get(a.anomaly_id)
             if ts is not None:
                 in_mw, reason = self.is_in_maintenance_window(ts)
                 if in_mw:
