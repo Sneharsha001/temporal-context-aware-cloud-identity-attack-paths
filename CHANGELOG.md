@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] — 2026-10-28
+### Added
+- **Enterprise Governance & Security Documentation Suite**:
+  - `docs/SIEM_INTEGRATION_GUIDE.md`: AWS Security Hub and Amazon EventBridge integration guide with automated remediation lambda patterns.
+  - `docs/TEMPORAL_THREAT_TAXONOMY.md`: Multi-cloud temporal identity threat model and attack vector taxonomy.
+  - `docs/IAM_CREDENTIAL_ROTATION_SPEC.md`: Enterprise IAM credential lifecycle and automated rotation policy specification.
+  - `docs/INCIDENT_RESPONSE_RUNBOOK.md`: Temporal risk incident response runbook and automated triage matrix.
+  - `docs/PERFORMANCE_BENCHMARK_WHITEPAPER.md`: Empirical runtime performance and asymptotic scalability whitepaper.
+  - `docs/ZERO_TRUST_ALIGNMENT.md`: Zero Trust architecture alignment specification (NIST SP 800-207) for temporal attack paths.
+  - `docs/SOC2_ISO27001_MAPPING.md`: SOC 2 Type II and ISO/IEC 27001:2022 trust criteria mapping document.
+  - `docs/CLOUDTRAIL_INGESTION_GUIDE.md`: CloudTrail logging configuration and high-fidelity event ingestion guide.
+  - `docs/BAYESIAN_RISK_MATHEMATICS.md`: Mathematical formalization of probabilistic Bayesian risk propagation.
+  - `docs/PRODUCTION_DEPLOYMENT_GUIDE.md`: Production deployment and air-gapped CI/CD verification guide.
+  - `docs/POST_BREACH_FORENSICS_GUIDE.md`: Post-breach temporal credential forensics and blast-radius guide.
+  - `docs/PROACTIVE_THREAT_HUNTING.md`: Proactive threat hunting queries and anomaly detection playbooks.
+  - `docs/LEAST_PRIVILEGE_GOVERNANCE.md`: Least privilege enforcement and IAM permission boundary reference.
+  - `docs/DISASTER_RECOVERY_SPEC.md`: Disaster recovery and high availability for temporal state caches.
+  - `docs/ENTERPRISE_INTEGRATION_CONTRACT.md`: REST, CLI, and SDK integration contract for enterprise SIEM pipelines.
+  - `docs/SOC_ANALYST_ONBOARDING.md`: Security operations center (SOC) analyst onboarding and triage tutorial.
+  - `docs/ENTERPRISE_IDENTITY_GLOSSARY.md`: Expanded enterprise cloud identity and temporal reasoning terminology.
+  - `docs/PCI_DSS_MAPPING.md`: PCI-DSS v4.0 Requirement 7 and 8 identity control mapping.
+
 ## [0.8.0] — 2026-10-27
 ### Added
 - **`TemporalRiskAggregator`** (`arf_rt.temporal.risk_aggregator`): Multi-hop attack path risk compounding via bottleneck, geometric mean, and probabilistic product models.
