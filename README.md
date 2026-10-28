@@ -9,7 +9,7 @@ A Bayesian reasoning engine for cloud identity attack path analysis. ARF-RT inge
 
 **SEMANTICS_VERSION:** 1.0.0  
 **Scope:** Replay-only. No live cloud SDK calls.  
-**Last Updated:** 2026-10-27 — v0.8.0: compliance auditor (CIS AWS / NIST 800-53), risk aggregator, session chain validator, remediation planner, and 472 passed tests across 34 temporal modules.
+**Last Updated:** 2026-10-28 — v0.9.0: enterprise governance & security documentation suite, Zero Trust architecture (NIST SP 800-207), SOC 2 / ISO 27001 mapping, PCI-DSS v4.0 controls, SIEM/SOAR integration, and Bayesian mathematical formalization.
 
 ---
 
@@ -519,6 +519,24 @@ arf_rt/
 - **[Credential Lifecycle & Timeline Analysis](docs/CREDENTIAL_LIFECYCLE_ANALYSIS.md)** — Mathematical chaining bounds and timeline reconstruction
 - **[Temporal Module Research Status](docs/TEMPORAL_RESEARCH_STATUS.md)** — Per-component implementation status, test coverage, and next steps
 - **[Temporal Compliance & Framework Mapping](docs/TEMPORAL_COMPLIANCE_MAPPING.md)** — CIS AWS Foundations Benchmark, NIST SP 800-53, and automated remediation
+- **[SIEM & EventBridge Integration Guide](docs/SIEM_INTEGRATION_GUIDE.md)** — AWS Security Hub and Amazon EventBridge integration patterns
+- **[Multi-Cloud Temporal Threat Taxonomy](docs/TEMPORAL_THREAT_TAXONOMY.md)** — Threat model and attack vector taxonomy across AWS, Azure, and GCP
+- **[IAM Credential Rotation Specification](docs/IAM_CREDENTIAL_ROTATION_SPEC.md)** — Enterprise IAM credential lifecycle and rotation policy
+- **[Incident Response Runbook](docs/INCIDENT_RESPONSE_RUNBOOK.md)** — Temporal risk incident response runbook and automated triage matrix
+- **[Performance Benchmark Whitepaper](docs/PERFORMANCE_BENCHMARK_WHITEPAPER.md)** — Empirical runtime performance and asymptotic scalability
+- **[Zero Trust Architecture Alignment](docs/ZERO_TRUST_ALIGNMENT.md)** — Zero Trust architecture alignment (NIST SP 800-207)
+- **[SOC 2 & ISO 27001 Mapping](docs/SOC2_ISO27001_MAPPING.md)** — SOC 2 Type II and ISO/IEC 27001:2022 trust criteria mapping
+- **[CloudTrail Event Ingestion Guide](docs/CLOUDTRAIL_INGESTION_GUIDE.md)** — CloudTrail logging configuration and high-fidelity event ingestion
+- **[Bayesian Risk Mathematics](docs/BAYESIAN_RISK_MATHEMATICS.md)** — Mathematical formalization of probabilistic Bayesian risk propagation
+- **[Production Deployment Guide](docs/PRODUCTION_DEPLOYMENT_GUIDE.md)** — Production deployment and air-gapped CI/CD verification guide
+- **[Post-Breach Forensics Guide](docs/POST_BREACH_FORENSICS_GUIDE.md)** — Post-breach temporal credential forensics and blast-radius guide
+- **[Proactive Threat Hunting Playbooks](docs/PROACTIVE_THREAT_HUNTING.md)** — Proactive threat hunting queries and anomaly detection playbooks
+- **[Least Privilege Governance](docs/LEAST_PRIVILEGE_GOVERNANCE.md)** — Least privilege enforcement and IAM permission boundary reference
+- **[Disaster Recovery & High Availability](docs/DISASTER_RECOVERY_SPEC.md)** — Disaster recovery and high availability for temporal state caches
+- **[Enterprise Integration Contract](docs/ENTERPRISE_INTEGRATION_CONTRACT.md)** — REST, CLI, and SDK integration contract for enterprise SIEM pipelines
+- **[SOC Analyst Onboarding Tutorial](docs/SOC_ANALYST_ONBOARDING.md)** — Security operations center (SOC) analyst onboarding and triage tutorial
+- **[Enterprise Identity Glossary](docs/ENTERPRISE_IDENTITY_GLOSSARY.md)** — Expanded enterprise cloud identity and temporal reasoning terminology
+- **[PCI-DSS v4.0 Control Mapping](docs/PCI_DSS_MAPPING.md)** — PCI-DSS v4.0 Requirement 7 and 8 identity control mapping
 - **[Contributing Guide](CONTRIBUTING.md)** — Pre-contribution requirements and PR checklist
 - **[Security Policy](SECURITY.md)** — Vulnerability reporting instructions
 - **[Changelog](CHANGELOG.md)** — Version history and milestone tracking
