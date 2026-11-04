@@ -665,3 +665,12 @@ Contributions to attack path documentation are welcome. Please follow these guid
 - Reference CVEs or vendor security advisories if available
 - Ensure no real credentials or sensitive infrastructure details are included
 - Run the validation suite before submitting a pull request
+
+
+<!-- streak-nov4-13 -->
+## Known Limitations
+
+- GCP coverage is currently partial; contributions for GCP temporal paths are especially welcome
+- Cross-cloud federation paths assume SAML/OIDC; proprietary federation mechanisms are out of scope
+- Attack paths assume attacker has initial foothold; initial access vectors are not modeled
+- Temporal windows are based on documented defaults; custom configurations may differ significantly
