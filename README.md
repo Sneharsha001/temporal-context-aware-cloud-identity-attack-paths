@@ -654,3 +654,14 @@ Steps:
 2. Run: pip install -r requirements.txt
 3. Configure cloud credentials
 4. Follow the scenario-specific guides in the docs/ directory
+
+
+<!-- streak-nov4-12 -->
+## Contribution Guidelines
+
+Contributions to attack path documentation are welcome. Please follow these guidelines:
+- Submit attack paths with reproducible steps and cloud provider context
+- Include MITRE ATT&CK technique mappings where applicable
+- Reference CVEs or vendor security advisories if available
+- Ensure no real credentials or sensitive infrastructure details are included
+- Run the validation suite before submitting a pull request
