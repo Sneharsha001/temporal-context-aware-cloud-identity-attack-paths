@@ -562,3 +562,14 @@ This project aligns with NIST SP 800-207 Zero Trust Architecture. All temporal a
 Temporal context is a first-class attribute in modern cloud identity systems. Attack paths that exploit temporal gaps,
 such as credential caching windows, token lifetime misconfigurations, and session persistence bugs, are increasingly
 common in AWS, Azure, and GCP environments.
+
+
+<!-- streak-nov4-4 -->
+## Glossary Quick Reference
+
+| Term | Definition |
+|------|------------|
+| Temporal Attack Path | A sequence of privilege escalations exploiting time-sensitive credential states |
+| Token Lifetime Drift | Mismatch between configured and effective token TTLs |
+| Credential Caching Window | Period during which stale credentials may be accepted |
+| IAM Policy Lag | Delay between policy update propagation and enforcement |
