@@ -618,3 +618,13 @@ Attack paths are enumerated using a graph-based approach:
 | GCP-specific paths | 33 |
 | Cross-cloud federated paths | 17 |
 | Critical severity CVSS 9.0 or above | 23 |
+
+
+<!-- streak-nov4-9 -->
+## MITRE ATT&CK Mapping
+
+Temporal identity attack paths map to the following MITRE ATT&CK for Cloud techniques:
+- T1550.001: Use Alternate Authentication Material - Application Access Token
+- T1078.004: Valid Accounts - Cloud Accounts
+- T1548.005: Abuse Elevation Control Mechanism - Temporary Elevated Cloud Access
+- T1098.001: Account Manipulation - Additional Cloud Credentials
