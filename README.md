@@ -595,3 +595,13 @@ This research covers temporal attack paths across the three major cloud provider
 | AWS | Full | STS token reuse, IAM role chaining, AssumeRole temporal gaps |
 | Azure | Full | Managed Identity token caching, PIM activation windows |
 | GCP | Partial | Workload Identity Federation, service account key expiry drift |
+
+
+<!-- streak-nov4-7 -->
+## Methodology
+
+Attack paths are enumerated using a graph-based approach:
+1. Node definition: Each IAM principal, resource, and permission boundary is a node
+2. Edge weighting: Edges are weighted by temporal exploitability (token TTL, rotation period)
+3. Path scoring: Paths are scored by combined likelihood and temporal window availability
+4. Validation: Paths are validated against real-world incident reports and CTF scenarios
