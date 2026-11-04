@@ -573,3 +573,13 @@ common in AWS, Azure, and GCP environments.
 | Token Lifetime Drift | Mismatch between configured and effective token TTLs |
 | Credential Caching Window | Period during which stale credentials may be accepted |
 | IAM Policy Lag | Delay between policy update propagation and enforcement |
+
+
+<!-- streak-nov4-5 -->
+## Defensive Mitigations Summary
+
+Key mitigations for temporal cloud identity attacks:
+- Short-lived credentials: Use IAM roles with max session durations of 1 hour or less
+- Continuous validation: Re-validate identity claims on sensitive operations, not just at session start
+- Audit log correlation: Correlate CloudTrail and Azure Monitor logs with temporal anomaly detection
+- MFA re-authentication: Require step-up authentication for privilege escalations
