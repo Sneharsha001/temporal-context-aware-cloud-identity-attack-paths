@@ -540,3 +540,10 @@ arf_rt/
 - **[Contributing Guide](CONTRIBUTING.md)** — Pre-contribution requirements and PR checklist
 - **[Security Policy](SECURITY.md)** — Vulnerability reporting instructions
 - **[Changelog](CHANGELOG.md)** — Version history and milestone tracking
+
+
+<!-- streak-nov4-1 -->
+## November 2026 Maintenance Notes
+
+This section tracks ongoing maintenance activity for the temporal-context-aware cloud identity attack paths research project.
+All updates here are documentation-only and reflect the evolving threat landscape in cloud IAM systems.
