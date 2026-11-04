@@ -628,3 +628,12 @@ Temporal identity attack paths map to the following MITRE ATT&CK for Cloud techn
 - T1078.004: Valid Accounts - Cloud Accounts
 - T1548.005: Abuse Elevation Control Mechanism - Temporary Elevated Cloud Access
 - T1098.001: Account Manipulation - Additional Cloud Credentials
+
+
+<!-- streak-nov4-10 -->
+## Related Work and References
+
+- CISA Cloud Security Technical Reference Architecture: https://www.cisa.gov/resources-tools/resources/cloud-security-technical-reference-architecture
+- AWS Security Best Practices for IAM: https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html
+- Microsoft Entra ID Privileged Identity Management: https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/
+- GCP IAM Best Practices: https://cloud.google.com/iam/docs/using-iam-securely
