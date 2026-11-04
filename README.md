@@ -547,3 +547,10 @@ arf_rt/
 
 This section tracks ongoing maintenance activity for the temporal-context-aware cloud identity attack paths research project.
 All updates here are documentation-only and reflect the evolving threat landscape in cloud IAM systems.
+
+
+<!-- streak-nov4-2 -->
+## Zero Trust Architecture Alignment
+
+This project aligns with NIST SP 800-207 Zero Trust Architecture. All temporal attack paths documented assume a
+'never trust, always verify' baseline. Temporal drift and token-reuse attacks are especially relevant in hybrid cloud environments.
