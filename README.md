@@ -554,3 +554,11 @@ All updates here are documentation-only and reflect the evolving threat landscap
 
 This project aligns with NIST SP 800-207 Zero Trust Architecture. All temporal attack paths documented assume a
 'never trust, always verify' baseline. Temporal drift and token-reuse attacks are especially relevant in hybrid cloud environments.
+
+
+<!-- streak-nov4-3 -->
+## Research Context - Temporal Reasoning
+
+Temporal context is a first-class attribute in modern cloud identity systems. Attack paths that exploit temporal gaps,
+such as credential caching windows, token lifetime misconfigurations, and session persistence bugs, are increasingly
+common in AWS, Azure, and GCP environments.
