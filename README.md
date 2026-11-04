@@ -686,3 +686,11 @@ Contributions to attack path documentation are welcome. Please follow these guid
 | Q1 2027 | Integrate automated detection rule generation |
 | Q2 2027 | Release v1.0 with full multi-cloud coverage |
 | Q2 2027 | Publish peer-reviewed research paper |
+
+
+<!-- streak-nov4-15 -->
+## Acknowledgements
+
+This research builds on the foundational work of the cloud security community, including publications from
+Wiz Research, Datadog Security Labs, Lacework Labs, and academic contributions from IEEE S&P and USENIX Security.
+Special thanks to all open-source contributors and bug reporters who have helped improve this documentation.
