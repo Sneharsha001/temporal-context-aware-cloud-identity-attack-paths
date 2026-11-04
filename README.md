@@ -583,3 +583,15 @@ Key mitigations for temporal cloud identity attacks:
 - Continuous validation: Re-validate identity claims on sensitive operations, not just at session start
 - Audit log correlation: Correlate CloudTrail and Azure Monitor logs with temporal anomaly detection
 - MFA re-authentication: Require step-up authentication for privilege escalations
+
+
+<!-- streak-nov4-6 -->
+## Cloud Provider Coverage
+
+This research covers temporal attack paths across the three major cloud providers:
+
+| Provider | Coverage | Key Attack Vectors |
+|----------|----------|--------------------|
+| AWS | Full | STS token reuse, IAM role chaining, AssumeRole temporal gaps |
+| Azure | Full | Managed Identity token caching, PIM activation windows |
+| GCP | Partial | Workload Identity Federation, service account key expiry drift |
