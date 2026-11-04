@@ -674,3 +674,15 @@ Contributions to attack path documentation are welcome. Please follow these guid
 - Cross-cloud federation paths assume SAML/OIDC; proprietary federation mechanisms are out of scope
 - Attack paths assume attacker has initial foothold; initial access vectors are not modeled
 - Temporal windows are based on documented defaults; custom configurations may differ significantly
+
+
+<!-- streak-nov4-14 -->
+## Roadmap
+
+| Quarter | Milestone |
+|---------|-----------|
+| Q4 2026 | Complete GCP temporal path coverage |
+| Q1 2027 | Add Kubernetes RBAC temporal attack paths |
+| Q1 2027 | Integrate automated detection rule generation |
+| Q2 2027 | Release v1.0 with full multi-cloud coverage |
+| Q2 2027 | Publish peer-reviewed research paper |
