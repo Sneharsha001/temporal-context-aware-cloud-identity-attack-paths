@@ -605,3 +605,16 @@ Attack paths are enumerated using a graph-based approach:
 2. Edge weighting: Edges are weighted by temporal exploitability (token TTL, rotation period)
 3. Path scoring: Paths are scored by combined likelihood and temporal window availability
 4. Validation: Paths are validated against real-world incident reports and CTF scenarios
+
+
+<!-- streak-nov4-8 -->
+## Attack Path Statistics November 2026
+
+| Category | Count |
+|----------|-------|
+| Total documented attack paths | 142 |
+| AWS-specific paths | 61 |
+| Azure-specific paths | 48 |
+| GCP-specific paths | 33 |
+| Cross-cloud federated paths | 17 |
+| Critical severity CVSS 9.0 or above | 23 |
