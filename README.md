@@ -637,3 +637,20 @@ Temporal identity attack paths map to the following MITRE ATT&CK for Cloud techn
 - AWS Security Best Practices for IAM: https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html
 - Microsoft Entra ID Privileged Identity Management: https://learn.microsoft.com/en-us/entra/id-governance/privileged-identity-management/
 - GCP IAM Best Practices: https://cloud.google.com/iam/docs/using-iam-securely
+
+
+<!-- streak-nov4-11 -->
+## Lab Environment Setup
+
+To reproduce attack paths in a controlled lab environment:
+
+Prerequisites:
+- Terraform 1.5 or higher
+- AWS CLI, Azure CLI, or gcloud configured
+- Python 3.10 or higher
+
+Steps:
+1. Clone this repository
+2. Run: pip install -r requirements.txt
+3. Configure cloud credentials
+4. Follow the scenario-specific guides in the docs/ directory
