@@ -694,3 +694,11 @@ Contributions to attack path documentation are welcome. Please follow these guid
 This research builds on the foundational work of the cloud security community, including publications from
 Wiz Research, Datadog Security Labs, Lacework Labs, and academic contributions from IEEE S&P and USENIX Security.
 Special thanks to all open-source contributors and bug reporters who have helped improve this documentation.
+
+
+<!-- streak-nov4-16 -->
+## Daily Update November 4 2026
+
+Documentation refresh completed on November 4, 2026. All sections reviewed for accuracy against current cloud
+provider documentation. Glossary expanded, provider coverage matrix updated, and roadmap revised to reflect
+Q4 2026 progress. No code changes; documentation only.
