@@ -23,7 +23,19 @@ Re-exports the most commonly used utilities for convenient import:
 from arf_rt.util.retry import retry, RetryError
 from arf_rt.util.text import slugify, truncate, indent_block
 from arf_rt.util.structures import flatten_dict, deep_merge
-from arf_rt.util.network import parse_ip, parse_network, is_ip_in_network
+from arf_rt.util.network import (
+    parse_ip,
+    parse_network,
+    is_ip_in_network,
+    is_ip_in_any_network,
+    is_private_ip,
+    network_overlaps,
+    network_contains,
+    get_network_bounds,
+    calculate_subnet_split,
+    format_cidr,
+    is_reserved_ip,
+)
 from arf_rt.util.hashing import canonical_json, sha256_digest, canonical_hash
 from arf_rt.util.datetime_helpers import (
     parse_iso8601,
@@ -53,6 +65,14 @@ __all__ = [
     "parse_ip",
     "parse_network",
     "is_ip_in_network",
+    "is_ip_in_any_network",
+    "is_private_ip",
+    "network_overlaps",
+    "network_contains",
+    "get_network_bounds",
+    "calculate_subnet_split",
+    "format_cidr",
+    "is_reserved_ip",
     "canonical_json",
     "sha256_digest",
     "canonical_hash",
