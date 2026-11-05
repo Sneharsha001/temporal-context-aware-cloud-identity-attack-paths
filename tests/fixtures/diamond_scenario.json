@@ -1,0 +1,160 @@
+{
+  "scenario_id": "diamond_scenario",
+  "name": "Diamond-Shaped Privilege Escalation Path",
+  "description": "A classic diamond-shaped privilege escalation where two parallel role chains converge on a sensitive resource. Tests the evaluator's ability to handle multiple path branches and converge correctly.",
+  "research_context": "Validates multi-branch path evaluation with converging sub-paths. The diamond pattern: Attacker -> RoleA, Attacker -> RoleB, both RoleA and RoleB -> TargetRole, TargetRole -> SensitiveResource.",
+  "paths": [
+    {
+      "path_id": "diamond_left_branch",
+      "hops": [
+        {
+          "hop": 1,
+          "edge_type": "sts:AssumeRole",
+          "src": {"provider": "aws", "node_type": "IAMUser", "provider_id": "AttackerOrigin", "region": "us-east-1"},
+          "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "RoleA", "region": "us-east-1"}
+        },
+        {
+          "hop": 2,
+          "edge_type": "sts:AssumeRole",
+          "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "RoleA", "region": "us-east-1"},
+          "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "TargetRole", "region": "us-east-1"}
+        },
+        {
+          "hop": 3,
+          "edge_type": "secretsmanager:GetSecretValue",
+          "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "TargetRole", "region": "us-east-1"},
+          "dst": {"provider": "aws", "node_type": "SecretsManagerSecret", "provider_id": "ProductionSecret", "region": "us-east-1"}
+        }
+      ],
+      "context_variables": [
+        {
+          "key": "aws:SourceIp",
+          "scope": "request",
+          "persistence_model": "persistent_under_static_origin_assumption",
+          "data_type": "ipv4_cidr"
+        },
+        {
+          "key": "aws:MultiFactorAuthPresent",
+          "scope": "session",
+          "persistence_model": "reset_on_role_assumption_unless_propagated",
+          "data_type": "boolean"
+        }
+      ],
+      "edge_context_specifications": [
+        {
+          "hop": 1,
+          "required_context": [
+            {"key": "aws:SourceIp", "operator": "IpAddress", "values": ["10.0.0.0/8"], "scope": "request"},
+            {"key": "aws:MultiFactorAuthPresent", "operator": "Bool", "values": ["true"], "scope": "session"}
+          ],
+          "produced_context": [
+            {"key": "active_principal", "operation": "SET", "value": "arn:aws:iam::123456789012:role/RoleA"},
+            {"key": "aws:MultiFactorAuthPresent", "operation": "SET", "value": "true"}
+          ]
+        },
+        {
+          "hop": 2,
+          "required_context": [
+            {"key": "aws:SourceIp", "operator": "IpAddress", "values": ["10.10.0.0/16"], "scope": "request"},
+            {"key": "aws:MultiFactorAuthPresent", "operator": "Bool", "values": ["true"], "scope": "session"}
+          ],
+          "produced_context": [
+            {"key": "active_principal", "operation": "SET", "value": "arn:aws:iam::123456789012:role/TargetRole"}
+          ]
+        },
+        {
+          "hop": 3,
+          "required_context": [
+            {"key": "aws:SourceIp", "operator": "IpAddress", "values": ["10.10.10.0/24"], "scope": "request"}
+          ],
+          "produced_context": []
+        }
+      ],
+      "transition_constraints": [
+        {"from_hop": 1, "to_hop": 2, "variable": "aws:SourceIp", "relation": "EQUAL", "formula": "SourceIp(hop1) == SourceIp(hop2)", "rationale": "Static origin"},
+        {"from_hop": 1, "to_hop": 2, "variable": "aws:MultiFactorAuthPresent", "relation": "IDENTITY_DERIVATION", "formula": "MFA(hop2) == MFA(hop1)", "rationale": "Session MFA carries across AssumeRole"},
+        {"from_hop": 2, "to_hop": 3, "variable": "aws:SourceIp", "relation": "EQUAL", "formula": "SourceIp(hop2) == SourceIp(hop3)", "rationale": "Static origin"}
+      ]
+    },
+    {
+      "path_id": "diamond_right_branch",
+      "hops": [
+        {
+          "hop": 1,
+          "edge_type": "sts:AssumeRole",
+          "src": {"provider": "aws", "node_type": "IAMUser", "provider_id": "AttackerOrigin", "region": "us-east-1"},
+          "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "RoleB", "region": "us-east-1"}
+        },
+        {
+          "hop": 2,
+          "edge_type": "sts:AssumeRole",
+          "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "RoleB", "region": "us-east-1"},
+          "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "TargetRole", "region": "us-east-1"}
+        },
+        {
+          "hop": 3,
+          "edge_type": "secretsmanager:GetSecretValue",
+          "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "TargetRole", "region": "us-east-1"},
+          "dst": {"provider": "aws", "node_type": "SecretsManagerSecret", "provider_id": "ProductionSecret", "region": "us-east-1"}
+        }
+      ],
+      "context_variables": [
+        {
+          "key": "aws:SourceIp",
+          "scope": "request",
+          "persistence_model": "persistent_under_static_origin_assumption",
+          "data_type": "ipv4_cidr"
+        },
+        {
+          "key": "aws:MultiFactorAuthPresent",
+          "scope": "session",
+          "persistence_model": "reset_on_role_assumption_unless_propagated",
+          "data_type": "boolean"
+        }
+      ],
+      "edge_context_specifications": [
+        {
+          "hop": 1,
+          "required_context": [
+            {"key": "aws:SourceIp", "operator": "IpAddress", "values": ["10.0.0.0/8"], "scope": "request"},
+            {"key": "aws:MultiFactorAuthPresent", "operator": "Bool", "values": ["true"], "scope": "session"}
+          ],
+          "produced_context": [
+            {"key": "active_principal", "operation": "SET", "value": "arn:aws:iam::123456789012:role/RoleB"},
+            {"key": "aws:MultiFactorAuthPresent", "operation": "SET", "value": "true"}
+          ]
+        },
+        {
+          "hop": 2,
+          "required_context": [
+            {"key": "aws:SourceIp", "operator": "IpAddress", "values": ["10.20.0.0/16"], "scope": "request"},
+            {"key": "aws:MultiFactorAuthPresent", "operator": "Bool", "values": ["true"], "scope": "session"}
+          ],
+          "produced_context": [
+            {"key": "active_principal", "operation": "SET", "value": "arn:aws:iam::123456789012:role/TargetRole"}
+          ]
+        },
+        {
+          "hop": 3,
+          "required_context": [
+            {"key": "aws:SourceIp", "operator": "IpAddress", "values": ["10.20.10.0/24"], "scope": "request"}
+          ],
+          "produced_context": []
+        }
+      ],
+      "transition_constraints": [
+        {"from_hop": 1, "to_hop": 2, "variable": "aws:SourceIp", "relation": "EQUAL", "formula": "SourceIp(hop1) == SourceIp(hop2)", "rationale": "Static origin"},
+        {"from_hop": 1, "to_hop": 2, "variable": "aws:MultiFactorAuthPresent", "relation": "IDENTITY_DERIVATION", "formula": "MFA(hop2) == MFA(hop1)", "rationale": "Session MFA carries across AssumeRole"},
+        {"from_hop": 2, "to_hop": 3, "variable": "aws:SourceIp", "relation": "EQUAL", "formula": "SourceIp(hop2) == SourceIp(hop3)", "rationale": "Static origin"}
+      ]
+    }
+  ],
+  "convergence_node": "TargetRole",
+  "sensitive_resource": "ProductionSecret",
+  "expected_outcome": {
+    "diamond_left_branch": "SAT",
+    "diamond_right_branch": "SAT",
+    "both_converge": "SAT",
+    "rationale": "Both branches have compatible nested CIDRs (10.0.0.0/8 -> 10.10.0.0/16 -> 10.10.10.0/24 for left; 10.0.0.0/8 -> 10.20.0.0/16 -> 10.20.10.0/24 for right) and consistent MFA=true propagation. The convergence at TargetRole does not introduce contradictions."
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "fixture_id": "CE1",
+  "name": "Compatible Persistent CIDR Constraints",
+  "research_question": "Does the CSP evaluator return SAT when two hops impose compatible nested CIDR constraints under a static-origin assumption?",
+  "scenario_file": "ce1_compatible_persistent.scenario.json",
+  "path_under_evaluation": [
+    {
+      "hop": 1,
+      "edge_type": "sts:AssumeRole",
+      "src": {"provider": "aws", "node_type": "IAMUser", "provider_id": "AttackerOrigin", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "JumpRole", "region": "us-east-1"}
+    },
+    {
+      "hop": 2,
+      "edge_type": "s3:GetObject",
+      "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "JumpRole", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "S3Bucket", "provider_id": "TargetData", "region": "us-east-1"}
+    }
+  ],
+  "context_variables": [
+    {
+      "key": "aws:SourceIp",
+      "scope": "request",
+      "persistence_model": "persistent_under_static_origin_assumption",
+      "data_type": "ipv4_cidr"
+    }
+  ],
+  "edge_context_specifications": [
+    {
+      "hop": 1,
+      "required_context": [
+        {
+          "key": "aws:SourceIp",
+          "operator": "IpAddress",
+          "values": ["10.0.0.0/8"],
+          "scope": "request"
+        }
+      ],
+      "produced_context": [
+        {
+          "key": "active_principal",
+          "operation": "SET",
+          "value": "arn:aws:iam::123456789012:role/JumpRole"
+        }
+      ]
+    },
+    {
+      "hop": 2,
+      "required_context": [
+        {
+          "key": "aws:SourceIp",
+          "operator": "IpAddress",
+          "values": ["10.1.0.0/16"],
+          "scope": "request"
+        }
+      ],
+      "produced_context": []
+    }
+  ],
+  "transition_constraints": [
+    {
+      "from_hop": 1,
+      "to_hop": 2,
+      "variable": "aws:SourceIp",
+      "relation": "EQUAL",
+      "formula": "SourceIp(hop1) == SourceIp(hop2)",
+      "rationale": "Static origin assumption: attacker operates from fixed origin across sequential role assumptions."
+    }
+  ],
+  "complete_constraint_system": "(SourceIp(hop1) in 10.0.0.0/8) AND (SourceIp(hop2) in 10.1.0.0/16) AND (SourceIp(hop1) == SourceIp(hop2))",
+  "expected_csp_outcome": "SAT",
+  "witness": {"aws:SourceIp": "10.1.5.5"},
+  "expected_feasibility_multiplier": 1.0,
+  "expected_path_score_effect": "UNCHANGED",
+  "formal_rationale": "The first hop imposes 10.0.0.0/8 and the second hop imposes 10.1.0.0/16. Since 10.1.0.0/16 is a subset of 10.0.0.0/8, their intersection is 10.1.0.0/16, which is non-empty. Under the static-origin assumption (EQUAL transition), the constraint system requires a single IP address to belong to both CIDRs. Any IP in 10.1.0.0/16 (e.g., 10.1.5.5) satisfies both constraints. The evaluator must return SAT with a valid witness.",
+  "falsification_criteria": "The feasibility hypothesis is falsified if the evaluator outputs UNSAT (falsely detecting a contradiction) or UNKNOWN (failing to evaluate the complete chain under static origin). The evaluator must correctly recognize the subset relationship and return SAT."
+}

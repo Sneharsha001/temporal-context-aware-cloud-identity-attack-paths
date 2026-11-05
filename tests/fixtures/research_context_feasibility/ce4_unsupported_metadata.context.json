@@ -1,0 +1,50 @@
+{
+  "fixture_id": "CE4",
+  "name": "Unsupported Operator Fallback",
+  "research_question": "Does the CSP evaluator return UNKNOWN (never UNSAT) when a hop contains an unsupported operator or vendor-specific key?",
+  "scenario_file": "ce4_unsupported_metadata.scenario.json",
+  "path_under_evaluation": [
+    {
+      "hop": 1,
+      "edge_type": "sts:AssumeRole",
+      "src": {"provider": "aws", "node_type": "IAMUser", "provider_id": "AttackerOrigin", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "JumpRole", "region": "us-east-1"}
+    }
+  ],
+  "context_variables": [
+    {
+      "key": "vendor:ProprietaryBiometricToken",
+      "scope": "request",
+      "persistence_model": "transient",
+      "data_type": "opaque_string"
+    }
+  ],
+  "edge_context_specifications": [
+    {
+      "hop": 1,
+      "required_context": [
+        {
+          "key": "vendor:ProprietaryBiometricToken",
+          "operator": "UnsupportedFuzzyMatch",
+          "values": ["biometric_sample_123"],
+          "scope": "request"
+        }
+      ],
+      "produced_context": [
+        {
+          "key": "active_principal",
+          "operation": "SET",
+          "value": "arn:aws:iam::123456789012:role/JumpRole"
+        }
+      ]
+    }
+  ],
+  "transition_constraints": [],
+  "complete_constraint_system": "vendor:ProprietaryBiometricToken(hop1) using UnsupportedFuzzyMatch with value biometric_sample_123",
+  "expected_csp_outcome": "UNKNOWN",
+  "witness": null,
+  "expected_feasibility_multiplier": null,
+  "expected_path_score_effect": "UNCHANGED",
+  "formal_rationale": "This fixture tests the evaluator's fallback behavior when encountering an unsupported operator (UnsupportedFuzzyMatch) on a vendor-specific key (vendor:ProprietaryBiometricToken). Per the CCPF contract section 3.1, unsupported operators must yield UNKNOWN, never UNSAT. The evaluator must not treat the unsupported constraint as a contradiction. The unknown_rationale must reference the unsupported key or operator.",
+  "falsification_criteria": "The feasibility hypothesis is falsified if the evaluator outputs UNSAT (treating unsupported operator as contradiction) or SAT (incorrectly assuming the constraint is satisfied). The evaluator must return UNKNOWN with a non-empty unknown_rationale that references the unsupported key or operator."
+}

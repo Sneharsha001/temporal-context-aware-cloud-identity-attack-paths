@@ -1,0 +1,92 @@
+{
+  "scenario_id": "primary_realistic_scenario",
+  "name": "Primary Realistic Cross-Account Attack Path",
+  "description": "A realistic cross-account attack scenario where an attacker in one AWS account assumes roles through a chain to access a sensitive resource in another account. Tests the evaluator's ability to handle cross-account trust relationships, external ID conditions, and session policies.",
+  "research_context": "Validates cross-account role chaining with external ID, session policy restrictions, and source IP constraints. Based on real AWS privilege escalation patterns.",
+  "paths": [
+    {
+      "path_id": "cross_account_chain",
+      "hops": [
+        {
+          "hop": 1,
+          "edge_type": "sts:AssumeRole",
+          "src": {"provider": "aws", "node_type": "IAMUser", "provider_id": "AttackerOrigin", "account": "111111111111", "region": "us-east-1"},
+          "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "JumpRole", "account": "222222222222", "region": "us-east-1"}
+        },
+        {
+          "hop": 2,
+          "edge_type": "sts:AssumeRole",
+          "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "JumpRole", "account": "222222222222", "region": "us-east-1"},
+          "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "TargetRole", "account": "333333333333", "region": "us-east-1"}
+        },
+        {
+          "hop": 3,
+          "edge_type": "s3:GetObject",
+          "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "TargetRole", "account": "333333333333", "region": "us-east-1"},
+          "dst": {"provider": "aws", "node_type": "S3Bucket", "provider_id": "ConfidentialData", "account": "333333333333", "region": "us-east-1"}
+        }
+      ],
+      "context_variables": [
+        {
+          "key": "aws:SourceIp",
+          "scope": "request",
+          "persistence_model": "persistent_under_static_origin_assumption",
+          "data_type": "ipv4_cidr"
+        },
+        {
+          "key": "sts:ExternalId",
+          "scope": "request",
+          "persistence_model": "transient",
+          "data_type": "string"
+        },
+        {
+          "key": "aws:MultiFactorAuthPresent",
+          "scope": "session",
+          "persistence_model": "reset_on_role_assumption_unless_propagated",
+          "data_type": "boolean"
+        }
+      ],
+      "edge_context_specifications": [
+        {
+          "hop": 1,
+          "required_context": [
+            {"key": "aws:SourceIp", "operator": "IpAddress", "values": ["203.0.113.0/24"], "scope": "request"},
+            {"key": "sts:ExternalId", "operator": "StringEquals", "values": ["extid-12345"], "scope": "request"},
+            {"key": "aws:MultiFactorAuthPresent", "operator": "Bool", "values": ["true"], "scope": "session"}
+          ],
+          "produced_context": [
+            {"key": "active_principal", "operation": "SET", "value": "arn:aws:iam::222222222222:role/JumpRole"},
+            {"key": "aws:MultiFactorAuthPresent", "operation": "SET", "value": "true"}
+          ]
+        },
+        {
+          "hop": 2,
+          "required_context": [
+            {"key": "aws:SourceIp", "operator": "IpAddress", "values": ["203.0.113.0/24"], "scope": "request"},
+            {"key": "sts:ExternalId", "operator": "StringEquals", "values": ["extid-67890"], "scope": "request"},
+            {"key": "aws:MultiFactorAuthPresent", "operator": "Bool", "values": ["true"], "scope": "session"}
+          ],
+          "produced_context": [
+            {"key": "active_principal", "operation": "SET", "value": "arn:aws:iam::333333333333:role/TargetRole"}
+          ]
+        },
+        {
+          "hop": 3,
+          "required_context": [
+            {"key": "aws:SourceIp", "operator": "IpAddress", "values": ["203.0.113.0/24"], "scope": "request"}
+          ],
+          "produced_context": []
+        }
+      ],
+      "transition_constraints": [
+        {"from_hop": 1, "to_hop": 2, "variable": "aws:SourceIp", "relation": "EQUAL", "formula": "SourceIp(hop1) == SourceIp(hop2)", "rationale": "Static origin"},
+        {"from_hop": 1, "to_hop": 2, "variable": "aws:MultiFactorAuthPresent", "relation": "IDENTITY_DERIVATION", "formula": "MFA(hop2) == MFA(hop1)", "rationale": "Session MFA carries across AssumeRole"},
+        {"from_hop": 2, "to_hop": 3, "variable": "aws:SourceIp", "relation": "EQUAL", "formula": "SourceIp(hop2) == SourceIp(hop3)", "rationale": "Static origin"}
+      ]
+    }
+  ],
+  "expected_outcome": {
+    "cross_account_chain": "SAT",
+    "rationale": "Compatible CIDRs (same 203.0.113.0/24 across all hops), consistent MFA=true propagation, and different but valid ExternalIds per hop. The cross-account trust relationships are properly configured."
+  }
+}

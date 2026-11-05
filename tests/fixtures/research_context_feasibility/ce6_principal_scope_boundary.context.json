@@ -1,0 +1,82 @@
+{
+  "fixture_id": "CE6",
+  "name": "Principal Scope Reset Clash",
+  "research_question": "Does the CSP evaluator return UNSAT when a principal tag (Department) clashes across an AssumeRole boundary due to scope reset and trust policy prohibition on session tag pass-through?",
+  "scenario_file": "ce6_principal_scope_boundary.scenario.json",
+  "path_under_evaluation": [
+    {
+      "hop": 1,
+      "edge_type": "sts:AssumeRole",
+      "src": {"provider": "aws", "node_type": "IAMUser", "provider_id": "DevUser", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "AppDevRole", "region": "us-east-1"}
+    },
+    {
+      "hop": 2,
+      "edge_type": "secretsmanager:GetSecretValue",
+      "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "AppDevRole", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "SecretsManagerSecret", "provider_id": "ProductionMasterKey", "region": "us-east-1"}
+    }
+  ],
+  "context_variables": [
+    {
+      "key": "aws:PrincipalTag/Department",
+      "scope": "principal",
+      "persistence_model": "reset_on_role_assumption_unless_propagated",
+      "data_type": "string"
+    }
+  ],
+  "edge_context_specifications": [
+    {
+      "hop": 1,
+      "required_context": [
+        {
+          "key": "aws:PrincipalTag/Department",
+          "operator": "StringEquals",
+          "values": ["ApplicationDevelopment"],
+          "scope": "principal"
+        }
+      ],
+      "produced_context": [
+        {
+          "key": "active_principal",
+          "operation": "SET",
+          "value": "arn:aws:iam::123456789012:role/AppDevRole"
+        },
+        {
+          "key": "aws:PrincipalTag/Department",
+          "operation": "SET",
+          "value": "ApplicationDevelopment"
+        }
+      ]
+    },
+    {
+      "hop": 2,
+      "required_context": [
+        {
+          "key": "aws:PrincipalTag/Department",
+          "operator": "StringEquals",
+          "values": ["SecurityOperations"],
+          "scope": "principal"
+        }
+      ],
+      "produced_context": []
+    }
+  ],
+  "transition_constraints": [
+    {
+      "from_hop": 1,
+      "to_hop": 2,
+      "variable": "aws:PrincipalTag/Department",
+      "relation": "IDENTITY_DERIVATION",
+      "formula": "Department(hop2) == ProducedContext(hop1)[Department]",
+      "rationale": "Principal tag Department derives from target role's static tag per trust policy Null(RequestTag/Department)==true"
+    }
+  ],
+  "complete_constraint_system": "(Department(hop1) == 'ApplicationDevelopment') AND (Department(hop2) == 'SecurityOperations') AND (Department(hop2) == ProducedContext(hop1)[Department] == 'ApplicationDevelopment')",
+  "expected_csp_outcome": "UNSAT",
+  "witness": null,
+  "expected_feasibility_multiplier": 0.0,
+  "expected_path_score_effect": "ELIMINATED",
+  "formal_rationale": "This fixture tests the principal scope reset behavior where the trust policy forbids session tag pass-through (Null(aws:RequestTag/Department)==true). The caller requires Department=ApplicationDevelopment, but the target role (AppDevRole) has a static Department tag of ApplicationDevelopment. The AssumeRole transition resets the caller's principal tags and establishes the target role's static tag (ApplicationDevelopment). The IDENTITY_DERIVATION transition derives the Department tag for hop2 from the produced context of hop1 (ApplicationDevelopment). However, hop2 requires Department=SecurityOperations. The derived tag ApplicationDevelopment clashes with the required SecurityOperations, creating a contradiction. The evaluator must return UNSAT with a contradiction_rationale referencing the Department principal tag and the clashing values ApplicationDevelopment vs SecurityOperations.",
+  "falsification_criteria": "The feasibility hypothesis is falsified if the evaluator outputs SAT (ignoring the principal tag clash) or UNKNOWN (failing to evaluate the string equality constraint). The evaluator must return UNSAT with a contradiction_rationale that mentions 'Department' or 'PrincipalTag' and the clashing values 'ApplicationDevelopment' and 'SecurityOperations'."
+}

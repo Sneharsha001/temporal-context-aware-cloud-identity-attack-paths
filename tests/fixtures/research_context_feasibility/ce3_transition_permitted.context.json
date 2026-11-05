@@ -1,0 +1,82 @@
+{
+  "fixture_id": "CE3",
+  "name": "Context-Changing Transition Permitted",
+  "research_question": "Does the CSP evaluator return SAT when a pivot transition (AssumeRole) rebinds the IP address to a new CIDR that is disjoint from the previous hop's CIDR, but compatible with the new hop's CIDR?",
+  "scenario_file": "ce3_transition_permitted.scenario.json",
+  "path_under_evaluation": [
+    {
+      "hop": 1,
+      "edge_type": "sts:AssumeRole",
+      "src": {"provider": "aws", "node_type": "IAMUser", "provider_id": "AttackerOrigin", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "PivotRole", "region": "us-east-1"}
+    },
+    {
+      "hop": 2,
+      "edge_type": "sts:AssumeRole",
+      "src": {"provider": "aws", "node_type": "IAMRole", "provider_id": "PivotRole", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "TargetRole", "region": "us-east-1"}
+    }
+  ],
+  "context_variables": [
+    {
+      "key": "aws:SourceIp",
+      "scope": "request",
+      "persistence_model": "persistent_under_static_origin_assumption",
+      "data_type": "ipv4_cidr"
+    }
+  ],
+  "edge_context_specifications": [
+    {
+      "hop": 1,
+      "required_context": [
+        {
+          "key": "aws:SourceIp",
+          "operator": "IpAddress",
+          "values": ["198.51.100.0/24"],
+          "scope": "request"
+        }
+      ],
+      "produced_context": [
+        {
+          "key": "active_principal",
+          "operation": "SET",
+          "value": "arn:aws:iam::123456789012:role/PivotRole"
+        },
+        {
+          "key": "network_execution_origin",
+          "operation": "SET",
+          "value": "10.0.1.100"
+        }
+      ]
+    },
+    {
+      "hop": 2,
+      "required_context": [
+        {
+          "key": "aws:SourceIp",
+          "operator": "IpAddress",
+          "values": ["10.0.0.0/8"],
+          "scope": "request"
+        }
+      ],
+      "produced_context": []
+    }
+  ],
+  "transition_constraints": [
+    {
+      "from_hop": 1,
+      "to_hop": 2,
+      "variable": "aws:SourceIp",
+      "relation": "PIVOT_TRANSITION",
+      "formula": "SourceIp(hop2) == Produced(hop1)[network_execution_origin]",
+      "rationale": "Network pivot: traversing hop 1 re-binds execution origin to internal bastion VPC IP 10.0.1.100"
+    }
+  ],
+  "complete_constraint_system": "(SourceIp(hop1) in 198.51.100.0/24) AND (SourceIp(hop2) in 10.0.0.0/8) AND (SourceIp(hop2) == Produced(hop1)[network_execution_origin])",
+  "expected_csp_outcome": "SAT",
+  "witness": {"hop_1_SourceIp": "198.51.100.50", "hop_2_SourceIp": "10.0.1.100"},
+  "expected_feasibility_multiplier": 1.0,
+  "expected_path_score_effect": "UNCHANGED",
+  "formal_rationale": "This fixture tests the pivot transition behavior where the PIVOT_TRANSITION constraint rebinds the request-scoped SourceIp to the internal bastion VPC IP (10.0.1.100) produced by hop 1. The attacker's external origin (198.51.100.0/24) remains fixed under static origin assumption, but the pivot transition re-binds the internal execution origin to the target host's IP (10.0.1.100), which falls within the allowed CIDR 10.0.0.0/8 for hop 2. The evaluator must return SAT with distinct witness IPs per hop.",
+  "falsification_criteria": "The feasibility hypothesis is falsified if the evaluator outputs UNSAT (falsely detecting a contradiction due to disjoint CIDRs 198.51.100.0/24 and 10.0.0.0/8) or fails to provide distinct witness IPs per hop. The evaluator must recognize that the pivot transition allows re-binding to a new CIDR under the static-origin model."
+}

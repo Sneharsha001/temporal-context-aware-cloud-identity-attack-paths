@@ -1,0 +1,36 @@
+{
+  "fixture_id": "CE5",
+  "name": "Baseline Fixture Isolated Fallback",
+  "research_question": "Does the CSP evaluator return UNKNOWN with 'NO_CONTEXT_CONSTRAINTS_DEFINED' when a hop has no context constraints?",
+  "scenario_file": "ce5_baseline_compatibility.scenario.json",
+  "path_under_evaluation": [
+    {
+      "hop": 1,
+      "edge_type": "sts:AssumeRole",
+      "src": {"provider": "aws", "node_type": "IAMUser", "provider_id": "AttackerOrigin", "region": "us-east-1"},
+      "dst": {"provider": "aws", "node_type": "IAMRole", "provider_id": "JumpRole", "region": "us-east-1"}
+    }
+  ],
+  "context_variables": [],
+  "edge_context_specifications": [
+    {
+      "hop": 1,
+      "required_context": [],
+      "produced_context": [
+        {
+          "key": "active_principal",
+          "operation": "SET",
+          "value": "arn:aws:iam::123456789012:role/JumpRole"
+        }
+      ]
+    }
+  ],
+  "transition_constraints": [],
+  "complete_constraint_system": "No context constraints defined for any hop",
+  "expected_csp_outcome": "UNKNOWN",
+  "witness": null,
+  "expected_feasibility_multiplier": null,
+  "expected_path_score_effect": "UNCHANGED",
+  "formal_rationale": "This fixture tests the evaluator's behavior when a hop has no required context constraints. Per the CCPF contract, when no context constraints are defined, the evaluator must return UNKNOWN with unknown_rationale = 'NO_CONTEXT_CONSTRAINTS_DEFINED'. The evaluator must not treat the absence of constraints as SAT (which would imply all paths are feasible) or UNSAT (which would imply a contradiction). The baseline fixtures (diamond_scenario.json, primary_realistic_scenario.json) must remain unmodified and accessible.",
+  "falsification_criteria": "The feasibility hypothesis is falsified if the evaluator outputs SAT (incorrectly assuming no constraints means feasible) or UNSAT (treating empty constraints as contradiction). The evaluator must return UNKNOWN with exact unknown_rationale 'NO_CONTEXT_CONSTRAINTS_DEFINED'."
+}
