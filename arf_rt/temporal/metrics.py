@@ -122,3 +122,118 @@ class TemporalMetrics:
             f"unknown={self.unknown_count}, "
             f"elim_rate={self.elimination_rate:.1%})"
         )
+
+
+def percentile(data: dict[int, int], p: float) -> float:
+    """Calculate percentile from histogram data.
+
+    Args:
+        data: Histogram mapping value -> count.
+        p: Percentile (0-100).
+
+    Returns:
+        Value at the given percentile.
+    """
+    if not data:
+        return 0.0
+
+    items = sorted(data.items())
+    total = sum(count for _, count in items)
+    target = total * p / 100.0
+
+    cumulative = 0
+    for value, count in items:
+        cumulative += count
+        if cumulative >= target:
+            return float(value)
+
+    return float(items[-1][0])
+
+
+@dataclass
+class TemporalMetricsExtended(TemporalMetrics):
+    """Extended temporal metrics with additional statistical measures."""
+
+    # Latency tracking (milliseconds)
+    evaluation_latencies: list[float] = field(default_factory=list)
+
+    def record_latency(self, latency_ms: float) -> None:
+        """Record evaluation latency in milliseconds."""
+        self.evaluation_latencies.append(latency_ms)
+
+    @property
+    def median_path_length(self) -> float:
+        """Return the median path length."""
+        return percentile(self.path_length_histogram, 50)
+
+    @property
+    def p95_path_length(self) -> float:
+        """Return the 95th percentile path length."""
+        return percentile(self.path_length_histogram, 95)
+
+    @property
+    def p99_path_length(self) -> float:
+        """Return the 99th percentile path length."""
+        return percentile(self.path_length_histogram, 99)
+
+    @property
+    def std_path_length(self) -> float:
+        """Return the standard deviation of path lengths."""
+        if self.total_paths <= 1:
+            return 0.0
+
+        mean_len = self.mean_path_length()
+        variance = sum(
+            count * (length - mean_len) ** 2
+            for length, count in self.path_length_histogram.items()
+        ) / self.total_paths
+
+        import math
+        return math.sqrt(variance)
+
+    @property
+    def mean_latency_ms(self) -> float:
+        """Return mean evaluation latency in milliseconds."""
+        if not self.evaluation_latencies:
+            return 0.0
+        return sum(self.evaluation_latencies) / len(self.evaluation_latencies)
+
+    @property
+    def median_latency_ms(self) -> float:
+        """Return median evaluation latency in milliseconds."""
+        if not self.evaluation_latencies:
+            return 0.0
+        sorted_lat = sorted(self.evaluation_latencies)
+        n = len(sorted_lat)
+        if n % 2 == 0:
+            return (sorted_lat[n // 2 - 1] + sorted_lat[n // 2]) / 2
+        return sorted_lat[n // 2]
+
+    @property
+    def p95_latency_ms(self) -> float:
+        """Return 95th percentile evaluation latency in milliseconds."""
+        if not self.evaluation_latencies:
+            return 0.0
+        sorted_lat = sorted(self.evaluation_latencies)
+        idx = int(len(sorted_lat) * 0.95)
+        return sorted_lat[min(idx, len(sorted_lat) - 1)]
+
+    def to_dict(self) -> dict:
+        """Serialize extended metrics to a plain dict (JSON-safe)."""
+        base = super().to_dict()
+        base.update({
+            "median_path_length": round(self.median_path_length, 2),
+            "p95_path_length": round(self.p95_path_length, 2),
+            "p99_path_length": round(self.p99_path_length, 2),
+            "std_path_length": round(self.std_path_length, 2),
+            "mean_latency_ms": round(self.mean_latency_ms, 2),
+            "median_latency_ms": round(self.median_latency_ms, 2),
+            "p95_latency_ms": round(self.p95_latency_ms, 2),
+            "evaluation_count": len(self.evaluation_latencies),
+        })
+        return base
+
+    def reset(self) -> None:
+        """Clear all counters to zero."""
+        super().reset()
+        self.evaluation_latencies.clear()

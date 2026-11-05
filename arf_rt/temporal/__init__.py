@@ -13,7 +13,7 @@ from arf_rt.temporal.verdict import TemporalVerdict, VerdictKind
 from arf_rt.temporal.evaluator import TemporalEvaluator
 from arf_rt.temporal.path_filter import FilterResult, TemporalPathFilter
 from arf_rt.temporal.audit_log import AuditEntry, TemporalAuditLog
-from arf_rt.temporal.metrics import TemporalMetrics
+from arf_rt.temporal.metrics import TemporalMetrics, TemporalMetricsExtended, percentile
 from arf_rt.temporal.summary import TemporalSummaryReporter
 from arf_rt.temporal.timeline import CredentialTimelineBuilder, TimelineEvent
 from arf_rt.temporal.anomaly_classifier import (
@@ -96,6 +96,8 @@ __all__ = [
     "TemporalAuditLog",
     "AuditEntry",
     "TemporalMetrics",
+    "TemporalMetricsExtended",
+    "percentile",
     "TemporalSummaryReporter",
     "CredentialTimelineBuilder",
     "TimelineEvent",
