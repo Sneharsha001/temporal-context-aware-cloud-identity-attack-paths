@@ -83,6 +83,90 @@ ARF-RT features a comprehensive **Temporal Context Subsystem** (`arf_rt/temporal
 
 ---
 
+## Enhanced Utility Modules (v0.9.1)
+
+### `arf_rt.util.datetime_helpers`
+
+Extended temporal operations for precise time-range analysis:
+
+- **`time_range_overlaps()`** — Check if two time ranges intersect
+- **`time_range_contains()`** — Verify if one range fully contains another
+- **`intersect_time_ranges()`** — Compute the intersection of two time ranges
+- **`format_duration_seconds()`** — Human-readable duration formatting (e.g., "1h 30m 45s")
+
+### `arf_rt.util.network`
+
+Comprehensive CIDR and IP address utilities:
+
+- **`network_overlaps()`** — Detect overlapping CIDR blocks
+- **`network_contains()`** — Check if one network contains another
+- **`get_network_bounds()`** — Get first/last IP addresses in a network
+- **`calculate_subnet_split()`** — Split a network into smaller subnets
+- **`format_cidr()`** — Standardize CIDR notation
+- **`is_reserved_ip()`** — Identify loopback, multicast, and reserved addresses
+
+### `arf_rt.util.math_stats`
+
+Extended statistical functions for path analysis:
+
+- **`js_divergence()`** — Jensen-Shannon divergence (symmetric, bounded)
+- **`cosine_similarity()`** — Vector similarity for path comparison
+- **`euclidean_distance()`** — Vector distance for clustering
+- **`mean()` / `variance()` / `standard_deviation()`** — Basic statistics
+
+### `arf_rt.util.text`
+
+Enhanced text processing utilities:
+
+- **`pluralize()`** — Count-aware singular/plural forms
+- **`snake_to_camel()` / `camel_to_snake()`** — Case conversion
+- **`strip_ansi()`** — Remove ANSI escape sequences
+- **`dedent()`** — Remove common leading whitespace
+- **`shorten()`** — Word-boundary-aware truncation
+- **`extract_version()`** — Semantic version extraction
+
+### `arf_rt.util.hashing`
+
+Cryptographic hashing and integrity utilities:
+
+- **`hmac_sha256()`** — HMAC authentication
+- **`hash_chain()`** — Merkle-like hash chaining
+- **`hash_file()`** — File integrity verification
+- **`hash_combine()`** — Order-independent hash combination
+- **`stable_hash()`** — 64-bit integer hashing for hash tables
+
+### `arf_rt.temporal.config` Enhancements
+
+New configuration options for fine-grained control:
+
+- **`max_path_length`** — Maximum hops per attack path (default: 10)
+- **`max_concurrent_sessions`** — Concurrent session limit per principal (default: 5)
+- **`credential_reuse_window_seconds`** — Suspicious reuse detection window (default: 3600s)
+- **`validate()`** — Configuration validation with warnings
+- **`to_dict()` / `from_dict()`** — Serialization support
+- **`balanced()` preset** — Moderate settings alongside existing `strict()` and `permissive()`
+- **`with_overrides()`** — Create modified config copies
+
+### `arf_rt.temporal.evaluator` Enhancements
+
+Enhanced evaluation with statistics and metrics integration:
+
+- **`EvaluationStats`** — Detailed per-evaluation statistics
+- **`enable_stats` parameter** — Optional statistics collection
+- **`evaluate_with_metrics()`** — Integrated metrics collection
+- **`config` / `reference_time` properties** — Access evaluation settings
+
+### `arf_rt.temporal.metrics` Extensions
+
+Extended metrics with percentiles and latency tracking:
+
+- **`TemporalMetricsExtended`** — Enhanced metrics with statistical measures
+- **`percentile()`** — Histogram percentile calculation
+- **Path length percentiles** — Median, p95, p99, standard deviation
+- **Latency tracking** — Mean, median, p95 evaluation latency
+
+---
+
 ## The Problem
 
 Static graph tools find attack paths but ignore policy constraints. This produces false positives — paths that look viable but are blocked by SCPs, trust conditions, or permission boundaries. When multiple edges share the same constraint, their failures are correlated, but naive analysis treats them as independent.
