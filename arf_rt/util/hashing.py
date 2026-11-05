@@ -69,3 +69,81 @@ def short_hash(obj: Any, length: int = 12) -> str:
         Truncated hash string.
     """
     return sha256_digest(canonical_json(obj))[:length]
+
+
+def hmac_sha256(key: Union[str, bytes], data: Union[str, bytes]) -> str:
+    """Compute HMAC-SHA256 digest.
+
+    Args:
+        key: Secret key for HMAC.
+        data: Data to authenticate.
+
+    Returns:
+        Lowercase hexadecimal HMAC digest.
+    """
+    import hmac
+
+    if isinstance(key, str):
+        key = key.encode("utf-8")
+    if isinstance(data, str):
+        data = data.encode("utf-8")
+
+    return hmac.new(key, data, hashlib.sha256).hexdigest()
+
+
+def hash_chain(*items: Any) -> str:
+    """Compute hash of concatenated canonical hashes (Merkle-like).
+
+    Args:
+        *items: Items to hash together.
+
+    Returns:
+        SHA-256 hash of concatenated individual hashes.
+    """
+    hashes = [canonical_hash(item) for item in items]
+    concatenated = "".join(hashes)
+    return sha256_digest(concatenated)
+
+
+def hash_file(path: str, chunk_size: int = 8192) -> str:
+    """Compute SHA-256 hash of a file.
+
+    Args:
+        path: Path to file.
+        chunk_size: Read chunk size in bytes.
+
+    Returns:
+        Lowercase hexadecimal digest.
+    """
+    hasher = hashlib.sha256()
+    with open(path, "rb") as f:
+        while chunk := f.read(chunk_size):
+            hasher.update(chunk)
+    return hasher.hexdigest()
+
+
+def hash_combine(*hashes: str) -> str:
+    """Combine multiple hashes into a single deterministic hash.
+
+    Args:
+        *hashes: Hexadecimal hash strings to combine.
+
+    Returns:
+        Combined SHA-256 hash.
+    """
+    sorted_hashes = sorted(hashes)
+    return sha256_digest("".join(sorted_hashes))
+
+
+def stable_hash(obj: Any) -> int:
+    """Compute a stable 64-bit integer hash for use in hash tables.
+
+    Args:
+        obj: JSON-serializable object.
+
+    Returns:
+        64-bit integer hash value.
+    """
+    # Use SHA-256 and take first 8 bytes as integer
+    digest = sha256_digest(canonical_json(obj))
+    return int(digest[:16], 16)  # First 64 bits

@@ -49,7 +49,17 @@ from arf_rt.util.network import (
     format_cidr,
     is_reserved_ip,
 )
-from arf_rt.util.hashing import canonical_json, sha256_digest, canonical_hash
+from arf_rt.util.hashing import (
+    canonical_json,
+    sha256_digest,
+    canonical_hash,
+    short_hash,
+    hmac_sha256,
+    hash_chain,
+    hash_file,
+    hash_combine,
+    stable_hash,
+)
 from arf_rt.util.datetime_helpers import (
     parse_iso8601,
     format_iso8601,
@@ -108,6 +118,12 @@ __all__ = [
     "canonical_json",
     "sha256_digest",
     "canonical_hash",
+    "short_hash",
+    "hmac_sha256",
+    "hash_chain",
+    "hash_file",
+    "hash_combine",
+    "stable_hash",
     "parse_iso8601",
     "format_iso8601",
     "is_within_temporal_window",
