@@ -20,7 +20,13 @@ Re-exports the most commonly used utilities for convenient import:
     )
 """
 
-from arf_rt.util.retry import retry, RetryError
+from arf_rt.util.retry import (
+    retry,
+    retry_async,
+    RetryError,
+    RetryContext,
+    retry_context,
+)
 from arf_rt.util.text import (
     slugify,
     truncate,
@@ -89,7 +95,10 @@ from arf_rt.util.visualization import export_to_dot, export_to_cytoscape
 
 __all__ = [
     "retry",
+    "retry_async",
     "RetryError",
+    "RetryContext",
+    "retry_context",
     "slugify",
     "truncate",
     "indent_block",
