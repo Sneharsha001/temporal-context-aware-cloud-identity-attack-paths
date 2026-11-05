@@ -10,7 +10,7 @@ evaluation. Import as::
 from arf_rt.temporal.hints import TemporalHint
 from arf_rt.temporal.config import TemporalConfig
 from arf_rt.temporal.verdict import TemporalVerdict, VerdictKind
-from arf_rt.temporal.evaluator import TemporalEvaluator
+from arf_rt.temporal.evaluator import TemporalEvaluator, EvaluationStats
 from arf_rt.temporal.path_filter import FilterResult, TemporalPathFilter
 from arf_rt.temporal.audit_log import AuditEntry, TemporalAuditLog
 from arf_rt.temporal.metrics import TemporalMetrics, TemporalMetricsExtended, percentile
@@ -91,6 +91,7 @@ __all__ = [
     "TemporalVerdict",
     "VerdictKind",
     "TemporalEvaluator",
+    "EvaluationStats",
     "TemporalPathFilter",
     "FilterResult",
     "TemporalAuditLog",
