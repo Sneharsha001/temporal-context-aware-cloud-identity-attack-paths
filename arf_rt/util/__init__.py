@@ -21,7 +21,20 @@ Re-exports the most commonly used utilities for convenient import:
 """
 
 from arf_rt.util.retry import retry, RetryError
-from arf_rt.util.text import slugify, truncate, indent_block
+from arf_rt.util.text import (
+    slugify,
+    truncate,
+    indent_block,
+    wrap_text,
+    join_with_oxford_comma,
+    pluralize,
+    snake_to_camel,
+    camel_to_snake,
+    strip_ansi,
+    dedent,
+    shorten,
+    extract_version,
+)
 from arf_rt.util.structures import flatten_dict, deep_merge
 from arf_rt.util.network import (
     parse_ip,
@@ -70,6 +83,15 @@ __all__ = [
     "slugify",
     "truncate",
     "indent_block",
+    "wrap_text",
+    "join_with_oxford_comma",
+    "pluralize",
+    "snake_to_camel",
+    "camel_to_snake",
+    "strip_ansi",
+    "dedent",
+    "shorten",
+    "extract_version",
     "flatten_dict",
     "deep_merge",
     "parse_ip",

@@ -136,3 +136,126 @@ def join_with_oxford_comma(items: Sequence[str], conjunction: str = "and") -> st
     if len(items) == 2:
         return f"{items[0]} {conjunction} {items[1]}"
     return ", ".join(items[:-1]) + f", {conjunction} {items[-1]}"
+
+
+def pluralize(count: int, singular: str, plural: str | None = None) -> str:
+    """Return singular or plural form based on count.
+
+    Args:
+        count: Number of items.
+        singular: Singular form.
+        plural: Plural form (defaults to singular + 's').
+
+    Returns:
+        Appropriate form for the count.
+
+    Examples:
+        >>> pluralize(1, "item")
+        '1 item'
+        >>> pluralize(3, "item")
+        '3 items'
+        >>> pluralize(0, "child", "children")
+        '0 children'
+    """
+    if plural is None:
+        plural = singular + "s"
+    return f"{count} {singular if count == 1 else plural}"
+
+
+def snake_to_camel(snake_str: str, capitalize_first: bool = False) -> str:
+    """Convert snake_case to camelCase or PascalCase.
+
+    Args:
+        snake_str: Input string in snake_case.
+        capitalize_first: If True, return PascalCase (default: camelCase).
+
+    Returns:
+        Converted string.
+
+    Examples:
+        >>> snake_to_camel("hello_world")
+        'helloWorld'
+        >>> snake_to_camel("hello_world", capitalize_first=True)
+        'HelloWorld'
+    """
+    parts = snake_str.split("_")
+    if capitalize_first:
+        return "".join(p.capitalize() for p in parts)
+    return parts[0] + "".join(p.capitalize() for p in parts[1:])
+
+
+def camel_to_snake(camel_str: str) -> str:
+    """Convert camelCase or PascalCase to snake_case.
+
+    Args:
+        camel_str: Input string in camelCase or PascalCase.
+
+    Returns:
+        Converted string in snake_case.
+
+    Examples:
+        >>> camel_to_snake("helloWorld")
+        'hello_world'
+        >>> camel_to_snake("HelloWorld")
+        'hello_world'
+    """
+    import re
+    # Insert underscore before capital letters, then lowercase
+    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", camel_str)
+    return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
+
+
+def strip_ansi(text: str) -> str:
+    """Remove ANSI escape sequences from text.
+
+    Args:
+        text: Input string possibly containing ANSI codes.
+
+    Returns:
+        String with ANSI codes removed.
+    """
+    import re
+    ansi_escape = re.compile(r"\x1b\[[0-9;]*m")
+    return ansi_escape.sub("", text)
+
+
+def dedent(text: str) -> str:
+    """Remove common leading whitespace from all lines.
+
+    Args:
+        text: Multi-line string.
+
+    Returns:
+        Dedented string.
+    """
+    import textwrap
+    return textwrap.dedent(text)
+
+
+def shorten(text: str, max_length: int, placeholder: str = "...") -> str:
+    """Shorten text to a maximum length, preserving word boundaries.
+
+    Args:
+        text: Input string.
+        max_length: Maximum length of returned string.
+        placeholder: String to append when truncated.
+
+    Returns:
+        Shortened string.
+    """
+    import textwrap
+    return textwrap.shorten(text, max_length, placeholder=placeholder)
+
+
+def extract_version(text: str) -> str | None:
+    """Extract semantic version from text (e.g., 'v1.2.3' or '1.2.3').
+
+    Args:
+        text: Input string.
+
+    Returns:
+        Version string if found, None otherwise.
+    """
+    import re
+    match = re.search(r"v?(\d+\.\d+\.\d+(?:-[a-zA-Z0-9.-]+)?(?:\+[a-zA-Z0-9.-]+)?)", text)
+    return match.group(1) if match else None
