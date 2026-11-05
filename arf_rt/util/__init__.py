@@ -49,7 +49,17 @@ from arf_rt.util.datetime_helpers import (
 )
 from arf_rt.util.config_loader import load_profile, RuntimeProfile
 from arf_rt.util.graph_traversal import find_all_simple_paths, detect_cycles
-from arf_rt.util.math_stats import shannon_entropy, normalize_distribution, kl_divergence
+from arf_rt.util.math_stats import (
+    shannon_entropy,
+    normalize_distribution,
+    kl_divergence,
+    js_divergence,
+    cosine_similarity,
+    euclidean_distance,
+    mean,
+    variance,
+    standard_deviation,
+)
 from arf_rt.util.policy_patterns import match_wildcard_pattern, match_any_pattern, sanitize_arn_pattern
 from arf_rt.util.dag import topological_sort, get_ancestors
 from arf_rt.util.visualization import export_to_dot, export_to_cytoscape
@@ -91,6 +101,12 @@ __all__ = [
     "shannon_entropy",
     "normalize_distribution",
     "kl_divergence",
+    "js_divergence",
+    "cosine_similarity",
+    "euclidean_distance",
+    "mean",
+    "variance",
+    "standard_deviation",
     "match_wildcard_pattern",
     "match_any_pattern",
     "sanitize_arn_pattern",
