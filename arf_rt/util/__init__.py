@@ -25,7 +25,16 @@ from arf_rt.util.text import slugify, truncate, indent_block
 from arf_rt.util.structures import flatten_dict, deep_merge
 from arf_rt.util.network import parse_ip, parse_network, is_ip_in_network
 from arf_rt.util.hashing import canonical_json, sha256_digest, canonical_hash
-from arf_rt.util.datetime_helpers import parse_iso8601, format_iso8601, is_within_temporal_window
+from arf_rt.util.datetime_helpers import (
+    parse_iso8601,
+    format_iso8601,
+    is_within_temporal_window,
+    parse_duration_seconds,
+    time_range_overlaps,
+    time_range_contains,
+    intersect_time_ranges,
+    format_duration_seconds,
+)
 from arf_rt.util.config_loader import load_profile, RuntimeProfile
 from arf_rt.util.graph_traversal import find_all_simple_paths, detect_cycles
 from arf_rt.util.math_stats import shannon_entropy, normalize_distribution, kl_divergence
@@ -50,6 +59,11 @@ __all__ = [
     "parse_iso8601",
     "format_iso8601",
     "is_within_temporal_window",
+    "parse_duration_seconds",
+    "time_range_overlaps",
+    "time_range_contains",
+    "intersect_time_ranges",
+    "format_duration_seconds",
     "load_profile",
     "RuntimeProfile",
     "find_all_simple_paths",
