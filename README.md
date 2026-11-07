@@ -1592,6 +1592,72 @@ python -m objgraph scripts/analyze.py scenario.json
 
 ---
 
+## Ecosystem & Integrations (v0.9.1)
+
+### Cloud Provider Integrations
+| Provider | Integration | Status |
+|----------|-------------|--------|
+| **AWS** | CloudTrail, IAM, STS, Organizations, Config | ✅ Full |
+| **Azure** | Activity Log, Entra ID, PIM, Resource Graph | ✅ Full |
+| **GCP** | Cloud Audit Logs, IAM, Workload Identity | ⚠️ Partial |
+
+### SIEM & SOAR Platforms
+| Platform | Integration Method | Format |
+|----------|-------------------|--------|
+| **Splunk** | HTTP Event Collector (HEC) | JSON |
+| **Elastic** | Elasticsearch Bulk API | NDJSON |
+| **Sumo Logic** | HTTP Source | JSON |
+| **Microsoft Sentinel** | Log Analytics Data Collector API | JSON |
+| **CrowdStrike** | Falcon API | JSON |
+| **Datadog** | Logs API | JSON |
+
+### Orchestration & Automation
+| Tool | Integration | Use Case |
+|------|-------------|----------|
+| **Terraform** | Provider-agnostic import | Infrastructure as Code |
+| **Ansible** | Module-based remediation | Configuration management |
+| **GitHub Actions** | CI/CD pipeline | Automated testing |
+| **GitLab CI** | Pipeline integration | DevSecOps |
+| **Jenkins** | Pipeline steps | Legacy CI/CD |
+
+### Data Export Formats
+| Format | Library | Use Case |
+|--------|---------|----------|
+| **Graphviz DOT** | `export_to_dot()` | Visualization |
+| **Cytoscape.js** | `export_to_cytoscape()` | Interactive UI |
+| **Mermaid.js** | `export_to_mermaid()` | Documentation |
+| **Gephi GEXF** | `export_to_gephi()` | Network analysis |
+| **GraphML** | `export_to_graphml()` | Graph tools |
+| **CSV/NDJSON** | `TemporalExporter` | SIEM ingestion |
+
+### Python Ecosystem
+```python
+# Direct library usage
+from arf_rt import analyze, plan, episode, whatif
+from arf_rt.adapters import build_and_save
+from arf_rt.temporal import TemporalEvaluator, TemporalConfig
+from arf_rt.util import (retry, retry_async, RetryContext, 
+    canonical_json, sha256_digest, network_overlaps, 
+    js_divergence, cosine_similarity, softmax, logsumexp)
+```
+
+### Container Deployment
+```dockerfile
+# Multi-stage build for minimal image
+FROM python:3.11-slim as builder
+COPY . /app
+RUN pip install -e "/app[dev]" --no-cache-dir
+
+FROM python:3.11-slim
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /app /app
+WORKDIR /app
+USER 1000:1000
+ENTRYPOINT ["arf-rt"]
+```
+
+---
+
 ## Architecture Decision Records (ADRs)
 
 | ADR | Title | Status | Date |
