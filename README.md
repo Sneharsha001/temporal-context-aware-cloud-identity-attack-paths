@@ -807,6 +807,226 @@ ARF_SQL_DEBUG=1 arf-rt analyze scenario.json
 
 ---
 
+## Temporal Evaluator API Reference (v0.9.1)
+
+### TemporalConfig
+```python
+@dataclass
+class TemporalConfig:
+    min_hop_delta_seconds: float = 0.5          # TC-3 minimum velocity threshold
+    stale_credential_days: int = 90              # TC-4 staleness threshold
+    session_expiry_grace_seconds: float = 30.0   # TC-2 clock skew tolerance
+    unknown_passthrough: bool = True             # Allow UNKNOWN to pass
+    enabled_constraints: frozenset[str] = {...}  # Active constraints
+    max_path_length: int = 10                    # Max hops per path
+    max_concurrent_sessions: int = 5             # TC-5 concurrent limit
+    credential_reuse_window_seconds: float = 3600.0  # Reuse detection window
+
+    # Presets
+    @classmethod
+    def strict(cls) -> "TemporalConfig"
+    @classmethod
+    def permissive(cls) -> "TemporalConfig"
+    @classmethod
+    def balanced(cls) -> "TemporalConfig"
+
+    # Validation & Serialization
+    def validate(self) -> List[str]
+    def to_dict(self) -> Dict
+    @classmethod
+    def from_dict(cls, data: Dict) -> "TemporalConfig"
+    def with_overrides(self, **kwargs) -> "TemporalConfig"
+```
+
+### TemporalEvaluator
+```python
+class TemporalEvaluator:
+    def __init__(
+        self,
+        config: TemporalConfig | None = None,
+        reference_time: datetime | None = None,
+        enable_stats: bool = False,
+    )
+
+    # Properties
+    @property
+    def config(self) -> TemporalConfig
+    @property
+    def reference_time(self) -> datetime
+    @property
+    def stats(self) -> EvaluationStats | None
+
+    # Evaluation
+    def evaluate(
+        self,
+        path_edge_ids: List[str],
+        hints: Dict[str, TemporalHint],
+    ) -> TemporalVerdict
+
+    def evaluate_with_metrics(
+        self,
+        path_edge_ids: List[str],
+        hints: Dict[str, TemporalHint],
+        metrics: TemporalMetrics | None = None,
+    ) -> TemporalVerdict
+```
+
+### TemporalHint
+```python
+@dataclass(frozen=True)
+class TemporalHint:
+    edge_id: str
+    earliest_observed: datetime | None
+    latest_observed: datetime | None
+    credential_issued: datetime | None
+    credential_expiry: datetime | None
+    last_used: datetime | None
+
+    def days_since_last_use(self, reference: datetime) -> float | None
+```
+
+### TemporalVerdict
+```python
+@dataclass(frozen=True)
+class TemporalVerdict:
+    kind: VerdictKind          # FEASIBLE / INFEASIBLE / UNKNOWN
+    violated_constraint: str | None
+    reason: str | None
+    missing_data_constraints: frozenset[str]
+
+    @classmethod
+    def feasible(cls) -> "TemporalVerdict"
+    @classmethod
+    def infeasible(cls, constraint_id: str, reason: str) -> "TemporalVerdict"
+    @classmethod
+    def unknown(cls, missing: frozenset[str]) -> "TemporalVerdict"
+
+    def is_feasible(self) -> bool
+    def is_infeasible(self) -> bool
+    def is_unknown(self) -> bool
+```
+
+### TemporalMetrics & TemporalMetricsExtended
+```python
+@dataclass
+class TemporalMetrics:
+    feasible_count: int
+    infeasible_count: int
+    unknown_count: int
+    total_paths: int
+    constraint_violations: Counter
+    path_length_histogram: Counter
+
+    def record_feasible(self, path_length: int) -> None
+    def record_infeasible(self, constraint_id: str, path_length: int) -> None
+    def record_unknown(self, path_length: int) -> None
+
+    @property
+    def elimination_rate(self) -> float
+    @property
+    def unknown_rate(self) -> float
+    @property
+    def top_violated_constraint(self) -> str | None
+    def mean_path_length(self) -> float
+    def to_dict(self) -> Dict
+
+@dataclass
+class TemporalMetricsExtended(TemporalMetrics):
+    evaluation_latencies: List[float]
+
+    def record_latency(self, latency_ms: float) -> None
+
+    @property
+    def median_path_length(self) -> float
+    @property
+    def p95_path_length(self) -> float
+    @property
+    def p99_path_length(self) -> float
+    @property
+    def std_path_length(self) -> float
+    @property
+    def mean_latency_ms(self) -> float
+    @property
+    def median_latency_ms(self) -> float
+    @property
+    def p95_latency_ms(self) -> float
+    def to_dict(self) -> Dict
+```
+
+### EvaluationStats
+```python
+@dataclass
+class EvaluationStats:
+    constraints_evaluated: int = 0
+    constraints_passed: int = 0
+    constraints_failed: int = 0
+    constraints_unknown: int = 0
+    evaluation_time_ms: float = 0.0
+    path_length: int = 0
+    missing_constraints: Set[str] = field(default_factory=set)
+
+    def to_dict(self) -> Dict
+```
+
+---
+
+## Formal Verification Artifacts (v0.9.1)
+
+### O1–O8 Property Proofs
+| Proof | Description | Status |
+|-------|-------------|--------|
+| O1 | Formal Soundness | ✅ Complete |
+| O2 | Scope Reset | ✅ Complete |
+| O3 | Claim 2 Lemma 2.1 Inductive | ✅ Complete |
+| O3 | Monotonic UNSAT | ✅ Complete |
+| O4 | Score Invariance | ✅ Complete |
+| O5 | Tie-Break | ✅ Complete |
+| O6 | Search Bound Admissibility | ✅ Complete |
+| O7 | Top-K Completeness | ✅ Complete |
+| O8 | Unknown Non-Perturbation | ✅ Complete |
+
+### Validation Artifacts
+- **O1_O8_BASELINE_AUDIT.md** — Baseline property audit
+- **O1_O8_VALIDATION_MATRIX.md** — Cross-property validation matrix
+- **O1_O8_FINAL_VALIDATION_REPORT.md** — Final validation summary
+- **FORMAL_PROOF_AUDIT_REPORT.md** — Independent audit findings
+- **FORMAL_PROOF_COMPLETION_PLAN.md** — Proof completion roadmap
+- **FORMAL_VALIDATION_EXECUTION_PLAN.md** — Execution timeline
+- **FORMAL_VALIDATION_NEXT_STEPS.md** — Next verification steps
+
+### Semantic Validation (CE1–CE6)
+| Counterexample | Description | Tests |
+|----------------|-------------|-------|
+| CE1 | Compatible Persistent Context | 5 |
+| CE2 | Contradictory Persistent Context | 7 |
+| CE3 | Transition Permitted | 5 |
+| CE4 | Unsupported Metadata | 5 |
+| CE5 | Baseline Compatibility | 5 |
+| CE6 | Principal Scope Boundary | 5 |
+
+### Research Test Suite
+- **128 total tests** (46 acceptance + 82 semantic/counterexample)
+- **All passing** — 128/128
+- **Stage E** — 22 new counterexample regression tests
+- **Independent re-review** — Ready for evaluation
+
+### Reproduction Commands
+```bash
+# Full formal verification
+pytest tests/research/ -v --tb=short
+
+# Specific proof validation
+pytest tests/research/test_rdce_property_based.py -v
+
+# Semantic validation
+pytest tests/research/test_semantic_validation.py -v
+
+# CCPF evaluator acceptance
+pytest tests/research/test_rdce.py -v
+```
+
+---
+
 ## PMapper Import Pipeline
 
 ```
