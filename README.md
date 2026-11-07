@@ -9,7 +9,7 @@ A Bayesian reasoning engine for cloud identity attack path analysis. ARF-RT inge
 
 **SEMANTICS_VERSION:** 1.0.0  
 **Scope:** Replay-only. No live cloud SDK calls.  
-**Last Updated:** 2026-10-28 — v0.9.0: enterprise governance & security documentation suite, Zero Trust architecture (NIST SP 800-207), SOC 2 / ISO 27001 mapping, PCI-DSS v4.0 controls, SIEM/SOAR integration, and Bayesian mathematical formalization.
+**Last Updated:** 2026-11-07 — v0.9.1: enhanced utility modules (13 new), temporal evaluator enhancements, comprehensive test infrastructure, compliance mappings, formal verification artifacts (O1–O8), migration guide, and comprehensive documentation refresh.
 
 ---
 
