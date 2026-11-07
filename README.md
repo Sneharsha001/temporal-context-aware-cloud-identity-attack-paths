@@ -1613,6 +1613,127 @@ ruff check arf_rt/
 
 ---
 
+## Benchmarking Methodology (v0.9.1)
+
+### Experimental Design
+- **Controlled fixtures** — Deterministic scenarios with known ground truth
+- **Baseline policies** — Random, Uncertainty, Centrality, EIG
+- **Metrics** — Entropy reduction rate, prediction calibration, EIG identity
+- **Statistical rigor** — 10+ episodes, 5 steps, fixed seed (1337)
+
+### Benchmark Categories
+
+#### Correctness Benchmarks
+| Test | Description | Pass Criteria |
+|------|-------------|---------------|
+| `test_determinism` | Same input → same canonical_run_hash | Exact match |
+| `test_paper_table_i` | EIG=0.2361, Random=0.0119, Uncertainty=0.0134, Centrality=-0.0033 | 4-decimal match |
+| `test_episode_deny` | H drops 0.3013 → 0.1638 | Exact match |
+| `test_episode_allow` | H jumps 0.3013 → 1.6094 | Exact match |
+| `test_eig_identity` | p·RIG_allow + (1-p)·RIG_deny = EIG | Machine precision |
+
+#### Performance Benchmarks
+```bash
+# Standard suite
+python scripts/benchmark.py --runs 10 --output benchmark.json
+
+# 250k edge stress test
+python scripts/benchmark_250k_runtime.py --runs 3
+
+# Regression detection
+python scripts/compare_benchmarks.py baseline.json candidate.json --threshold 0.05
+```
+
+#### Scaling Validation
+| Graph Size | Nodes | Edges | Analyze | Planner | Memory |
+|------------|-------|-------|---------|---------|--------|
+| 100 | 100 | 500 | <100ms | <500ms | <50MB |
+| 1k | 1k | 5k | <1s | <5s | <200MB |
+| 10k | 10k | 50k | <10s | <60s | <1GB |
+| 100k | 100k | 500k | <60s | <300s | <5GB |
+
+### Statistical Validation
+- **Wilcoxon signed-rank** — EIG vs baselines (p < 0.01)
+- **Effect size** — Cohen's d > 0.8 (large effect)
+- **Confidence intervals** — 95% CI for entropy reduction rates
+- **Reproducibility** — 100% deterministic under fixed seed
+
+### CI Integration
+```yaml
+# .github/workflows/benchmark.yml
+- name: Run Benchmarks
+  run: |
+    python scripts/benchmark.py --runs 5 --output current.json
+    python scripts/compare_benchmarks.py baseline.json current.json --threshold 0.05
+```
+
+---
+
+## Research Artifacts (v0.9.1)
+
+### Reproducible Paper Artifacts
+| Artifact | Location | Description |
+|----------|----------|-------------|
+| Primary Fixture | `tests/fixtures/primary_realistic_scenario.json` | 14 nodes, 16 edges, 2 SCPs |
+| Truth Map | `tests/fixtures/primary_realistic_truth_map.json` | Ground truth for EIG validation |
+| Diamond Fixture | `tests/fixtures/diamond_scenario.json` | 46× correlation collapse |
+| Complex Fixture | `tests/fixtures/complex_scenario.json` | 24 nodes, 33 edges |
+| OIDC Fixture | `tests/fixtures/oidc_scenario.json` | Cross-account federation |
+
+### Formal Verification Artifacts
+| Artifact | Location | Status |
+|----------|----------|--------|
+| O1 Soundness Proof | `docs/O1_FORMAL_SOUNDNESS_PROOF.md` | ✅ |
+| O2 Scope Reset | `docs/O2_SCOPE_RESET_FORMAL_PROOF.md` | ✅ |
+| O3 Lemma 2.1 | `docs/O3_CLAIM2_LEMMA21_INDUCTIVE_PROOF.md` | ✅ |
+| O3 Monotonic UNSAT | `docs/O3_MONOTONIC_UNSAT_FORMAL_PROOF.md` | ✅ |
+| O4 Score Invariance | `docs/O4_SCORE_INVARIANCE_FORMAL_PROOF.md` | ✅ |
+| O5 Tie-Break | `docs/O5_TIE_BREAK_FORMAL_PROOF.md` | ✅ |
+| O6 Search Bound | `docs/O6_SEARCH_BOUND_ADMISSIBILITY_PROOF.md` | ✅ |
+| O7 Top-K Completeness | `docs/O7_TOP_K_COMPLETENESS_PROOF.md` | ✅ |
+| O8 Unknown Non-Perturbation | `docs/O8_UNKNOWN_NON_PERTURBATION_FORMAL_PROOF.md` | ✅ |
+
+### Validation Reports
+| Report | Location |
+|--------|----------|
+| Baseline Audit | `docs/O1_O8_BASELINE_AUDIT.md` |
+| Validation Matrix | `docs/O1_O8_VALIDATION_MATRIX.md` |
+| Final Validation | `docs/O1_O8_FINAL_VALIDATION_REPORT.md` |
+| Independent Audit | `docs/CCPF_INDEPENDENT_REVIEW.md` |
+| Completion Plan | `docs/FORMAL_PROOF_COMPLETION_PLAN.md` |
+| Execution Plan | `docs/FORMAL_VALIDATION_EXECUTION_PLAN.md` |
+| Next Steps | `docs/FORMAL_VALIDATION_NEXT_STEPS.md` |
+
+### Counterexample Fixtures (CE1–CE6)
+| Fixture | Description | File |
+|---------|-------------|------|
+| CE1 | Compatible Persistent Context | `ce1_compatible_persistent.context.json` |
+| CE2 | Contradictory Persistent Context | `ce2_contradictory_persistent.context.json` |
+| CE3 | Transition Permitted | `ce3_transition_permitted.context.json` |
+| CE4 | Unsupported Metadata | `ce4_unsupported_metadata.context.json` |
+| CE5 | Baseline Compatibility | `ce5_baseline_compatibility.context.json` |
+| CE6 | Principal Scope Boundary | `ce6_principal_scope_boundary.context.json` |
+
+### Reproduction Commands
+```bash
+# Full paper reproduction
+python scripts/reproduce_paper.py --output artifacts/reproduction/latest
+
+# CCPF evaluator (128 tests)
+pytest tests/research/ -v --tb=short
+
+# Formal verification
+pytest tests/research/test_rdce_property_based.py -v
+
+# Semantic validation (60 tests)
+pytest tests/research/test_semantic_validation.py -v
+
+# CCPF acceptance (46 tests)
+pytest tests/research/test_rdce.py -v
+```
+
+---
+
 ## Release Process (v0.9.1)
 
 ### Versioning Scheme
