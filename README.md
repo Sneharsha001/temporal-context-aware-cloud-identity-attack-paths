@@ -642,6 +642,171 @@ restored = TemporalConfig.from_dict(config_dict)
 
 ---
 
+## Migration Guide (v0.8 → v0.9)
+
+### Breaking Changes
+- **TemporalConfig** — New required fields: `max_path_length`, `max_concurrent_sessions`, `credential_reuse_window_seconds`
+- **TemporalMetrics** — Extended to `TemporalMetricsExtended` with percentile/latency tracking
+- **TemporalEvaluator** — Added `enable_stats` parameter and `evaluate_with_metrics()` method
+- **Retry** — New `retry_async()`, `RetryContext`, `retry_context()` APIs
+
+### Migration Steps
+```python
+# Old config (v0.8)
+config = TemporalConfig(
+    min_hop_delta_seconds=0.5,
+    stale_credential_days=90,
+)
+
+# New config (v0.9) - use presets or explicit config
+config = TemporalConfig.balanced()  # Recommended
+# OR
+config = TemporalConfig(
+    min_hop_delta_seconds=0.5,
+    stale_credential_days=90,
+    max_path_length=10,           # NEW
+    max_concurrent_sessions=5,    # NEW
+    credential_reuse_window_seconds=3600.0,  # NEW
+)
+
+# Old evaluator
+evaluator = TemporalEvaluator(config=config)
+
+# New evaluator with stats
+evaluator = TemporalEvaluator(config=config, enable_stats=True)
+metrics = TemporalMetricsExtended()
+verdict = evaluator.evaluate_with_metrics(path_edges, hints, metrics)
+```
+
+### Deprecated APIs
+- `TemporalConfig()` without new fields (uses defaults but logs warning)
+- Direct `TemporalMetrics` instantiation (use `TemporalMetricsExtended` for new features)
+
+---
+
+## Performance Tuning (v0.9.1)
+
+### Configuration Optimization
+```python
+# For high-throughput scenarios
+config = TemporalConfig(
+    max_path_length=6,           # Reduce for faster evaluation
+    max_concurrent_sessions=3,   # Limit concurrent session checks
+    credential_reuse_window_seconds=1800.0,  # Shorter window = faster
+)
+
+# For accuracy-critical scenarios
+config = TemporalConfig(
+    max_path_length=15,          # Allow deeper paths
+    max_concurrent_sessions=10,  # More concurrent checks
+    credential_reuse_window_seconds=7200.0,  # Longer window = more thorough
+)
+```
+
+### Batch Processing
+```python
+from arf_rt.temporal import PathFeasibilityBatchRunner
+
+runner = PathFeasibilityBatchRunner(config=config)
+results = runner.run_batch(scenarios, max_workers=4)  # Parallel execution
+```
+
+### Caching & Memoization
+```python
+# Enable result caching for repeated evaluations
+from functools import lru_cache
+
+@lru_cache(maxsize=1024)
+def cached_evaluate(path_tuple, hints_dict):
+    return evaluator.evaluate(list(path_tuple), hints_dict)
+```
+
+### Memory Optimization
+- Use `TemporalConfig.balanced()` for most cases
+- Limit `top_k_paths` in objectives (default: 5)
+- Reduce `max_path_depth` in objectives (default: 6)
+
+---
+
+## Frequently Asked Questions
+
+### General
+
+**Q: What's the difference between `TemporalConfig.strict()` and `TemporalConfig.permissive()`?**
+A: `strict()` fails UNKNOWN paths, uses tighter velocity bounds (1.0s), and enables all constraints. `permissive()` passes UNKNOWN paths, disables velocity/staleness checks, and only enables TC-1/TC-2.
+
+**Q: How do I reproduce paper results exactly?**
+A: Use `--truth-mode scripted --truth-map tests/fixtures/primary_realistic_truth_map.json` with the primary fixture. See `scripts/reproduce_paper.py`.
+
+**Q: Why does my `canonical_run_hash` differ from the paper?**
+A: Serialization details (account IDs, JSON key ordering, timestamps) don't affect quantitative metrics. See Artifact Reconciliation section.
+
+### Temporal Analysis
+
+**Q: What's the difference between `TemporalMetrics` and `TemporalMetricsExtended`?**
+A: `TemporalMetricsExtended` adds percentile calculations (median, p95, p99), standard deviation, and latency tracking (mean, median, p95).
+
+**Q: How do I enable evaluation statistics?**
+A: Pass `enable_stats=True` to `TemporalEvaluator` constructor, then access `evaluator.stats` after evaluation.
+
+**Q: What are the temporal constraint types (TC-1 through TC-5)?**
+A: TC-1: Causal Order, TC-2: Session Validity, TC-3: Minimum Velocity, TC-4: Stale Credential, TC-5: Concurrent Session.
+
+### Utility Modules
+
+**Q: When should I use `js_divergence` vs `kl_divergence`?**
+A: JSD is symmetric and bounded (0 to ln(2)), making it better for comparing distributions. KL is asymmetric and unbounded.
+
+**Q: How do I handle missing temporal data?**
+A: Set `unknown_passthrough=True` (default) to return UNKNOWN instead of INFEASIBLE when data is missing.
+
+**Q: What's the purpose of `hash_chain`?**
+A: Merkle-like hash chaining for tamper-evident audit trails — each hash incorporates the previous hash.
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+**Import errors after upgrade**
+```bash
+pip install -e ".[dev]" --upgrade
+# Or reinstall
+pip uninstall arf-rt && pip install -e ".[dev]"
+```
+
+**YAML config not loading**
+```bash
+pip install pyyaml
+# Then use load_profile_auto() or load_profile_from_yaml()
+```
+
+**Slow temporal evaluation**
+```python
+# Reduce path depth and enable strict mode
+config = TemporalConfig.strict()
+config.max_path_length = 5
+```
+
+**Memory issues with large graphs**
+```python
+# Process in batches
+runner = PathFeasibilityBatchRunner(config=config)
+results = runner.run_batch(scenarios, max_workers=2)
+```
+
+### Debug Mode
+```bash
+# Verbose logging
+ARF_LOG_LEVEL=DEBUG arf-rt analyze scenario.json
+
+# Enable SQL query logging
+ARF_SQL_DEBUG=1 arf-rt analyze scenario.json
+```
+
+---
+
 ## PMapper Import Pipeline
 
 ```
