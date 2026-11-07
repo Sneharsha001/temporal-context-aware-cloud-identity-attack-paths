@@ -2755,3 +2755,121 @@ jira create --summary "Temporal Violation: $CASE_ID" \
 # 5. Execute remediation (with approval)
 echo "Review /tmp/${CASE_ID}_remediation.sh before executing"
 ```
+
+
+---
+
+## Performance Optimization Tips (v0.9.1)
+
+### Configuration Tuning
+```python
+# Fast evaluation (trade accuracy for speed)
+config = TemporalConfig.permissive()
+config.max_path_length = 5
+config.max_concurrent_sessions = 2
+config.credential_reuse_window_seconds = 1800
+
+# Balanced (recommended)
+config = TemporalConfig.balanced()
+
+# Maximum accuracy
+config = TemporalConfig.strict()
+config.max_path_length = 15
+config.max_concurrent_sessions = 10
+```
+
+### Batch Processing Optimization
+```python
+from concurrent.futures import ProcessPoolExecutor
+from arf_rt.temporal import PathFeasibilityBatchRunner
+
+# Optimal worker count = CPU cores - 1
+with ProcessPoolExecutor(max_workers=os.cpu_count() - 1) as executor:
+    # Chunk size: 25-50 scenarios per batch
+    for batch in chunked(scenarios, 50):
+        executor.submit(runner.run_batch, batch)
+```
+
+### Memory Optimization
+```python
+# Disable stats if not needed
+evaluator = TemporalEvaluator(config=config, enable_stats=False)
+
+# Use base TemporalMetrics instead of Extended
+from arf_rt.temporal import TemporalMetrics
+metrics = TemporalMetrics()  # Not TemporalMetricsExtended
+
+# Clear caches periodically
+import gc
+gc.collect()
+```
+
+### Database Optimization
+```python
+# SQLite PRAGMA settings for performance
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;
+PRAGMA cache_size = -32768;  # 32MB cache
+PRAGMA temp_store = MEMORY;
+PRAGMA mmap_size = 268435456;  # 256MB mmap
+```
+
+### Caching Strategies
+```python
+from functools import lru_cache
+
+@lru_cache(maxsize=1024)
+def cached_temporal_eval(path_tuple, hints_frozen):
+    """Cache temporal evaluation results."""
+    return evaluator.evaluate(list(path_tuple), dict(hints_frozen))
+
+# Warm cache with common paths
+common_paths = get_common_attack_paths(scenario)
+for path in common_paths:
+    cached_temporal_eval(tuple(path), frozenset(hints.items()))
+```
+
+### Profiling Commands
+```bash
+# CPU profiling
+python -m cProfile -o profile.stats scripts/analyze.py scenario.json
+python -m pstats profile.stats <<< "sort cumulative
+stats 20"
+
+# Memory profiling
+python -m memory_profiler scripts/analyze.py scenario.json
+mprof run scripts/analyze.py scenario.json
+mprof plot
+
+# Line-by-line profiling
+kernprof -l -v scripts/analyze.py scenario.json
+```
+
+### Query Optimization
+```python
+# Use indexes for temporal queries
+CREATE INDEX IF NOT EXISTS idx_hints_edge_timestamp 
+ON temporal_hints(edge_id, earliest_observed);
+
+CREATE INDEX IF NOT EXISTS idx_hints_credential_expiry 
+ON temporal_hints(credential_expiry);
+
+# Batch inserts for bulk loading
+executemany("INSERT INTO temporal_hints VALUES (?,?,?,?,?,?)", hint_batch)
+```
+
+### Container Resource Limits
+```yaml
+# Kubernetes resource limits
+resources:
+  requests:
+    memory: "2Gi"
+    cpu: "1000m"
+  limits:
+    memory: "4Gi"
+    cpu: "2000m"
+```
+
+---
+
+*Last updated: November 7, 2026 — v0.9.1 documentation refresh*
