@@ -330,11 +330,35 @@ ARF-RT provides a suite of developer utilities in `scripts/`:
 
 ## Quick Start
 
+### Installation
 ```bash
+# Core installation
 pip install -e ".[dev]"
 
-# Run analysis
+# With temporal analysis extras
+pip install -e ".[dev,temporal]"
+
+# For YAML config support
+pip install -e ".[dev,yaml]"
+
+# Verify installation
+arf-rt --version
+python -c "import arf_rt; print(arf_rt.__version__)"
+```
+
+### Quick Analysis
+```bash
+# Run full analysis pipeline
 arf-rt analyze scenario.json --format both
+
+# Recommend next probe via EIG
+arf-rt plan scenario.json --signal-q 5
+
+# Measure realized entropy reduction
+arf-rt episode scenario.json --edge EDGE_ID --outcome allow
+
+# What-if analysis with edge refutation
+arf-rt whatif scenario.json --refute EDGE_ID_1 --refute EDGE_ID_2
 
 # Import from PMapper + AWS Organizations
 python -c "
@@ -349,6 +373,24 @@ build_and_save('pmapper_graph.json', 'scenario.json', org_path='aws_org.json',
         'max_depth': 6, 'k': 5}])
 "
 arf-rt analyze scenario.json --format both
+```
+
+### Temporal Analysis Quick Start
+```bash
+# Audit compliance
+python scripts/audit_temporal_compliance.py scenario.json --frameworks CIS_AWS,NIST_800_53
+
+# Score credentials
+python scripts/score_credentials.py scenario.json --format table --top 10
+
+# Generate remediation
+python scripts/generate_remediation_plan.py scenario.json --format bash -o remediation.sh
+
+# Validate policies
+python scripts/validate_policy_windows.py scenario.json --strict
+
+# Run dashboard
+python scripts/run_temporal_dashboard.py scenario.json
 ```
 
 **→ [Full 5-minute demo walkthrough](docs/quickstart.md)** — import a real AWS graph, probe strategically, watch entropy collapse from 0.56 → 0.10 nats across two probes.
