@@ -1590,6 +1590,210 @@ python -m memory_profiler scripts/benchmark.py
 python -m objgraph scripts/analyze.py scenario.json
 ```
 
+### Reproduction Commands
+```bash
+# Full formal verification
+pytest tests/research/ -v --tb=short
+
+# Specific proof validation
+pytest tests/research/test_rdce_property_based.py -v
+
+# Semantic validation
+pytest tests/research/test_semantic_validation.py -v
+
+# CCPF evaluator acceptance
+pytest tests/research/test_rdce.py -v
+```
+
+---
+
+## Testing Strategies (v0.9.1)
+
+### Test Pyramid
+```
+                    ┌─────────────┐
+                    │   E2E/      │  ← Few: Full pipeline integration
+                    │  Golden     │
+                   ┌┴─────────────┴┐
+                   │  Integration  │  ← Some: Module interactions
+                   │   Tests       │
+                  ┌┴────────────────┴┐
+                  │    Unit Tests    │  ← Many: Isolated function/class tests
+                 ┌┴────────────────────┴┐
+                 │ Property-Based Tests │  ← Many: Invariant verification
+                ┌┴────────────────────────┴┐
+                │   Lint/Static Analysis   │  ← Automated: Style, types, security
+               ┌┴────────────────────────────┴┐
+```
+
+### Test Categories
+
+#### Unit Tests (`tests/unit/`)
+- **Belief model** — Beta-Bernoulli updates, saturation, mass caps
+- **Canonical JSON** — Deterministic serialization, hash consistency
+- **Constraints** — Relevance rules, N/M thresholds, union-find
+- **Correlation** — Component signatures, representative selection
+- **Paths** — Best-first search, p_worst bounds, Top-K
+- **Planner** — EIG computation, candidate pruning
+- **Templates** — Aggregation, template inference
+- **Snapshot** — Obs digest, canonical_run_hash
+
+#### Property-Based Tests (`tests/research/test_rdce_property_based.py`)
+- **Entropy invariants** — H(P) ≥ 0, monotonic under refinement
+- **Divergence bounds** — JSD ∈ [0, ln(2)], KL ≥ 0
+- **Similarity metrics** — Cosine ∈ [-1, 1], Euclidean ≥ 0
+- **Round-trip serialization** — flatten ↔ unflatten, encode ↔ decode
+- **Graph algorithms** — DAG properties, path existence, cycle detection
+
+#### Golden Master Tests (`tests/golden/`)
+- **Determinism** — Same input → same canonical_run_hash
+- **Paper artifacts** — EIG/entropy match camera-ready (4-decimal)
+- **What-if diff** — Control ROI computation accuracy
+- **Cross-episode** — Realized gain measurement
+
+#### Benchmark Tests (`tests/perf/`, `tests/stress/`)
+- **Scaling** — 100/1k/10k/250k edge graphs
+- **Latency** — p50, p95, p99 for analyze/planner
+- **Memory** — Heap growth, object allocation
+
+### Test Execution
+```bash
+# Fast feedback loop (unit only)
+pytest tests/unit/ -q --tb=short
+
+# Full validation (CI pipeline)
+pytest tests/unit tests/golden -q --tb=short
+
+# Property-based (slower, comprehensive)
+pytest tests/research/test_rdce_property_based.py -v
+
+# Research validation
+pytest tests/research/ -v --tb=short
+
+# With coverage
+pytest tests/unit tests/golden --cov=arf_rt --cov-report=term-missing
+
+# Parallel execution
+pytest tests/unit tests/golden -n auto
+
+# Stress/performance
+python scripts/benchmark.py
+python scripts/benchmark_250k_runtime.py
+```
+
+### Test Data Management
+- **Fixtures** — `tests/fixtures/` (scenarios, hints, truth maps)
+- **CE1–CE6** — Counterexample fixtures for semantic validation
+- **Synthetic generators** — `scripts/generate_synthetic_cloudtrail.py`
+- **Schema validation** — `scripts/validate_fixtures.py --strict`
+
+---
+
+## Debugging Guide (v0.9.1)
+
+### Common Debugging Scenarios
+
+#### 1. Unexpected Temporal Verdict
+```python
+# Enable stats to see constraint evaluation
+evaluator = TemporalEvaluator(config=config, enable_stats=True)
+verdict = evaluator.evaluate(path_edges, hints)
+
+print(f"Verdict: {verdict.kind}")
+print(f"Violated: {verdict.violated_constraint}")
+print(f"Reason: {verdict.reason}")
+print(f"Missing: {verdict.missing_data_constraints}")
+print(f"Stats: {evaluator.stats.to_dict()}")
+```
+
+#### 2. Determinism Failure (Hash Mismatch)
+```bash
+# Check canonical JSON serialization
+python -c "
+from arf_rt.util import canonical_json, sha256_digest
+import json
+with open('scenario.json') as f:
+    data = json.load(f)
+print(canonical_json(data)[:200])
+print(sha256_digest(canonical_json(data)))
+"
+```
+
+#### 3. Slow Evaluation
+```python
+# Profile evaluation
+import cProfile, pstats
+profiler = cProfile.Profile()
+profiler.enable()
+
+verdict = evaluator.evaluate(path_edges, hints)
+
+profiler.disable()
+stats = pstats.Stats(profiler).sort_stats('cumulative')
+stats.print_stats(20)
+```
+
+#### 4. Memory Issues
+```bash
+# Track memory usage
+python -m memory_profiler scripts/analyze.py scenario.json
+
+# Object graph analysis
+python -c "
+import objgraph
+from arf_rt import analyze
+analyze('scenario.json')
+print(objgraph.most_common_types(20))
+"
+```
+
+#### 5. Temporal Hint Issues
+```python
+# Inspect hints
+from arf_rt.temporal import ScenarioEnricher
+enricher = ScenarioEnricher()
+hints = enricher.enrich(scenario, cloudtrail_events)
+
+for edge_id, hint in hints.items():
+    print(f"{edge_id}: earliest={hint.earliest_observed}, "
+          f"latest={hint.latest_observed}, "
+          f"issued={hint.credential_issued}, "
+          f"expiry={hint.credential_expiry}, "
+          f"last_used={hint.last_used}")
+```
+
+### Debug Logging
+```bash
+# Structured logging
+ARF_LOG_LEVEL=DEBUG arf-rt analyze scenario.json --format json
+
+# SQL query logging
+ARF_SQL_DEBUG=1 arf-rt analyze scenario.json
+
+# Temporal module debug
+ARF_TEMPORAL_DEBUG=1 python scripts/audit_temporal_compliance.py scenario.json
+```
+
+### IDE Integration
+```json
+// .vscode/launch.json
+{
+  "configurations": [
+    {
+      "name": "Debug Analyze",
+      "type": "python",
+      "request": "launch",
+      "module": "arf_rt.cli",
+      "args": ["analyze", "scenario.json", "--format", "json"],
+      "env": {
+        "ARF_LOG_LEVEL": "DEBUG",
+        "PYTHONPATH": "${workspaceFolder}"
+      }
+    }
+  ]
+}
+```
+
 ---
 
 ## Ecosystem & Integrations (v0.9.1)
