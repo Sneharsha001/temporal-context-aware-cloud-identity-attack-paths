@@ -2547,6 +2547,109 @@ If you use ARF-RT or its temporal extensions in academic work, please cite:
 
 *Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
+---
+
+## Migration Guide: v0.8 → v0.9 (v0.9.1)
+
+### Breaking Changes
+| Component | v0.8 | v0.9/v0.9.1 | Migration |
+|-----------|------|-------------|-----------|
+| `TemporalConfig` | 4 fields | 7 fields + presets | Use `TemporalConfig.balanced()` or add new fields |
+| `TemporalMetrics` | Basic only | Extended available | Migrate to `TemporalMetricsExtended` for percentiles |
+| `TemporalEvaluator` | No stats | `enable_stats` param | Add `enable_stats=True` for stats |
+| `Retry` | Sync only | + async + context | Use `retry_async()` or `RetryContext()` |
+
+### Step-by-Step Migration
+```python
+# 1. Update config
+config = TemporalConfig.balanced()  # Instead of TemporalConfig()
+
+# 2. Enable stats if needed
+evaluator = TemporalEvaluator(config=config, enable_stats=True)
+
+# 3. Use extended metrics
+from arf_rt.temporal import TemporalMetricsExtended
+metrics = TemporalMetricsExtended()
+verdict = evaluator.evaluate_with_metrics(path_edges, hints, metrics)
+
+# 4. Update retry usage
+from arf_rt.util import retry_async, RetryContext, retry_context
+
+# Sync (unchanged)
+@retry(max_attempts=3)
+def sync_op(): ...
+
+# Async (new)
+@retry_async(max_attempts=3)
+async def async_op(): ...
+
+# Context manager (new)
+with RetryContext(max_attempts=3) as ctx:
+    result = ctx.run(sync_op)
+
+# Or async context
+async with RetryContext(max_attempts=3) as ctx:
+    result = await ctx.run_async(async_op)
+```
+
+### Deprecated APIs (Still Working)
+- `TemporalConfig()` without new fields → logs deprecation warning
+- `TemporalMetrics()` without extended → works but no percentiles
+- `TemporalEvaluator()` without `enable_stats` → works but no stats
+
+---
+
+## Future Research Directions (v0.9.1+)
+
+### Near-Term (Q4 2026 – Q1 2027)
+- [ ] **GCP Temporal Coverage** — Workload Identity Federation, service account key expiry
+- [ ] **Azure AD PIM** — Privileged Identity Management temporal attack paths
+- [ ] **Kubernetes RBAC** — Service account token expiry, binding drift
+- [ ] **SaaS Identity** — Okta, Auth0, Ping Identity temporal risks
+
+### Mid-Term (Q2 – Q4 2027)
+- [ ] **ML-Based Anomaly Detection** — Temporal pattern learning from CloudTrail
+- [ ] **Causal Inference** — Attack attribution via temporal causality
+- [ ] **Federated Analysis** — Cross-organizational temporal correlation
+- [ ] **Sigma/YARA-L Export** — Automated detection rule generation
+
+### Long-Term (2028+)
+- [ ] **Quantum-Resistant Temporal Models** — Post-quantum credential lifecycles
+- [ ] **Automated Theorem Proving** — Coq/Lean formalization of O1–O8 proofs
+- [ ] **Real-Time Streaming** — Flink/KSQL integration for live temporal analysis
+- [ ] **Federated Learning** — Privacy-preserving multi-org temporal ML
+
+---
+
+## Acknowledgments (Extended)
+
+### Research Collaborators
+- **Formal Verification** — Independent audit team (O1–O8 proofs)
+- **Semantic Validation** — CE1–CE6 counterexample design
+- **Property-Based Testing** — Hypothesis strategy design for temporal invariants
+
+### Open Source Dependencies
+| Library | Purpose | License |
+|---------|---------|---------|
+| **Ruff** | Linting/formatting | MIT |
+| **Hypothesis** | Property-based testing | MPL-2.0 |
+| **PyYAML** | Configuration parsing | MIT |
+| **Pydantic** | Schema validation | MIT |
+| **SQLite** | Embedded database | Public Domain |
+| **Prometheus Client** | Metrics export | Apache-2.0 |
+| **Mermaid** | Diagram generation | MIT |
+
+### Standards Bodies & Frameworks
+- **NIST** — SP 800-207 (Zero Trust), SP 800-53 (Controls)
+- **CIS** — AWS Foundations Benchmark v1.4/1.5
+- **PCI SSC** — PCI-DSS v4.0 Requirements 7, 8
+- **ISO/IEC** — 27001:2022 Annex A controls
+- **MITRE** — ATT&CK for Cloud matrix
+
+---
+
+*Last updated: November 7, 2026 — v0.9.1 documentation refresh*
+
 
 ---
 
@@ -2869,6 +2972,109 @@ resources:
     memory: "4Gi"
     cpu: "2000m"
 ```
+
+---
+
+*Last updated: November 7, 2026 — v0.9.1 documentation refresh*
+
+---
+
+## Migration Guide: v0.8 → v0.9 (v0.9.1)
+
+### Breaking Changes
+| Component | v0.8 | v0.9/v0.9.1 | Migration |
+|-----------|------|-------------|-----------|
+| `TemporalConfig` | 4 fields | 7 fields + presets | Use `TemporalConfig.balanced()` or add new fields |
+| `TemporalMetrics` | Basic only | Extended available | Migrate to `TemporalMetricsExtended` for percentiles |
+| `TemporalEvaluator` | No stats | `enable_stats` param | Add `enable_stats=True` for stats |
+| `Retry` | Sync only | + async + context | Use `retry_async()` or `RetryContext()` |
+
+### Step-by-Step Migration
+```python
+# 1. Update config
+config = TemporalConfig.balanced()  # Instead of TemporalConfig()
+
+# 2. Enable stats if needed
+evaluator = TemporalEvaluator(config=config, enable_stats=True)
+
+# 3. Use extended metrics
+from arf_rt.temporal import TemporalMetricsExtended
+metrics = TemporalMetricsExtended()
+verdict = evaluator.evaluate_with_metrics(path_edges, hints, metrics)
+
+# 4. Update retry usage
+from arf_rt.util import retry_async, RetryContext, retry_context
+
+# Sync (unchanged)
+@retry(max_attempts=3)
+def sync_op(): ...
+
+# Async (new)
+@retry_async(max_attempts=3)
+async def async_op(): ...
+
+# Context manager (new)
+with RetryContext(max_attempts=3) as ctx:
+    result = ctx.run(sync_op)
+
+# Or async context
+async with RetryContext(max_attempts=3) as ctx:
+    result = await ctx.run_async(async_op)
+```
+
+### Deprecated APIs (Still Working)
+- `TemporalConfig()` without new fields → logs deprecation warning
+- `TemporalMetrics()` without extended → works but no percentiles
+- `TemporalEvaluator()` without `enable_stats` → works but no stats
+
+---
+
+## Future Research Directions (v0.9.1+)
+
+### Near-Term (Q4 2026 – Q1 2027)
+- [ ] **GCP Temporal Coverage** — Workload Identity Federation, service account key expiry
+- [ ] **Azure AD PIM** — Privileged Identity Management temporal attack paths
+- [ ] **Kubernetes RBAC** — Service account token expiry, binding drift
+- [ ] **SaaS Identity** — Okta, Auth0, Ping Identity temporal risks
+
+### Mid-Term (Q2 – Q4 2027)
+- [ ] **ML-Based Anomaly Detection** — Temporal pattern learning from CloudTrail
+- [ ] **Causal Inference** — Attack attribution via temporal causality
+- [ ] **Federated Analysis** — Cross-organizational temporal correlation
+- [ ] **Sigma/YARA-L Export** — Automated detection rule generation
+
+### Long-Term (2028+)
+- [ ] **Quantum-Resistant Temporal Models** — Post-quantum credential lifecycles
+- [ ] **Automated Theorem Proving** — Coq/Lean formalization of O1–O8 proofs
+- [ ] **Real-Time Streaming** — Flink/KSQL integration for live temporal analysis
+- [ ] **Federated Learning** — Privacy-preserving multi-org temporal ML
+
+---
+
+## Acknowledgments (Extended)
+
+### Research Collaborators
+- **Formal Verification** — Independent audit team (O1–O8 proofs)
+- **Semantic Validation** — CE1–CE6 counterexample design
+- **Property-Based Testing** — Hypothesis strategy design for temporal invariants
+
+### Open Source Dependencies
+| Library | Purpose | License |
+|---------|---------|---------|
+| **Ruff** | Linting/formatting | MIT |
+| **Hypothesis** | Property-based testing | MPL-2.0 |
+| **PyYAML** | Configuration parsing | MIT |
+| **Pydantic** | Schema validation | MIT |
+| **SQLite** | Embedded database | Public Domain |
+| **Prometheus Client** | Metrics export | Apache-2.0 |
+| **Mermaid** | Diagram generation | MIT |
+
+### Standards Bodies & Frameworks
+- **NIST** — SP 800-207 (Zero Trust), SP 800-53 (Controls)
+- **CIS** — AWS Foundations Benchmark v1.4/1.5
+- **PCI SSC** — PCI-DSS v4.0 Requirements 7, 8
+- **ISO/IEC** — 27001:2022 Annex A controls
+- **MITRE** — ATT&CK for Cloud matrix
 
 ---
 
