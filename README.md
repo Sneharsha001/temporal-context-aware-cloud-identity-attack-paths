@@ -1503,6 +1503,113 @@ pytest tests/unit tests/golden -q
 - Union-find constraint correlation
 
 
+---
+
+## Security Considerations
+
+### Threat Model
+ARF-RT operates under the following threat model assumptions:
+- **Attacker capabilities**: Valid cloud credentials with limited permissions
+- **Attack surface**: IAM assume-role chains, STS token reuse, cross-account federation
+- **Defense scope**: Replay-only analysis, no live cloud SDK calls
+- **Data sensitivity**: Scenario JSON may contain ARN structures (no secrets)
+
+### Data Handling
+- **No secret storage** — ARF-RT never stores AWS credentials, secrets, or keys
+- **Scenario anonymization** — Use `scripts/validate_fixtures.py --anonymize` for sharing
+- **Audit logging** — All probe executions logged to `call_log` with full context
+- **Replay determinism** — Same input always produces same `canonical_run_hash`
+
+### Secure Development Practices
+```bash
+# Verify supply chain
+pip install -e ".[dev]" --require-hashes
+
+# Scan for vulnerabilities
+bandit -r arf_rt/
+safety check
+
+# Static analysis
+mypy arf_rt/
+ruff check arf_rt/
+```
+
+### Deployment Security
+- **Air-gapped CI/CD** — Use `scripts/reproduce_paper.py` for offline validation
+- **SBOM generation** — `cyclonedx-bom -o sbom.json`
+- **Container hardening** — Non-root user, read-only filesystem
+- **Network policies** — Egress restrictions for temporal analysis pods
+
+---
+
+## Performance Benchmarks (v0.9.1)
+
+### Scaling Characteristics
+| Graph Size | Nodes | Edges | Analyze Time | Planner Time | Memory |
+|------------|-------|-------|--------------|--------------|--------|
+| Small | 50 | 100 | ~50ms | ~200ms | 15 MB |
+| Medium | 500 | 2,000 | ~500ms | ~2s | 80 MB |
+| Large | 5,000 | 25,000 | ~5s | ~30s | 500 MB |
+| XLarge | 25,000 | 125,000 | ~30s | ~300s | 2.5 GB |
+
+### Benchmark Commands
+```bash
+# Standard benchmark suite
+python scripts/benchmark.py
+
+# 250k edge stress test
+python scripts/benchmark_250k_runtime.py
+
+# Regression detection
+python scripts/compare_benchmarks.py baseline.json candidate.json
+
+# Profile specific scenario
+python scripts/profile_scenario.py scenario.json
+```
+
+### Optimization Flags
+```python
+# Fast mode (reduced accuracy)
+config = TemporalConfig.permissive()
+config.max_path_length = 5
+
+# Balanced mode (recommended)
+config = TemporalConfig.balanced()
+
+# Accurate mode (full analysis)
+config = TemporalConfig.strict()
+config.max_path_length = 15
+```
+
+### Memory Profiling
+```bash
+# Memory usage tracking
+python -m memory_profiler scripts/benchmark.py
+
+# Object allocation tracking
+python -m objgraph scripts/analyze.py scenario.json
+```
+
+---
+
+## Architecture Decision Records (ADRs)
+
+| ADR | Title | Status | Date |
+|-----|-------|--------|------|
+| ADR-001 | Q8 Fixed-Point Arithmetic for Determinism | Accepted | 2026-01 |
+| ADR-002 | Union-Find for Constraint Correlation | Accepted | 2026-02 |
+| ADR-003 | Canonical JSON + SHA-256 for Replay Hash | Accepted | 2026-02 |
+| ADR-004 | Beta-Bernoulli Belief Model | Accepted | 2026-03 |
+| ADR-005 | EIG Probe Planning with Null Complement | Accepted | 2026-04 |
+| ADR-006 | Temporal Constraints as First-Class Objects | Accepted | 2026-07 |
+| ADR-007 | CCPF as CSP Layer (Not Bayesian Perturbation) | Accepted | 2026-09 |
+| ADR-008 | Replay-Only Semantics (No Live SDK) | Accepted | 2026-01 |
+| ADR-009 | SQLite WAL Mode with FK=ON | Accepted | 2026-03 |
+| ADR-010 | Structured Audit Logging (JSONL) | Accepted | 2026-08 |
+
+See `docs/adr/` for full decision records.
+
+
 <!-- streak-nov4-1 -->
 ## November 2026 Maintenance Notes
 
