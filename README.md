@@ -1779,3 +1779,82 @@ Major documentation expansion completed on November 7, 2026. All 20+ new utility
 and research infrastructure features documented. Enhanced utility modules section expanded with comprehensive 
 API references for math_stats, structures, dag, graph_traversal, retry, visualization, config_loader, and 
 temporal modules. Added test infrastructure documentation and compliance feature references.
+
+
+---
+
+## Community & Support
+
+### Getting Help
+- **GitHub Issues** — Bug reports, feature requests, questions
+- **GitHub Discussions** — General questions, ideas, show-and-tell
+- **Security Issues** — Email security@ or use GitHub Security Advisories
+
+### Contributing Community
+- **Contributors** — See [Contributors Graph](https://github.com/Sneharsha001/temporal-context-aware-cloud-identity-attack-paths/graphs/contributors)
+- **Code of Conduct** — See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+- **Good First Issues** — Tagged with `good first issue` label
+
+### Related Projects
+- **PMapper** — AWS IAM graph enumeration
+- **BloodHound** — Active Directory attack paths
+- **Cartography** — Infrastructure asset graph
+- **CloudSploit** — Cloud security scanning
+
+---
+
+## Glossary of New Terms (v0.9.1)
+
+| Term | Definition |
+|------|------------|
+| **EvaluationStats** | Per-evaluation statistics tracking constraints evaluated, passed, failed, unknown, and timing |
+| **TemporalMetricsExtended** | Enhanced metrics with percentile calculations (median, p95, p99), standard deviation, and latency tracking |
+| **Jensen-Shannon Divergence** | Symmetric, bounded measure of distribution similarity (0 to ln(2)) |
+| **Cross-Entropy** | Loss function H(P,Q) = -Σ P(x) log Q(x) for ML evaluation |
+| **Mutual Information** | I(X;Y) = Σ P(x,y) log(P(x,y)/(P(x)P(y))) measuring dependency |
+| **Softmax with Temperature** | Probability distribution from logits with controllable sharpness |
+| **LogSumExp** | Numerically stable computation of log(Σ exp(x_i)) |
+| **TemporalConfig Presets** | `strict()`, `permissive()`, `balanced()` factory methods for common configurations |
+| **RetryContext** | Context manager for manual retry control with sync/async support |
+| **Merkle Hash Chain** | Cryptographic hash chaining for tamper-evident audit trails |
+| **ADR** | Architecture Decision Record documenting key technical choices |
+| **SBOM** | Software Bill of Materials for supply chain transparency |
+
+---
+
+## License & Citation
+
+### License
+This project is licensed under the **MIT License** — see [LICENSE](LICENSE) for details.
+
+### Citation
+If you use ARF-RT or its temporal extensions in academic work, please cite:
+
+```bibtex
+@inproceedings{arf-rt-2026,
+  title={ARF-RT: Bayesian Risk Topology for Cloud Identity Attack Path Analysis},
+  author={Sneharsha, S. and Contributors},
+  booktitle={Proceedings of the 2026 IEEE Symposium on Security and Privacy (S&P)},
+  year={2026},
+  organization={IEEE}
+}
+
+@techreport{arf-rt-temporal-2026,
+  title={Temporal Context-Aware Cloud Identity Attack Paths: Formal Verification and Compliance},
+  author={Sneharsha, S. and Contributors},
+  institution={GitHub},
+  year={2026},
+  url={https://github.com/Sneharsha001/temporal-context-aware-cloud-identity-attack-paths}
+}
+```
+
+### Acknowledgments
+- **Cloud Security Community** — Wiz Research, Datadog Security Labs, Lacework Labs
+- **Academic Contributors** — IEEE S&P, USENIX Security publications
+- **Open Source** — PMapper, BloodHound, Cartography, Ruff, Hypothesis, PyYAML
+- **Standards Bodies** — NIST, CIS, PCI SSC, ISO/IEC for framework mappings
+- **All Contributors** — See [Contributors Graph](https://github.com/Sneharsha001/temporal-context-aware-cloud-identity-attack-paths/graphs/contributors)
+
+---
+
+*Last updated: November 7, 2026 — v0.9.1 documentation refresh*
