@@ -645,6 +645,146 @@ arf_rt/
     remediation_planner.py       TemporalRemediationPlanner — prioritized AWS CLI remediation playbook generator
 ```
 
+## Comprehensive Test Infrastructure (v0.9.1)
+
+### Unit Test Suite
+- **`tests/util/`** — Utility module tests (datetime_helpers, network, math_stats, text, hashing, structures, dag, graph_traversal, retry, visualization, config_loader)
+- **`tests/temporal/`** — Temporal module tests (config, evaluator, metrics)
+- **`tests/research/`** — Research validation tests (CCPF evaluator, semantic validation, property-based testing)
+
+### Property-Based Testing
+- **Hypothesis-driven tests** for mathematical functions (entropy, divergence, similarity metrics)
+- **Invariant testing** for serialization round-trips (canonical JSON, hash functions)
+- **Edge case generation** for temporal constraint evaluators
+
+### Golden Master Tests
+- **Determinism verification** — Exact replay consistency across runs
+- **Paper artifact recovery** — 4-decimal precision match for EIG/entropy values
+- **Cross-episode validation** — Realized gain measurement accuracy
+
+### Benchmark & Stress Tests
+- **`scripts/benchmark.py`** — Median, p95, p99 latency tracking
+- **`scripts/benchmark_250k_runtime.py`** — Large-scale performance measurement
+- **`scripts/compare_benchmarks.py`** — Regression detection against baselines
+
+### Validation Scripts
+- **`scripts/validate_fixtures.py`** — JSON/YAML schema validation
+- **`scripts/check_scenario.py`** — Scenario syntax and reachability validation
+- **`scripts/lint_check.py`** — Static analysis (ruff, mypy, bandit)
+- **`scripts/format_docs.py`** — Markdown formatting consistency
+
+### CI Integration
+```bash
+# Full test suite
+pytest tests/unit tests/golden -q
+
+# With coverage
+pytest tests/unit tests/golden --cov=arf_rt --cov-report=term-missing
+
+# Property-based tests
+pytest tests/research/test_rdce_property_based.py -v
+
+# Benchmarks
+python scripts/benchmark.py
+python scripts/benchmark_250k_runtime.py
+```
+
+---
+
+## Temporal Compliance & Enterprise Features (v0.9.1)
+
+### Compliance Frameworks
+- **CIS AWS Foundations Benchmark** — Rules 1.3, 1.4, 1.16 (IAM credential management)
+- **NIST SP 800-53 Rev 5** — AC-2, IA-5, SC-10 (access control, identification, network protection)
+- **PCI-DSS v4.0** — Requirements 7 & 8 (access restriction, authentication)
+- **SOC 2 Type II** — CC6.1, CC6.2, CC6.3 (logical access controls)
+- **ISO/IEC 27001:2022** — A.9.2, A.9.4 (user access management)
+
+### Key Compliance Modules
+
+#### `TemporalComplianceAuditor`
+Maps temporal anomalies to compliance frameworks with automated finding generation:
+```python
+from arf_rt.temporal import TemporalComplianceAuditor, Framework
+auditor = TemporalComplianceAuditor()
+report = auditor.audit(scenario, frameworks=[Framework.CIS_AWS, Framework.NIST_800_53])
+```
+
+#### `PolicyWindowValidator`
+Enforces enterprise IAM governance:
+- Max STS session duration enforcement
+- Mandatory credential rotation intervals
+- Expired credential restriction validation
+
+#### `CredentialAlertEngine`
+SIEM-ready alerting with 4 severity tiers:
+- **CRITICAL** — Active credential compromise indicators
+- **HIGH** — Imminent expiry, concurrent session violations
+- **MEDIUM** — Stale credentials, velocity anomalies
+- **LOW** — Coverage gaps, drift detection
+
+#### `CoverageReporter`
+Privilege graph metadata completeness auditing:
+- Edge hint coverage percentages
+- Missing observation/credential metadata identification
+- Threshold-based gap reporting
+
+### Automated Remediation
+- **`TemporalRemediationPlanner`** — Prioritized AWS CLI playbooks
+- **Risk reduction estimation** — Quantified impact per remediation action
+- **Playbook export** — Table, JSON, and executable bash formats
+
+### Integration Points
+- **AWS Security Hub** — Finding ingestion via EventBridge
+- **Amazon EventBridge** — Real-time alert routing
+- **SIEM pipelines** — Structured JSON/NDJSON export for Splunk, Elastic, Sumo Logic
+
+---
+
+## Research Infrastructure (v0.9.1)
+
+### CCPF Research Track
+Active development of **Context-Conditioned Path Feasibility** on `temporal-context-dev`:
+
+| Stage | Description | Status |
+|-------|-------------|--------|
+| Prompt 3 | Isolated evaluator implementation | ✅ Complete |
+| Prompt 4 | Semantic validation | ✅ Complete |
+| Prompt 5 | Independent code review & soundness audit | ✅ Complete |
+| Prompt 5A | Correctness remediation & test strengthening | ✅ Complete (128/128 tests) |
+| Independent Re-review | Ready for reviewer evaluation | 🔄 Pending |
+| Prompt 6 | Integration design | ⏳ Planned |
+| Prompt 7 | Production integration | ⏳ Planned |
+| Prompt 8 | Baseline vs CCPF evaluation | ⏳ Planned |
+| Prompt 9 | Conference paper evidence | ⏳ Planned |
+
+### Research Test Artifacts
+- **`research/ccpf/rdce.py`** — Reference evaluator implementation
+- **`tests/research/test_rdce.py`** — 46 acceptance tests
+- **`tests/research/test_semantic_validation.py`** — 60 semantic tests (Stage B/C/D/E)
+- **`tests/research/test_rdce_property_based.py`** — Property-based validation
+- **`tests/research/test_reference_harness.py`** — Independent harness
+
+### Formal Verification Documentation
+- **O1–O8** — Property proofs and validation matrices
+- **CE1–CE6** — Counterexample fixtures for semantic validation
+- **Inductive proofs** — Lemma 2.1, monotonic unsat, score invariance
+- **Completeness audits** — Top-K, search bound admissibility
+
+### Reproduction Scripts
+```bash
+# Full paper artifact reproduction
+python scripts/reproduce_paper.py --output artifacts/reproduction/latest
+
+# CCPF research validation
+pytest tests/research/ -v --tb=short
+
+# Semantic validation suite
+pytest tests/research/test_semantic_validation.py -v
+```
+
+---
+
 ## Documentation Index
 
 - **[System Architecture](docs/ARCHITECTURE.md)** — Core subsystems, data flow, and belief network design
