@@ -2546,3 +2546,212 @@ If you use ARF-RT or its temporal extensions in academic work, please cite:
 ---
 
 *Last updated: November 7, 2026 — v0.9.1 documentation refresh*
+
+
+---
+
+## Monitoring & Observability (v0.9.1)
+
+### Metrics Collection
+```python
+from arf_rt.temporal import TemporalEvaluator, TemporalMetricsExtended
+
+evaluator = TemporalEvaluator(enable_stats=True)
+metrics = TemporalMetricsExtended()
+
+# Per-evaluation metrics
+verdict = evaluator.evaluate_with_metrics(path_edges, hints, metrics)
+
+# Access metrics
+print(f"Total paths: {metrics.total_paths}")
+print(f"Feasible: {metrics.feasible_count}")
+print(f"Infeasible: {metrics.infeasible_count}")
+print(f"Unknown: {metrics.unknown_count}")
+print(f"Elimination rate: {metrics.elimination_rate:.2%}")
+print(f"Median path length: {metrics.median_path_length:.1f}")
+print(f"P95 path length: {metrics.p95_path_length:.1f}")
+print(f"P99 path length: {metrics.p99_path_length:.1f}")
+print(f"Std path length: {metrics.std_path_length:.2f}")
+print(f"Mean latency: {metrics.mean_latency_ms:.2f}ms")
+print(f"Median latency: {metrics.median_latency_ms:.2f}ms")
+print(f"P95 latency: {metrics.p95_latency_ms:.2f}ms")
+
+# Extended stats
+if evaluator.stats:
+    print(f"Constraints evaluated: {evaluator.stats.constraints_evaluated}")
+    print(f"Constraints passed: {evaluator.stats.constraints_passed}")
+    print(f"Constraints failed: {evaluator.stats.constraints_failed}")
+    print(f"Constraints unknown: {evaluator.stats.constraints_unknown}")
+    print(f"Evaluation time: {evaluator.stats.evaluation_time_ms:.2f}ms")
+```
+
+### Prometheus Metrics Export
+```python
+from prometheus_client import Counter, Histogram, Gauge
+
+# Define metrics
+TEMPORAL_EVALUATIONS = Counter('arf_rt_temporal_evaluations_total', 'Total evaluations', ['verdict'])
+TEMPORAL_LATENCY = Histogram('arf_rt_temporal_latency_seconds', 'Evaluation latency')
+TEMPORAL_PATH_LENGTH = Histogram('arf_rt_temporal_path_length', 'Path length distribution')
+TEMPORAL_ELIMINATION_RATE = Gauge('arf_rt_temporal_elimination_rate', 'Current elimination rate')
+
+# In evaluation loop
+TEMPORAL_EVALUATIONS.labels(verdict=verdict.kind.value).inc()
+TEMPORAL_LATENCY.observe(evaluator.stats.evaluation_time_ms / 1000)
+TEMPORAL_PATH_LENGTH.observe(len(path_edges))
+TEMPORAL_ELIMINATION_RATE.set(metrics.elimination_rate)
+```
+
+### Grafana Dashboard Panels
+| Panel | Query | Description |
+|-------|-------|-------------|
+| Evaluations/sec | `rate(arf_rt_temporal_evaluations_total[5m])` | Throughput |
+| Latency p50/p95/p99 | `histogram_quantile(0.5, ...)` | Latency percentiles |
+| Elimination Rate | `arf_rt_temporal_elimination_rate` | Current rate |
+| Path Length Distribution | `histogram_quantile(0.5/0.95/0.99, ...)` | Path lengths |
+| Verdict Breakdown | `sum by (verdict) (rate(...))` | FEASIBLE/INFEASIBLE/UNKNOWN |
+
+### Alerting Rules
+```yaml
+groups:
+- name: arf-rt-temporal
+  rules:
+  - alert: HighInfeasibleRate
+    expr: arf_rt_temporal_elimination_rate > 0.8
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High temporal infeasible rate detected"
+      
+  - alert: EvaluationLatencyHigh
+    expr: histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m])) > 10
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Temporal evaluation latency > 10s"
+
+  - alert: UnknownRateSpike
+    expr: rate(arf_rt_temporal_evaluations_total{verdict="UNKNOWN"}[5m]) > 0.5
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High UNKNOWN verdict rate - missing temporal data"
+```
+
+---
+
+## Incident Response Integration (v0.9.1)
+
+### Automated Triage Pipeline
+```python
+from arf_rt.temporal import (
+    TemporalEvaluator, TemporalConfig, TemporalMetricsExtended,
+    CredentialAlertEngine, AlertSeverity, AlertRule
+)
+
+# Configure alerting
+engine = CredentialAlertEngine()
+engine.add_rule(AlertRule(
+    name="critical_stale_credential",
+    severity=AlertSeverity.CRITICAL,
+    condition=lambda score: score.staleness_days > 90,
+    action=lambda alert: siem_client.send(alert)
+))
+
+engine.add_rule(AlertRule(
+    name="high_velocity_violation",
+    severity=AlertSeverity.HIGH,
+    condition=lambda score: score.velocity_score > 0.9,
+    action=lambda alert: soar_client.create_case(alert)
+))
+
+# Process scenarios in real-time
+def process_temporal_alert(scenario, cloudtrail_events):
+    evaluator = TemporalEvaluator(enable_stats=True)
+    metrics = TemporalMetricsExtended()
+    
+    for path_edges in scenario.paths:
+        hints = enrich_hints(path_edges, cloudtrail_events)
+        verdict = evaluator.evaluate_with_metrics(path_edges, hints, metrics)
+        
+        if verdict.is_infeasible():
+            # Generate alert
+            alert = engine.evaluate(scenario, path_edges, hints, verdict)
+            if alert:
+                soar_client.create_case({
+                    "title": f"Temporal Violation: {alert.rule_name}",
+                    "severity": alert.severity.value,
+                    "verdict": verdict.kind.value,
+                    "constraint": verdict.violated_constraint,
+                    "path": path_edges,
+                    "metrics": metrics.to_dict(),
+                    "timestamp": datetime.utcnow().isoformat(),
+                })
+```
+
+### SOAR Playbook Integration
+```yaml
+# Splunk SOAR / Phantom playbook
+playbook: temporal_violation_response
+steps:
+  1. enrich:
+     - query_cloudtrail: "{{path_edges}}"
+     - query_iam: "{{principal_arn}}"
+     - query_config: "{{resource_arn}}"
+  
+  2. analyze:
+     - evaluate_temporal_constraints: "{{verdict}}"
+     - calculate_blast_radius: "{{path_edges}}"
+     - identify_affected_principals: "{{principal_arn}}"
+  
+  3. remediate:
+     - revoke_session: "{{session_id}}"
+     - rotate_credential: "{{access_key}}"
+     - attach_boundary_policy: "{{principal_arn}}"
+  
+  4. notify:
+     - slack: "#security-alerts"
+     - email: "security-team@company.com"
+     - pagerduty: "temporal-violation"
+
+  5. document:
+     - create_jira: "TEMPORAL-{{case_id}}"
+     - update_cmdb: "{{affected_resources}}"
+```
+
+### Runbook Automation
+```bash
+# Automated incident response for temporal violations
+# Usage: ./temporal_incident_response.sh <case_id>
+
+#!/bin/bash
+CASE_ID=$1
+SCENARIO_FILE="incidents/${CASE_ID}/scenario.json"
+
+# 1. Run temporal analysis
+python scripts/audit_temporal_compliance.py $SCENARIO_FILE \
+  --frameworks CIS_AWS,NIST_800_53 \
+  --output /tmp/${CASE_ID}_compliance.json
+
+# 2. Generate remediation
+python scripts/generate_remediation_plan.py $SCENARIO_FILE \
+  --format bash \
+  --output /tmp/${CASE_ID}_remediation.sh
+
+# 3. Score credentials
+python scripts/score_credentials.py $SCENARIO_FILE \
+  --format json \
+  --output /tmp/${CASE_ID}_scores.json \
+  --top 20
+
+# 4. Create Jira ticket with findings
+jira create --summary "Temporal Violation: $CASE_ID" \
+  --description "$(cat /tmp/${CASE_ID}_compliance.json)" \
+  --labels temporal,incident-response
+
+# 5. Execute remediation (with approval)
+echo "Review /tmp/${CASE_ID}_remediation.sh before executing"
+```
