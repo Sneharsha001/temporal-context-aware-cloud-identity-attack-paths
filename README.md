@@ -113,6 +113,13 @@ Extended statistical functions for path analysis:
 - **`cosine_similarity()`** — Vector similarity for path comparison
 - **`euclidean_distance()`** — Vector distance for clustering
 - **`mean()` / `variance()` / `standard_deviation()`** — Basic statistics
+- **`median()` / `quantile()` / `percentile()`** — Distribution quantiles
+- **`iqr()`** — Interquartile range for outlier detection
+- **`skewness()` / `kurtosis()`** — Distribution shape analysis
+- **`covariance()` / `correlation()`** — Bivariate statistical relationships
+- **`cross_entropy()`** — Cross-entropy for ML loss computation
+- **`mutual_information()`** — Information-theoretic dependency measure
+- **`softmax()` / `logsumexp()`** — Numerically stable probability transforms
 
 ### `arf_rt.util.text`
 
@@ -134,6 +141,72 @@ Cryptographic hashing and integrity utilities:
 - **`hash_file()`** — File integrity verification
 - **`hash_combine()`** — Order-independent hash combination
 - **`stable_hash()`** — 64-bit integer hashing for hash tables
+
+### `arf_rt.util.structures`
+
+Nested dictionary and collection manipulation:
+
+- **`unflatten_dict()`** — Reconstruct nested dicts from dot-notation keys
+- **`filter_dict()`** — Allow/block key filtering
+- **`map_values()` / `map_keys()`** — Dictionary transformations
+- **`get_nested()` / `set_nested()`** — Dot-notation path access
+- **`chunk_list()`** — Split lists into fixed-size chunks
+
+### `arf_rt.util.dag`
+
+Directed Acyclic Graph algorithms:
+
+- **`get_descendants()`** — All reachable nodes from a source
+- **`has_path()`** — Path existence check
+- **`find_all_paths()`** — Enumerate all paths with limit
+- **`find_shortest_path()`** — BFS shortest path
+- **`detect_cycles()`** — Cycle enumeration
+- **`is_dag()`** — DAG validation
+- **`reverse_graph()`** — Edge reversal
+- **`get_sources()` / `get_sinks()`** — Graph boundary nodes
+
+### `arf_rt.util.graph_traversal`
+
+Graph traversal and analysis utilities:
+
+- **`find_shortest_path()`** — BFS shortest path finder
+- **`find_all_paths()`** — DFS all paths with limit
+- **`bfs_layers()`** — BFS level-order traversal
+- **`dfs_preorder()` / `dfs_postorder()`** — DFS traversal orders
+- **`get_reachable()` / `get_reachable_reverse()`** — Reachability analysis
+- **`path_length_distribution()`** — Path length statistics
+- **`count_paths()`** — Simple path counting
+
+### `arf_rt.util.retry`
+
+Resilient execution with exponential backoff:
+
+- **`retry()`** — Decorator for sync functions
+- **`retry_async()`** — Decorator for async functions
+- **`RetryContext`** — Context manager for manual control
+- **`retry_context()`** — Context manager factory
+
+### `arf_rt.util.visualization`
+
+Graph export for visualization tools:
+
+- **`export_to_dot()`** — Graphviz DOT format
+- **`export_to_cytoscape()`** — Cytoscape.js JSON
+- **`export_to_mermaid()`** — Mermaid.js diagrams
+- **`export_to_gephi()`** — GEXF for Gephi
+- **`export_to_graphml()`** — GraphML XML
+- **`style_attack_path_dot()`** — Highlighted attack path DOT
+
+### `arf_rt.util.config_loader`
+
+Runtime configuration management:
+
+- **`load_profile()`** — Load JSON config with env overrides
+- **`load_profile_from_yaml()`** — YAML config support
+- **`load_profile_auto()`** — Auto-detect format (JSON/YAML)
+- **`merge_profiles()`** — Combine profiles with precedence
+- **`get_env_overrides()` / `apply_env_overrides()`** — ARF_ env var handling
+- **`validate_profile()`** — Configuration validation
 
 ### `arf_rt.temporal.config` Enhancements
 
