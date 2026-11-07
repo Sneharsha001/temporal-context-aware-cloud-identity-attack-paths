@@ -2334,6 +2334,143 @@ temporal modules. Added test infrastructure documentation and compliance feature
 
 ---
 
+## Related Projects & Comparisons (v0.9.1)
+
+### Cloud Security Tools Comparison
+
+| Tool | Focus | Temporal Analysis | Correlation | EIG Planning | Deterministic |
+|------|-------|-------------------|-------------|--------------|---------------|
+| **ARF-RT** | Cloud IAM attack paths | ✅ Full (TC-1..TC-5) | ✅ Union-find | ✅ EIG + null complement | ✅ Canonical hash |
+| **PMapper** | AWS IAM graph | ❌ | ❌ | ❌ | ❌ |
+| **BloodHound** | AD/Azure AD | ❌ | ❌ | ❌ | ❌ |
+| **Cartography** | Asset inventory | ❌ | ❌ | ❌ | ❌ |
+| **CloudSploit** | Compliance scanning | ❌ | ❌ | ❌ | ❌ |
+| **ScoutSuite** | Multi-cloud audit | ❌ | ❌ | ❌ | ❌ |
+| **Prowler** | Compliance/audit | ❌ | ❌ | ❌ | ❌ |
+
+### Academic & Research Comparisons
+
+| Work | Approach | Temporal | Correlation | Deterministic |
+|------|----------|----------|-------------|---------------|
+| **ARF-RT** | Bayesian + CSP | ✅ | ✅ Union-find | ✅ Q8 fixed-point |
+| **BLOODHOUND** | Graph traversal | ❌ | ❌ | ❌ |
+| **PMapper** | Graph + IAM | ❌ | ❌ | ❌ |
+| **TAF** | Attack graphs | ❌ | Partial | ❌ |
+| **ARMOR** | Risk metrics | ❌ | ❌ | ❌ |
+| **CLOUDPATH** | Path finding | ❌ | ❌ | ❌ |
+
+### Unique ARF-RT Capabilities
+1. **Deterministic Replay** — Same input → identical `canonical_run_hash`
+2. **Correlation-Aware EIG** — Null complement dynamics, representative mechanics
+3. **Temporal CSP Layer** — TC-1..TC-5 constraints as first-class objects
+4. **Formal Verification** — O1–O8 proofs, 128/128 tests passing
+5. **Exact Calibration** — 0.0000 prediction error under deterministic replay
+
+---
+
+## Advanced Configuration Examples (v0.9.1)
+
+### Multi-Environment Configuration
+```python
+from arf_rt.util import load_profile_auto
+from arf_rt.temporal import TemporalConfig
+
+# Load base profile
+profile = load_profile_auto("config/production.yaml")
+
+# Environment-specific overrides
+config = TemporalConfig.balanced().with_overrides(
+    max_path_length=10 if profile.env == "prod" else 5,
+    stale_credential_days=30 if profile.env == "prod" else 7,
+    max_concurrent_sessions=5 if profile.env == "prod" else 2,
+)
+
+# Validate
+warnings = config.validate()
+if warnings:
+    import logging
+    for w in warnings:
+        logging.warning(f"Config warning: {w}")
+```
+
+### High-Throughput Batch Processing
+```python
+from concurrent.futures import ProcessPoolExecutor
+from arf_rt.temporal import PathFeasibilityBatchRunner, TemporalConfig
+
+config = TemporalConfig.permissive()
+config.max_path_length = 5
+config.max_concurrent_sessions = 2
+
+runner = PathFeasibilityBatchRunner(config=config)
+
+# Process 1000 scenarios in parallel
+with ProcessPoolExecutor(max_workers=8) as executor:
+    futures = [executor.submit(runner.run_batch, batch) for batch in chunks(scenarios, 50)]
+    results = [f.result() for f in futures]
+```
+
+### Custom Temporal Constraints
+```python
+from arf_rt.temporal import TemporalConfig, TemporalEvaluator
+
+# Custom constraint for specific compliance requirement
+config = TemporalConfig(
+    min_hop_delta_seconds=2.0,        # Stricter velocity
+    stale_credential_days=14,          # 2-week staleness
+    session_expiry_grace_seconds=5.0,  # Tighter clock skew
+    enabled_constraints=frozenset({"TC-1", "TC-2", "TC-3", "TC-4"}),  # Disable TC-5
+)
+
+evaluator = TemporalEvaluator(config=config, enable_stats=True)
+```
+
+### SIEM Integration Pipeline
+```python
+from arf_rt.temporal import TemporalEvaluator, TemporalMetricsExtended
+import json
+
+evaluator = TemporalEvaluator(enable_stats=True)
+metrics = TemporalMetricsExtended()
+
+for path_edges, hints in scenario_stream:
+    verdict = evaluator.evaluate_with_metrics(path_edges, hints, metrics)
+    
+    # Emit to SIEM
+    event = {
+        "timestamp": datetime.utcnow().isoformat(),
+        "verdict": verdict.kind.value,
+        "constraint": verdict.violated_constraint,
+        "path_length": len(path_edges),
+        "metrics": metrics.to_dict(),
+    }
+    siem_client.send(event)
+```
+
+### Custom Visualization Export
+```python
+from arf_rt.util import export_to_mermaid, style_attack_path_dot
+
+# Mermaid for documentation
+mermaid_diagram = export_to_mermaid(nodes, edges, "Attack Path Analysis")
+
+# Highlighted DOT for presentation
+highlighted_dot = style_attack_path_dot(
+    nodes, edges, 
+    path_edges=["e1", "e3", "e7"],  # Attack path edges
+    graph_name="Critical_Attack_Path"
+)
+
+with open("attack_path.mmd", "w") as f:
+    f.write(mermaid_diagram)
+
+with open("attack_path.dot", "w") as f:
+    f.write(highlighted_dot)
+```
+
+
+---
+
 ## Community & Support
 
 ### Getting Help
