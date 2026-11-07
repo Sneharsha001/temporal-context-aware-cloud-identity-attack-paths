@@ -445,6 +445,161 @@ Three execution modes with full audit trail:
 
 Every probe is recorded in `call_log` with edge details, EIG score, disposition, and `run_hash` tying it to the exact pipeline state.
 
+---
+
+## CLI Usage Examples (v0.9.1)
+
+### Temporal Analysis Commands
+```bash
+# Audit temporal compliance against CIS AWS and NIST 800-53
+python scripts/audit_temporal_compliance.py scenario.json --format table --frameworks CIS_AWS,NIST_800_53
+
+# Generate remediation playbooks with risk reduction estimates
+python scripts/generate_remediation_plan.py scenario.json --format bash --output remediation.sh
+
+# Score credentials with temporal risk factors
+python scripts/score_credentials.py scenario.json --format csv --output scores.csv --top 20
+
+# Validate policy windows (session TTLs, rotation, expired credentials)
+python scripts/validate_policy_windows.py scenario.json --strict
+
+# Detect temporal drift between baseline and current snapshots
+python scripts/detect_temporal_drift.py baseline.json current.json --output drift_report.json
+
+# Report temporal hint coverage across graph edges
+python scripts/report_temporal_coverage.py scenario.json --threshold 0.8
+
+# Run unified temporal dashboard
+python scripts/run_temporal_dashboard.py scenario.json --refresh 30
+```
+
+### Utility Module Usage
+```python
+# DateTime helpers for temporal analysis
+from arf_rt.util import (
+    parse_iso8601, format_iso8601, is_within_temporal_window,
+    parse_duration_seconds, time_range_overlaps, time_range_contains,
+    intersect_time_ranges, format_duration_seconds
+)
+
+# Network/CIDR utilities
+from arf_rt.util import (
+    parse_ip, parse_network, is_ip_in_network, is_ip_in_any_network,
+    is_private_ip, network_overlaps, network_contains,
+    get_network_bounds, calculate_subnet_split, format_cidr, is_reserved_ip
+)
+
+# Statistical analysis
+from arf_rt.util import (
+    shannon_entropy, normalize_distribution, kl_divergence,
+    js_divergence, cosine_similarity, euclidean_distance,
+    mean, variance, standard_deviation, median, quantile, percentile,
+    iqr, skewness, kurtosis, covariance, correlation,
+    cross_entropy, mutual_information, softmax, logsumexp
+)
+
+# Text processing
+from arf_rt.util import (
+    slugify, truncate, indent_block, wrap_text, join_with_oxford_comma,
+    pluralize, snake_to_camel, camel_to_snake, strip_ansi,
+    dedent, shorten, extract_version
+)
+
+# Cryptographic hashing
+from arf_rt.util import (
+    canonical_json, sha256_digest, canonical_hash, short_hash,
+    hmac_sha256, hash_chain, hash_file, hash_combine, stable_hash
+)
+
+# Data structures
+from arf_rt.util import (
+    flatten_dict, deep_merge, unflatten_dict, filter_dict,
+    map_values, map_keys, get_nested, set_nested, chunk_list
+)
+
+# DAG algorithms
+from arf_rt.util import (
+    topological_sort, get_ancestors, get_descendants,
+    has_path, find_all_paths, find_shortest_path,
+    detect_cycles, is_dag, reverse_graph, get_sources, get_sinks
+)
+
+# Graph traversal
+from arf_rt.util import (
+    find_all_simple_paths, detect_cycles, find_shortest_path,
+    find_all_paths, bfs_layers, dfs_preorder, dfs_postorder,
+    get_reachable, get_reachable_reverse,
+    path_length_distribution, count_paths
+)
+
+# Retry with exponential backoff
+from arf_rt.util import retry, retry_async, RetryContext, retry_context
+
+@retry(max_attempts=3, base_delay=1.0, backoff=2.0)
+def flaky_operation():
+    ...
+
+async def async_operation():
+    ...
+
+# Visualization exports
+from arf_rt.util import (
+    export_to_dot, export_to_cytoscape,
+    export_to_mermaid, export_to_gephi,
+    export_to_graphml, style_attack_path_dot
+)
+
+# Configuration management
+from arf_rt.util import (
+    load_profile, load_profile_from_yaml, load_profile_auto,
+    merge_profiles, RuntimeProfile, validate_profile
+)
+
+# Temporal evaluation with metrics
+from arf_rt.temporal import (
+    TemporalEvaluator, TemporalConfig, TemporalMetrics,
+    TemporalMetricsExtended, EvaluationStats
+)
+
+evaluator = TemporalEvaluator(enable_stats=True)
+metrics = TemporalMetricsExtended()
+verdict = evaluator.evaluate_with_metrics(path_edges, hints, metrics)
+```
+
+### Advanced Configuration
+```python
+from arf_rt.temporal import TemporalConfig
+
+# Strict mode for conservative evaluation
+config = TemporalConfig.strict()
+
+# Permissive mode for recall-favoring
+config = TemporalConfig.permissive()
+
+# Balanced preset
+config = TemporalConfig.balanced()
+
+# Custom with overrides
+config = TemporalConfig(
+    min_hop_delta_seconds=1.0,
+    stale_credential_days=30,
+    max_path_length=8,
+    max_concurrent_sessions=3,
+).with_overrides(unknown_passthrough=False)
+
+# Validate configuration
+warnings = config.validate()
+if warnings:
+    for w in warnings:
+        print(f"Config warning: {w}")
+
+# Serialization
+config_dict = config.to_dict()
+restored = TemporalConfig.from_dict(config_dict)
+```
+
+---
+
 ## PMapper Import Pipeline
 
 ```
