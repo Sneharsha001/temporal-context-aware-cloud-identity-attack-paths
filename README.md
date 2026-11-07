@@ -1201,6 +1201,88 @@ pytest tests/research/test_semantic_validation.py -v
 - **[Changelog](CHANGELOG.md)** — Version history and milestone tracking
 
 
+---
+
+## Contributing Guide Summary
+
+### Development Setup
+```bash
+# Fork and clone
+git clone https://github.com/Sneharsha001/temporal-context-aware-cloud-identity-attack-paths.git
+cd temporal-context-aware-cloud-identity-attack-paths
+
+# Install development dependencies
+pip install -e ".[dev]"
+
+# Install pre-commit hooks
+pre-commit install
+
+# Run tests
+pytest tests/unit tests/golden -q
+```
+
+### Contribution Workflow
+1. **Open an issue** — Discuss proposed changes before implementing
+2. **Create a branch** — `git checkout -b feature/your-feature-name`
+3. **Write tests** — Add unit tests for new functionality
+4. **Run validation** — `python scripts/lint_check.py && python scripts/validate_fixtures.py --strict`
+5. **Submit PR** — Reference the issue, include test results
+
+### Code Standards
+- **Type hints** — All public APIs must have type annotations
+- **Docstrings** — Google-style docstrings for all public functions/classes
+- **Formatting** — Ruff for linting/formatting (`python scripts/format_docs.py --fix`)
+- **Testing** — Minimum 80% coverage for new code
+
+### Areas Seeking Contributions
+- **GCP temporal attack paths** — Expand cloud provider coverage
+- **Kubernetes RBAC** — Add temporal attack paths for K8s
+- **Property-based tests** — Extend Hypothesis test suites
+- **Documentation** — Tutorials, examples, API reference
+- **Performance** — Benchmark optimization, memory profiling
+
+---
+
+## Version History (Changelog Summary)
+
+### v0.9.1 (November 2026) — Enhanced Utility & Temporal Modules
+- **Utility Modules**: 13 new modules (math_stats, structures, dag, graph_traversal, retry, visualization, config_loader, etc.)
+- **Temporal Enhancements**: TemporalMetricsExtended, EvaluationStats, TemporalConfig presets, validation, serialization
+- **Test Infrastructure**: Property-based tests, golden masters, benchmarks, validation scripts
+- **Compliance**: CIS AWS, NIST 800-53, PCI-DSS, SOC 2, ISO 27001 mappings
+- **Research**: CCPF track (128/128 tests passing), formal verification docs
+
+### v0.9.0 (October 2026) — Enterprise Governance & Security
+- Zero Trust Architecture (NIST SP 800-207)
+- SOC 2 & ISO 27001 mapping
+- PCI-DSS v4.0 Requirements 7 & 8
+- SIEM/SOAR integration contracts
+- Bayesian mathematical formalization
+- Disaster recovery & HA specifications
+
+### v0.8.0 (September 2026) — Temporal Context Suite
+- Temporal Compliance Auditor
+- Multi-Hop Risk Aggregator
+- Session Chain Validator
+- Automated Remediation Planner
+- Temporal Correlation Matrix
+- Statistical Anomaly Filter
+- Credential Risk Scoring
+- SIEM & Policy Alerting
+- Policy Window Enforcement
+- Snapshot Drift Detection
+- Metadata Coverage Auditing
+- Unified Terminal Dashboard
+
+### v0.7.x and earlier — Core ARF-RT Engine
+- Bayesian belief propagation with Beta-Bernoulli
+- Correlation-aware probe planning (EIG)
+- PMapper + AWS Organizations import
+- Deterministic replay with canonical_run_hash
+- Q8 fixed-point integer arithmetic
+- Union-find constraint correlation
+
+
 <!-- streak-nov4-1 -->
 ## November 2026 Maintenance Notes
 
