@@ -1540,6 +1540,96 @@ ruff check arf_rt/
 - **Container hardening** — Non-root user, read-only filesystem
 - **Network policies** — Egress restrictions for temporal analysis pods
 
+
+---
+
+## Release Process (v0.9.1)
+
+### Versioning Scheme
+**Semantic Versioning** (MAJOR.MINOR.PATCH):
+- **MAJOR** — Breaking API changes, architectural shifts
+- **MINOR** — New features, backward-compatible
+- **PATCH** — Bug fixes, documentation, performance
+
+### Release Checklist
+```bash
+# 1. Version bump
+# Update version in pyproject.toml, arf_rt/__init__.py
+# Update CHANGELOG.md with release notes
+
+# 2. Run full validation
+pytest tests/unit tests/golden -q
+pytest tests/research/ -v --tb=short
+python scripts/lint_check.py
+python scripts/validate_fixtures.py --strict
+python scripts/benchmark.py
+
+# 3. Build artifacts
+pip wheel . -w dist/
+twine check dist/*
+
+# 4. Tag and push
+git tag -a v0.9.1 -m "Release v0.9.1: Enhanced Utility & Temporal Modules"
+git push origin v0.9.1
+
+# 5. Publish
+twine upload dist/*
+```
+
+### Release Cadence
+- **Patch releases** — As needed (bug fixes, security)
+- **Minor releases** — Quarterly (feature complete)
+- **Major releases** — Annually (architectural changes)
+
+### Release Artifacts
+| Artifact | Location | Purpose |
+|----------|----------|---------|
+| **PyPI Package** | `arf-rt` on PyPI | `pip install arf-rt` |
+| **Docker Image** | `ghcr.io/.../arf-rt` | Container deployment |
+| **Source Archive** | GitHub Releases | Source distribution |
+| **SBOM** | GitHub Releases | Supply chain transparency |
+| **Documentation** | GitHub Pages / ReadTheDocs | Online reference |
+
+### Pre-Release Validation
+- **All tests pass** — Unit, golden, research, property-based
+- **Benchmarks stable** — No regression >5% vs baseline
+- **Documentation builds** — ReadTheDocs / GitHub Pages
+- **Security scan clean** — Bandit, Safety, Trivy
+- **License compliance** — REUSE/FOSSology check
+
+---
+
+## Project Governance
+
+### Maintainers
+| Role | GitHub | Responsibilities |
+|------|--------|------------------|
+| **BDFL** | @Sneharsha001 | Final decisions, releases, direction |
+| **Core Maintainers** | [List] | Code review, triage, merges |
+| **Security Team** | [List] | Vulnerability response, disclosures |
+
+### Decision Making
+- **Consensus-seeking** — Discuss in issues/PRs
+- **BDFL final say** — When consensus unreachable
+- **RFC process** — For major changes (ADR-000 template)
+
+### Contributor Lifecycle
+1. **Contributor** — PRs, issues, discussions
+2. **Active Contributor** — 5+ merged PRs, consistent quality
+4. **Core Maintainer** — Invitation by BDFL, review rights
+5. **Emeritus** — Past maintainers, advisory role
+
+### Code of Conduct
+- **Enforcement** — Maintainers + GitHub reporting
+- **Scope** — All project spaces (issues, PRs, discussions)
+- **Standards** — Contributor Covenant 2.1
+
+### Security Policy
+- **Reporting** — security@ or GitHub Security Advisories
+- **Response** — 48hr acknowledgment, 7-day triage
+- **Disclosure** — Coordinated, 90-day default
+- **Scope** — ARF-RT core, temporal, utilities
+
 ---
 
 ## Performance Benchmarks (v0.9.1)
