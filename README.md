@@ -1505,6 +1505,76 @@ pytest tests/unit tests/golden -q
 
 ---
 
+## Data Privacy & Compliance (v0.9.1)
+
+### Data Handling Principles
+- **No PII Storage** — ARF-RT processes ARNs and metadata only; no credentials, emails, or personal data
+- **Scenario Anonymization** — `scripts/validate_fixtures.py --anonymize` replaces account IDs, regions
+- **Local-First** — All analysis runs locally; no telemetry, no cloud uploads
+- **Audit Trail** — JSONL logs for compliance evidence retention
+
+### Regulatory Alignment
+| Regulation | ARF-RT Support | Evidence |
+|------------|----------------|----------|
+| **GDPR Art. 25** | Data minimization, purpose limitation | Local processing, no PII |
+| **GDPR Art. 32** | Security of processing | Deterministic replay, audit logs |
+| **CCPA/CPRA** | No sale of personal info | No personal info processed |
+| **SOC 2 Type II** | CC6.1, CC6.2, CC6.3 | Audit logs, access controls |
+| **ISO 27001** | A.8, A.9, A.12 | Asset mgmt, access, operations |
+
+### Compliance Evidence Generation
+```bash
+# Generate compliance report
+python scripts/audit_temporal_compliance.py scenario.json   --frameworks SOC2,ISO27001,GDPR   --format json   --output compliance_report.json
+
+# Generate SBOM for supply chain
+cyclonedx-bom -o sbom.json --format json
+
+# License compliance
+pip-licenses --format=json --output-file=licenses.json
+```
+
+### Data Retention
+- **Scenario files** — User-controlled, recommend 90-day retention for active analysis
+- **Audit logs** — JSONL format, user-controlled retention (recommend 1 year)
+- **Temporal hints** — Derived from CloudTrail, follow AWS retention policies
+- **Belief states** — Ephemeral, recomputed per analysis run
+
+
+---
+
+## Future Roadmap (v0.9.1+)
+
+### Q4 2026 — GCP & Multi-Cloud
+- [ ] Complete GCP temporal path coverage (Workload Identity Federation)
+- [ ] Azure AD PIM temporal attack paths
+- [ ] Cross-cloud federation (AWS ↔ Azure ↔ GCP)
+
+### Q1 2027 — Platform Expansion
+- [ ] Kubernetes RBAC temporal attack paths
+- [ ] SaaS application temporal risks (Okta, Auth0, Ping Identity)
+- [ ] Container registry temporal risks (ECR, GCR, ACR)
+
+### Q1 2027 — Automation & Detection
+- [ ] Automated Sigma rule generation from temporal findings
+- [ ] YARA-L 2.0 rule export for Chronicle
+- [ ] MITRE ATT&CK Navigator layer export
+
+### Q2 2027 — v1.0 Release
+- [ ] Full multi-cloud temporal coverage
+- [ ] Production-hardened CCPF integration
+- [ ] Peer-reviewed research paper publication
+- [ ] v1.0 API stability guarantee
+
+### Q2 2027+ — Advanced Research
+- [ ] ML-based anomaly detection for temporal patterns
+- [ ] Causal inference for attack attribution
+- [ ] Federated temporal analysis across org boundaries
+- [ ] Quantum-resistant temporal credential models
+
+
+---
+
 ## Security Considerations
 
 ### Threat Model
