@@ -2552,6 +2552,367 @@ If you use ARF-RT or its temporal extensions in academic work, please cite:
 
 ---
 
+## Security Hardening Guide (v0.9.1)
+
+### Threat Model
+
+ARF-RT operates under the following threat model assumptions:
+
+| Threat | Likelihood | Impact | Mitigation |
+|--------|------------|--------|------------|
+| Malicious scenario file | Medium | High | Input validation, schema enforcement |
+| SQL injection | Low | High | Parameterized queries, ORM |
+| Path traversal | Low | High | Path sanitization, safe joins |
+| Resource exhaustion | Medium | Medium | Rate limiting, resource limits |
+| Data exfiltration | Low | High | No network egress, local-only |
+| Supply chain attack | Low | Critical | Dependency pinning, SBOM |
+
+### Input Validation & Sanitization
+
+#### Scenario JSON Validation
+```python
+from arf_rt.adapters import seed_json
+
+# Schema validation with strict mode (extra=forbid)
+scenario = seed_json.validate(scenario_json, strict=True)
+
+# Validates:
+# - Required fields present
+# - Correct types for all fields
+# - No extra/unknown fields
+# - ARN format validation
+# - Temporal hint schema compliance
+```
+
+#### File Path Safety
+```python
+import os
+from pathlib import Path
+
+def safe_read_scenario(file_path: str) -> dict:
+    # Resolve and validate path
+    path = Path(file_path).resolve()
+    
+    # Prevent directory traversal
+    base_dir = Path("/safe/base/dir").resolve()
+    if not str(path).startswith(str(base_dir)):
+        raise ValueError("Path traversal attempt detected")
+    
+    # Check extension
+    if path.suffix not in ['.json', '.yaml', '.yml']:
+        raise ValueError("Invalid file extension")
+    
+    # Size limit
+    if path.stat().st_size > 100 * 1024 * 1024:  # 100MB
+        raise ValueError("File too large")
+    
+    return load_scenario(path)
+```
+
+#### ARN Validation
+```python
+import re
+
+ARN_PATTERN = re.compile(
+    r'^arn:aws:[a-z0-9-]+:[a-z0-9-]*:'
+    r'(?:\d{12}|aws):'
+    r'[a-zA-Z0-9_+=,.@\-/]+'
+)
+
+def validate_arn(arn: str) -> bool:
+    return bool(ARN_PATTERN.match(arn))
+
+# Usage
+if not validate_arn(scenario['nodes'][0]['provider_id']):
+    raise ValueError("Invalid ARN format")
+```
+
+### Database Security
+
+#### SQLite Hardening
+```sql
+-- Enable security features
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;
+PRAGMA foreign_keys = ON;
+PRAGMA secure_delete = ON;
+PRAGMA trusted_schema = OFF;  -- Prevent loading untrusted extensions
+PRAGMA query_only = FALSE;  -- Set to TRUE for read-only mode
+```
+
+#### Parameterized Queries
+```python
+# Always use parameterized queries (handled by ORM)
+from arf_rt.storage import SQLiteStore
+
+store = SQLiteStore(path)
+# All queries use parameterized statements automatically
+scenario = store.get_scenario(scenario_id)
+
+# Never use string interpolation for SQL
+# BAD: f"SELECT * FROM scenarios WHERE id = '{id}'"
+# GOOD: "SELECT * FROM scenarios WHERE id = ?", (id,)
+```
+
+#### Database Permissions
+```bash
+# File permissions
+chmod 600 arf_rt.db
+chown appuser:appgroup arf_rt.db
+
+# Directory permissions
+chmod 700 /var/lib/arf-rt/
+chown appuser:appgroup /var/lib/arf-rt/
+```
+
+### Network Security
+
+#### Zero Egress (Air-Gapped)
+```yaml
+# Kubernetes NetworkPolicy - deny all egress
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: arf-rt-deny-egress
+spec:
+  podSelector:
+    matchLabels:
+      app: arf-rt
+  policyTypes:
+  - Egress
+  egress: []  # No egress allowed
+```
+
+#### Restricted Egress (If Required)
+```yaml
+# Allow only specific egress
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: arf-rt-restricted-egress
+spec:
+  podSelector:
+    matchLabels:
+      app: arf-rt
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    ports:
+    - protocol: TCP
+      port: 9090  # Prometheus
+  - to:
+    - ipBlock:
+        cidr: 10.0.0.0/8  # Internal services only
+```
+
+### Container Security
+
+#### Minimal Base Image
+```dockerfile
+# Multi-stage build for minimal attack surface
+FROM python:3.11-slim as builder
+WORKDIR /app
+COPY . .
+RUN pip install --no-cache-dir -e ".[dev]" \
+    && pip install --no-cache-dir --target=/app/deps .
+
+FROM python:3.11-slim
+WORKDIR /app
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /app /app
+USER 1000:1000  # Non-root user
+ENTRYPOINT ["arf-rt"]
+```
+
+#### Security Scanning
+```bash
+# Scan for vulnerabilities
+trivy image arf-rt:latest
+syft packages dir:. -o spdx-json=sbom.json
+grype dir:.
+
+# Dependency scanning
+safety check
+pip-audit
+pip-audit --desc  # Include descriptions
+```
+
+### Runtime Security
+
+#### Non-Root Execution
+```dockerfile
+# Create non-root user
+RUN groupadd -r arf-rt && useradd -r -g arf-rt arf-rt
+USER arf-rt:arf-rt
+
+# Read-only filesystem
+# In Kubernetes:
+# securityContext:
+#   readOnlyRootFilesystem: true
+#   runAsNonRoot: true
+#   runAsUser: 1000
+#   runAsGroup: 1000
+#   allowPrivilegeEscalation: false
+#   capabilities:
+#     drop: ["ALL"]
+```
+
+#### Capability Dropping
+```yaml
+# Kubernetes securityContext
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: ["ALL"]
+  readOnlyRootFilesystem: true
+```
+
+#### Resource Limits
+```yaml
+resources:
+  requests:
+    memory: "2Gi"
+    cpu: "1000m"
+  limits:
+    memory: "4Gi"
+    cpu: "2000m"
+```
+
+### Secrets Management
+
+#### No Hardcoded Secrets
+```python
+# NEVER hardcode secrets
+# BAD
+API_KEY = "sk-1234567890abcdef"
+DB_PASSWORD = "supersecret"
+
+# GOOD - Use environment variables
+import os
+API_KEY = os.environ.get("ARF_API_KEY")
+DB_PASSWORD = os.environ.get("DB_PASSWORD")
+
+# Use secret managers in production
+# AWS Secrets Manager, HashiCorp Vault, Azure Key Vault
+```
+
+#### Secret Scanning
+```bash
+# Pre-commit hooks
+pre-commit install
+
+# CI pipeline scanning
+# GitHub: secret scanning enabled
+# GitLab: secret detection enabled
+# Custom: trufflehog, gitleaks, detect-secrets
+
+# Pre-commit config (.pre-commit-config.yaml)
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.0
+    hooks:
+      - id: gitleaks
+```
+
+### Audit & Compliance
+
+#### Structured Audit Logging
+```python
+import json
+import logging
+from datetime import datetime
+
+def audit_log(event: str, details: dict, level: str = "INFO"):
+    log_entry = {
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "event": event,
+        "details": details,
+        "component": "arf-rt",
+        "version": "0.9.1",
+    }
+    logging.getLogger("audit").log(
+        getattr(logging, level),
+        json.dumps(log_entry)
+    )
+
+# Usage
+audit_log("temporal_evaluation", {
+    "scenario_id": scenario_id,
+    "verdict": verdict.kind.value,
+    "path_length": len(path_edges),
+    "elimination_rate": metrics.elimination_rate,
+})
+```
+
+#### Log Retention
+```bash
+# Rotate logs daily, keep 365 days
+logrotate /etc/logrotate.d/arf-rt <<EOF
+/var/log/arf-rt/*.log {
+    daily
+    rotate 365
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0640 arf-rt arf-rt
+}
+EOF
+```
+
+### Incident Response
+
+#### Security Incident Checklist
+```markdown
+## Security Incident Response
+
+### Detection
+- [ ] Alert triggered (high infeasible rate, latency spike, error rate)
+- [ ] Logs reviewed for suspicious activity
+- [ ] Affected systems identified
+
+### Containment
+- [ ] Isolate affected systems
+- [ ] Preserve evidence (logs, database snapshots)
+- [ ] Disable compromised credentials
+
+### Eradication
+- [ ] Root cause identified
+- [ ] Vulnerability patched
+- [ ] Malicious artifacts removed
+
+### Recovery
+- [ ] Systems restored from clean backup
+- [ ] Monitoring enhanced
+- [ ] Post-incident review scheduled
+```
+
+### Compliance Checklist
+
+| Requirement | Implementation | Verification |
+|-------------|----------------|--------------|
+| GDPR Art. 25 | Data minimization, local processing | Code review |
+| GDPR Art. 32 | Encryption, audit logs | Security audit |
+| CCPA/CPRA | No PII processing | Data flow analysis |
+| SOC 2 Type II | Audit logs, access controls | SOC 2 audit |
+| ISO 27001 | Asset mgmt, access controls | ISO audit |
+| PCI-DSS Req 7/8 | Access restrictions, auth | PCI audit |
+
+---
+
+*Last updated: November 7, 2026 — v0.9.1 documentation refresh*
+
+---
+
+---
+
 ## Best Practices (v0.9.1)
 
 ### Configuration Best Practices
@@ -3818,6 +4179,367 @@ async with RetryContext(max_attempts=3) as ctx:
 
 *Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
+
+---
+
+---
+
+## Security Hardening Guide (v0.9.1)
+
+### Threat Model
+
+ARF-RT operates under the following threat model assumptions:
+
+| Threat | Likelihood | Impact | Mitigation |
+|--------|------------|--------|------------|
+| Malicious scenario file | Medium | High | Input validation, schema enforcement |
+| SQL injection | Low | High | Parameterized queries, ORM |
+| Path traversal | Low | High | Path sanitization, safe joins |
+| Resource exhaustion | Medium | Medium | Rate limiting, resource limits |
+| Data exfiltration | Low | High | No network egress, local-only |
+| Supply chain attack | Low | Critical | Dependency pinning, SBOM |
+
+### Input Validation & Sanitization
+
+#### Scenario JSON Validation
+```python
+from arf_rt.adapters import seed_json
+
+# Schema validation with strict mode (extra=forbid)
+scenario = seed_json.validate(scenario_json, strict=True)
+
+# Validates:
+# - Required fields present
+# - Correct types for all fields
+# - No extra/unknown fields
+# - ARN format validation
+# - Temporal hint schema compliance
+```
+
+#### File Path Safety
+```python
+import os
+from pathlib import Path
+
+def safe_read_scenario(file_path: str) -> dict:
+    # Resolve and validate path
+    path = Path(file_path).resolve()
+    
+    # Prevent directory traversal
+    base_dir = Path("/safe/base/dir").resolve()
+    if not str(path).startswith(str(base_dir)):
+        raise ValueError("Path traversal attempt detected")
+    
+    # Check extension
+    if path.suffix not in ['.json', '.yaml', '.yml']:
+        raise ValueError("Invalid file extension")
+    
+    # Size limit
+    if path.stat().st_size > 100 * 1024 * 1024:  # 100MB
+        raise ValueError("File too large")
+    
+    return load_scenario(path)
+```
+
+#### ARN Validation
+```python
+import re
+
+ARN_PATTERN = re.compile(
+    r'^arn:aws:[a-z0-9-]+:[a-z0-9-]*:'
+    r'(?:\d{12}|aws):'
+    r'[a-zA-Z0-9_+=,.@\-/]+'
+)
+
+def validate_arn(arn: str) -> bool:
+    return bool(ARN_PATTERN.match(arn))
+
+# Usage
+if not validate_arn(scenario['nodes'][0]['provider_id']):
+    raise ValueError("Invalid ARN format")
+```
+
+### Database Security
+
+#### SQLite Hardening
+```sql
+-- Enable security features
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;
+PRAGMA foreign_keys = ON;
+PRAGMA secure_delete = ON;
+PRAGMA trusted_schema = OFF;  -- Prevent loading untrusted extensions
+PRAGMA query_only = FALSE;  -- Set to TRUE for read-only mode
+```
+
+#### Parameterized Queries
+```python
+# Always use parameterized queries (handled by ORM)
+from arf_rt.storage import SQLiteStore
+
+store = SQLiteStore(path)
+# All queries use parameterized statements automatically
+scenario = store.get_scenario(scenario_id)
+
+# Never use string interpolation for SQL
+# BAD: f"SELECT * FROM scenarios WHERE id = '{id}'"
+# GOOD: "SELECT * FROM scenarios WHERE id = ?", (id,)
+```
+
+#### Database Permissions
+```bash
+# File permissions
+chmod 600 arf_rt.db
+chown appuser:appgroup arf_rt.db
+
+# Directory permissions
+chmod 700 /var/lib/arf-rt/
+chown appuser:appgroup /var/lib/arf-rt/
+```
+
+### Network Security
+
+#### Zero Egress (Air-Gapped)
+```yaml
+# Kubernetes NetworkPolicy - deny all egress
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: arf-rt-deny-egress
+spec:
+  podSelector:
+    matchLabels:
+      app: arf-rt
+  policyTypes:
+  - Egress
+  egress: []  # No egress allowed
+```
+
+#### Restricted Egress (If Required)
+```yaml
+# Allow only specific egress
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: arf-rt-restricted-egress
+spec:
+  podSelector:
+    matchLabels:
+      app: arf-rt
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    ports:
+    - protocol: TCP
+      port: 9090  # Prometheus
+  - to:
+    - ipBlock:
+        cidr: 10.0.0.0/8  # Internal services only
+```
+
+### Container Security
+
+#### Minimal Base Image
+```dockerfile
+# Multi-stage build for minimal attack surface
+FROM python:3.11-slim as builder
+WORKDIR /app
+COPY . .
+RUN pip install --no-cache-dir -e ".[dev]" \
+    && pip install --no-cache-dir --target=/app/deps .
+
+FROM python:3.11-slim
+WORKDIR /app
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /app /app
+USER 1000:1000  # Non-root user
+ENTRYPOINT ["arf-rt"]
+```
+
+#### Security Scanning
+```bash
+# Scan for vulnerabilities
+trivy image arf-rt:latest
+syft packages dir:. -o spdx-json=sbom.json
+grype dir:.
+
+# Dependency scanning
+safety check
+pip-audit
+pip-audit --desc  # Include descriptions
+```
+
+### Runtime Security
+
+#### Non-Root Execution
+```dockerfile
+# Create non-root user
+RUN groupadd -r arf-rt && useradd -r -g arf-rt arf-rt
+USER arf-rt:arf-rt
+
+# Read-only filesystem
+# In Kubernetes:
+# securityContext:
+#   readOnlyRootFilesystem: true
+#   runAsNonRoot: true
+#   runAsUser: 1000
+#   runAsGroup: 1000
+#   allowPrivilegeEscalation: false
+#   capabilities:
+#     drop: ["ALL"]
+```
+
+#### Capability Dropping
+```yaml
+# Kubernetes securityContext
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: ["ALL"]
+  readOnlyRootFilesystem: true
+```
+
+#### Resource Limits
+```yaml
+resources:
+  requests:
+    memory: "2Gi"
+    cpu: "1000m"
+  limits:
+    memory: "4Gi"
+    cpu: "2000m"
+```
+
+### Secrets Management
+
+#### No Hardcoded Secrets
+```python
+# NEVER hardcode secrets
+# BAD
+API_KEY = "sk-1234567890abcdef"
+DB_PASSWORD = "supersecret"
+
+# GOOD - Use environment variables
+import os
+API_KEY = os.environ.get("ARF_API_KEY")
+DB_PASSWORD = os.environ.get("DB_PASSWORD")
+
+# Use secret managers in production
+# AWS Secrets Manager, HashiCorp Vault, Azure Key Vault
+```
+
+#### Secret Scanning
+```bash
+# Pre-commit hooks
+pre-commit install
+
+# CI pipeline scanning
+# GitHub: secret scanning enabled
+# GitLab: secret detection enabled
+# Custom: trufflehog, gitleaks, detect-secrets
+
+# Pre-commit config (.pre-commit-config.yaml)
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.0
+    hooks:
+      - id: gitleaks
+```
+
+### Audit & Compliance
+
+#### Structured Audit Logging
+```python
+import json
+import logging
+from datetime import datetime
+
+def audit_log(event: str, details: dict, level: str = "INFO"):
+    log_entry = {
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "event": event,
+        "details": details,
+        "component": "arf-rt",
+        "version": "0.9.1",
+    }
+    logging.getLogger("audit").log(
+        getattr(logging, level),
+        json.dumps(log_entry)
+    )
+
+# Usage
+audit_log("temporal_evaluation", {
+    "scenario_id": scenario_id,
+    "verdict": verdict.kind.value,
+    "path_length": len(path_edges),
+    "elimination_rate": metrics.elimination_rate,
+})
+```
+
+#### Log Retention
+```bash
+# Rotate logs daily, keep 365 days
+logrotate /etc/logrotate.d/arf-rt <<EOF
+/var/log/arf-rt/*.log {
+    daily
+    rotate 365
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0640 arf-rt arf-rt
+}
+EOF
+```
+
+### Incident Response
+
+#### Security Incident Checklist
+```markdown
+## Security Incident Response
+
+### Detection
+- [ ] Alert triggered (high infeasible rate, latency spike, error rate)
+- [ ] Logs reviewed for suspicious activity
+- [ ] Affected systems identified
+
+### Containment
+- [ ] Isolate affected systems
+- [ ] Preserve evidence (logs, database snapshots)
+- [ ] Disable compromised credentials
+
+### Eradication
+- [ ] Root cause identified
+- [ ] Vulnerability patched
+- [ ] Malicious artifacts removed
+
+### Recovery
+- [ ] Systems restored from clean backup
+- [ ] Monitoring enhanced
+- [ ] Post-incident review scheduled
+```
+
+### Compliance Checklist
+
+| Requirement | Implementation | Verification |
+|-------------|----------------|--------------|
+| GDPR Art. 25 | Data minimization, local processing | Code review |
+| GDPR Art. 32 | Encryption, audit logs | Security audit |
+| CCPA/CPRA | No PII processing | Data flow analysis |
+| SOC 2 Type II | Audit logs, access controls | SOC 2 audit |
+| ISO 27001 | Asset mgmt, access controls | ISO audit |
+| PCI-DSS Req 7/8 | Access restrictions, auth | PCI audit |
+
+---
+
+*Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
 ---
 
@@ -5267,6 +5989,367 @@ resources:
 
 ---
 
+## Security Hardening Guide (v0.9.1)
+
+### Threat Model
+
+ARF-RT operates under the following threat model assumptions:
+
+| Threat | Likelihood | Impact | Mitigation |
+|--------|------------|--------|------------|
+| Malicious scenario file | Medium | High | Input validation, schema enforcement |
+| SQL injection | Low | High | Parameterized queries, ORM |
+| Path traversal | Low | High | Path sanitization, safe joins |
+| Resource exhaustion | Medium | Medium | Rate limiting, resource limits |
+| Data exfiltration | Low | High | No network egress, local-only |
+| Supply chain attack | Low | Critical | Dependency pinning, SBOM |
+
+### Input Validation & Sanitization
+
+#### Scenario JSON Validation
+```python
+from arf_rt.adapters import seed_json
+
+# Schema validation with strict mode (extra=forbid)
+scenario = seed_json.validate(scenario_json, strict=True)
+
+# Validates:
+# - Required fields present
+# - Correct types for all fields
+# - No extra/unknown fields
+# - ARN format validation
+# - Temporal hint schema compliance
+```
+
+#### File Path Safety
+```python
+import os
+from pathlib import Path
+
+def safe_read_scenario(file_path: str) -> dict:
+    # Resolve and validate path
+    path = Path(file_path).resolve()
+    
+    # Prevent directory traversal
+    base_dir = Path("/safe/base/dir").resolve()
+    if not str(path).startswith(str(base_dir)):
+        raise ValueError("Path traversal attempt detected")
+    
+    # Check extension
+    if path.suffix not in ['.json', '.yaml', '.yml']:
+        raise ValueError("Invalid file extension")
+    
+    # Size limit
+    if path.stat().st_size > 100 * 1024 * 1024:  # 100MB
+        raise ValueError("File too large")
+    
+    return load_scenario(path)
+```
+
+#### ARN Validation
+```python
+import re
+
+ARN_PATTERN = re.compile(
+    r'^arn:aws:[a-z0-9-]+:[a-z0-9-]*:'
+    r'(?:\d{12}|aws):'
+    r'[a-zA-Z0-9_+=,.@\-/]+'
+)
+
+def validate_arn(arn: str) -> bool:
+    return bool(ARN_PATTERN.match(arn))
+
+# Usage
+if not validate_arn(scenario['nodes'][0]['provider_id']):
+    raise ValueError("Invalid ARN format")
+```
+
+### Database Security
+
+#### SQLite Hardening
+```sql
+-- Enable security features
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;
+PRAGMA foreign_keys = ON;
+PRAGMA secure_delete = ON;
+PRAGMA trusted_schema = OFF;  -- Prevent loading untrusted extensions
+PRAGMA query_only = FALSE;  -- Set to TRUE for read-only mode
+```
+
+#### Parameterized Queries
+```python
+# Always use parameterized queries (handled by ORM)
+from arf_rt.storage import SQLiteStore
+
+store = SQLiteStore(path)
+# All queries use parameterized statements automatically
+scenario = store.get_scenario(scenario_id)
+
+# Never use string interpolation for SQL
+# BAD: f"SELECT * FROM scenarios WHERE id = '{id}'"
+# GOOD: "SELECT * FROM scenarios WHERE id = ?", (id,)
+```
+
+#### Database Permissions
+```bash
+# File permissions
+chmod 600 arf_rt.db
+chown appuser:appgroup arf_rt.db
+
+# Directory permissions
+chmod 700 /var/lib/arf-rt/
+chown appuser:appgroup /var/lib/arf-rt/
+```
+
+### Network Security
+
+#### Zero Egress (Air-Gapped)
+```yaml
+# Kubernetes NetworkPolicy - deny all egress
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: arf-rt-deny-egress
+spec:
+  podSelector:
+    matchLabels:
+      app: arf-rt
+  policyTypes:
+  - Egress
+  egress: []  # No egress allowed
+```
+
+#### Restricted Egress (If Required)
+```yaml
+# Allow only specific egress
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: arf-rt-restricted-egress
+spec:
+  podSelector:
+    matchLabels:
+      app: arf-rt
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    ports:
+    - protocol: TCP
+      port: 9090  # Prometheus
+  - to:
+    - ipBlock:
+        cidr: 10.0.0.0/8  # Internal services only
+```
+
+### Container Security
+
+#### Minimal Base Image
+```dockerfile
+# Multi-stage build for minimal attack surface
+FROM python:3.11-slim as builder
+WORKDIR /app
+COPY . .
+RUN pip install --no-cache-dir -e ".[dev]" \
+    && pip install --no-cache-dir --target=/app/deps .
+
+FROM python:3.11-slim
+WORKDIR /app
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /app /app
+USER 1000:1000  # Non-root user
+ENTRYPOINT ["arf-rt"]
+```
+
+#### Security Scanning
+```bash
+# Scan for vulnerabilities
+trivy image arf-rt:latest
+syft packages dir:. -o spdx-json=sbom.json
+grype dir:.
+
+# Dependency scanning
+safety check
+pip-audit
+pip-audit --desc  # Include descriptions
+```
+
+### Runtime Security
+
+#### Non-Root Execution
+```dockerfile
+# Create non-root user
+RUN groupadd -r arf-rt && useradd -r -g arf-rt arf-rt
+USER arf-rt:arf-rt
+
+# Read-only filesystem
+# In Kubernetes:
+# securityContext:
+#   readOnlyRootFilesystem: true
+#   runAsNonRoot: true
+#   runAsUser: 1000
+#   runAsGroup: 1000
+#   allowPrivilegeEscalation: false
+#   capabilities:
+#     drop: ["ALL"]
+```
+
+#### Capability Dropping
+```yaml
+# Kubernetes securityContext
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: ["ALL"]
+  readOnlyRootFilesystem: true
+```
+
+#### Resource Limits
+```yaml
+resources:
+  requests:
+    memory: "2Gi"
+    cpu: "1000m"
+  limits:
+    memory: "4Gi"
+    cpu: "2000m"
+```
+
+### Secrets Management
+
+#### No Hardcoded Secrets
+```python
+# NEVER hardcode secrets
+# BAD
+API_KEY = "sk-1234567890abcdef"
+DB_PASSWORD = "supersecret"
+
+# GOOD - Use environment variables
+import os
+API_KEY = os.environ.get("ARF_API_KEY")
+DB_PASSWORD = os.environ.get("DB_PASSWORD")
+
+# Use secret managers in production
+# AWS Secrets Manager, HashiCorp Vault, Azure Key Vault
+```
+
+#### Secret Scanning
+```bash
+# Pre-commit hooks
+pre-commit install
+
+# CI pipeline scanning
+# GitHub: secret scanning enabled
+# GitLab: secret detection enabled
+# Custom: trufflehog, gitleaks, detect-secrets
+
+# Pre-commit config (.pre-commit-config.yaml)
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.0
+    hooks:
+      - id: gitleaks
+```
+
+### Audit & Compliance
+
+#### Structured Audit Logging
+```python
+import json
+import logging
+from datetime import datetime
+
+def audit_log(event: str, details: dict, level: str = "INFO"):
+    log_entry = {
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "event": event,
+        "details": details,
+        "component": "arf-rt",
+        "version": "0.9.1",
+    }
+    logging.getLogger("audit").log(
+        getattr(logging, level),
+        json.dumps(log_entry)
+    )
+
+# Usage
+audit_log("temporal_evaluation", {
+    "scenario_id": scenario_id,
+    "verdict": verdict.kind.value,
+    "path_length": len(path_edges),
+    "elimination_rate": metrics.elimination_rate,
+})
+```
+
+#### Log Retention
+```bash
+# Rotate logs daily, keep 365 days
+logrotate /etc/logrotate.d/arf-rt <<EOF
+/var/log/arf-rt/*.log {
+    daily
+    rotate 365
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0640 arf-rt arf-rt
+}
+EOF
+```
+
+### Incident Response
+
+#### Security Incident Checklist
+```markdown
+## Security Incident Response
+
+### Detection
+- [ ] Alert triggered (high infeasible rate, latency spike, error rate)
+- [ ] Logs reviewed for suspicious activity
+- [ ] Affected systems identified
+
+### Containment
+- [ ] Isolate affected systems
+- [ ] Preserve evidence (logs, database snapshots)
+- [ ] Disable compromised credentials
+
+### Eradication
+- [ ] Root cause identified
+- [ ] Vulnerability patched
+- [ ] Malicious artifacts removed
+
+### Recovery
+- [ ] Systems restored from clean backup
+- [ ] Monitoring enhanced
+- [ ] Post-incident review scheduled
+```
+
+### Compliance Checklist
+
+| Requirement | Implementation | Verification |
+|-------------|----------------|--------------|
+| GDPR Art. 25 | Data minimization, local processing | Code review |
+| GDPR Art. 32 | Encryption, audit logs | Security audit |
+| CCPA/CPRA | No PII processing | Data flow analysis |
+| SOC 2 Type II | Audit logs, access controls | SOC 2 audit |
+| ISO 27001 | Asset mgmt, access controls | ISO audit |
+| PCI-DSS Req 7/8 | Access restrictions, auth | PCI audit |
+
+---
+
+*Last updated: November 7, 2026 — v0.9.1 documentation refresh*
+
+---
+
+---
+
 ## Best Practices (v0.9.1)
 
 ### Configuration Best Practices
@@ -6533,6 +7616,367 @@ async with RetryContext(max_attempts=3) as ctx:
 
 *Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
+
+---
+
+---
+
+## Security Hardening Guide (v0.9.1)
+
+### Threat Model
+
+ARF-RT operates under the following threat model assumptions:
+
+| Threat | Likelihood | Impact | Mitigation |
+|--------|------------|--------|------------|
+| Malicious scenario file | Medium | High | Input validation, schema enforcement |
+| SQL injection | Low | High | Parameterized queries, ORM |
+| Path traversal | Low | High | Path sanitization, safe joins |
+| Resource exhaustion | Medium | Medium | Rate limiting, resource limits |
+| Data exfiltration | Low | High | No network egress, local-only |
+| Supply chain attack | Low | Critical | Dependency pinning, SBOM |
+
+### Input Validation & Sanitization
+
+#### Scenario JSON Validation
+```python
+from arf_rt.adapters import seed_json
+
+# Schema validation with strict mode (extra=forbid)
+scenario = seed_json.validate(scenario_json, strict=True)
+
+# Validates:
+# - Required fields present
+# - Correct types for all fields
+# - No extra/unknown fields
+# - ARN format validation
+# - Temporal hint schema compliance
+```
+
+#### File Path Safety
+```python
+import os
+from pathlib import Path
+
+def safe_read_scenario(file_path: str) -> dict:
+    # Resolve and validate path
+    path = Path(file_path).resolve()
+    
+    # Prevent directory traversal
+    base_dir = Path("/safe/base/dir").resolve()
+    if not str(path).startswith(str(base_dir)):
+        raise ValueError("Path traversal attempt detected")
+    
+    # Check extension
+    if path.suffix not in ['.json', '.yaml', '.yml']:
+        raise ValueError("Invalid file extension")
+    
+    # Size limit
+    if path.stat().st_size > 100 * 1024 * 1024:  # 100MB
+        raise ValueError("File too large")
+    
+    return load_scenario(path)
+```
+
+#### ARN Validation
+```python
+import re
+
+ARN_PATTERN = re.compile(
+    r'^arn:aws:[a-z0-9-]+:[a-z0-9-]*:'
+    r'(?:\d{12}|aws):'
+    r'[a-zA-Z0-9_+=,.@\-/]+'
+)
+
+def validate_arn(arn: str) -> bool:
+    return bool(ARN_PATTERN.match(arn))
+
+# Usage
+if not validate_arn(scenario['nodes'][0]['provider_id']):
+    raise ValueError("Invalid ARN format")
+```
+
+### Database Security
+
+#### SQLite Hardening
+```sql
+-- Enable security features
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;
+PRAGMA foreign_keys = ON;
+PRAGMA secure_delete = ON;
+PRAGMA trusted_schema = OFF;  -- Prevent loading untrusted extensions
+PRAGMA query_only = FALSE;  -- Set to TRUE for read-only mode
+```
+
+#### Parameterized Queries
+```python
+# Always use parameterized queries (handled by ORM)
+from arf_rt.storage import SQLiteStore
+
+store = SQLiteStore(path)
+# All queries use parameterized statements automatically
+scenario = store.get_scenario(scenario_id)
+
+# Never use string interpolation for SQL
+# BAD: f"SELECT * FROM scenarios WHERE id = '{id}'"
+# GOOD: "SELECT * FROM scenarios WHERE id = ?", (id,)
+```
+
+#### Database Permissions
+```bash
+# File permissions
+chmod 600 arf_rt.db
+chown appuser:appgroup arf_rt.db
+
+# Directory permissions
+chmod 700 /var/lib/arf-rt/
+chown appuser:appgroup /var/lib/arf-rt/
+```
+
+### Network Security
+
+#### Zero Egress (Air-Gapped)
+```yaml
+# Kubernetes NetworkPolicy - deny all egress
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: arf-rt-deny-egress
+spec:
+  podSelector:
+    matchLabels:
+      app: arf-rt
+  policyTypes:
+  - Egress
+  egress: []  # No egress allowed
+```
+
+#### Restricted Egress (If Required)
+```yaml
+# Allow only specific egress
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: arf-rt-restricted-egress
+spec:
+  podSelector:
+    matchLabels:
+      app: arf-rt
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    ports:
+    - protocol: TCP
+      port: 9090  # Prometheus
+  - to:
+    - ipBlock:
+        cidr: 10.0.0.0/8  # Internal services only
+```
+
+### Container Security
+
+#### Minimal Base Image
+```dockerfile
+# Multi-stage build for minimal attack surface
+FROM python:3.11-slim as builder
+WORKDIR /app
+COPY . .
+RUN pip install --no-cache-dir -e ".[dev]" \
+    && pip install --no-cache-dir --target=/app/deps .
+
+FROM python:3.11-slim
+WORKDIR /app
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /app /app
+USER 1000:1000  # Non-root user
+ENTRYPOINT ["arf-rt"]
+```
+
+#### Security Scanning
+```bash
+# Scan for vulnerabilities
+trivy image arf-rt:latest
+syft packages dir:. -o spdx-json=sbom.json
+grype dir:.
+
+# Dependency scanning
+safety check
+pip-audit
+pip-audit --desc  # Include descriptions
+```
+
+### Runtime Security
+
+#### Non-Root Execution
+```dockerfile
+# Create non-root user
+RUN groupadd -r arf-rt && useradd -r -g arf-rt arf-rt
+USER arf-rt:arf-rt
+
+# Read-only filesystem
+# In Kubernetes:
+# securityContext:
+#   readOnlyRootFilesystem: true
+#   runAsNonRoot: true
+#   runAsUser: 1000
+#   runAsGroup: 1000
+#   allowPrivilegeEscalation: false
+#   capabilities:
+#     drop: ["ALL"]
+```
+
+#### Capability Dropping
+```yaml
+# Kubernetes securityContext
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: ["ALL"]
+  readOnlyRootFilesystem: true
+```
+
+#### Resource Limits
+```yaml
+resources:
+  requests:
+    memory: "2Gi"
+    cpu: "1000m"
+  limits:
+    memory: "4Gi"
+    cpu: "2000m"
+```
+
+### Secrets Management
+
+#### No Hardcoded Secrets
+```python
+# NEVER hardcode secrets
+# BAD
+API_KEY = "sk-1234567890abcdef"
+DB_PASSWORD = "supersecret"
+
+# GOOD - Use environment variables
+import os
+API_KEY = os.environ.get("ARF_API_KEY")
+DB_PASSWORD = os.environ.get("DB_PASSWORD")
+
+# Use secret managers in production
+# AWS Secrets Manager, HashiCorp Vault, Azure Key Vault
+```
+
+#### Secret Scanning
+```bash
+# Pre-commit hooks
+pre-commit install
+
+# CI pipeline scanning
+# GitHub: secret scanning enabled
+# GitLab: secret detection enabled
+# Custom: trufflehog, gitleaks, detect-secrets
+
+# Pre-commit config (.pre-commit-config.yaml)
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.0
+    hooks:
+      - id: gitleaks
+```
+
+### Audit & Compliance
+
+#### Structured Audit Logging
+```python
+import json
+import logging
+from datetime import datetime
+
+def audit_log(event: str, details: dict, level: str = "INFO"):
+    log_entry = {
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "event": event,
+        "details": details,
+        "component": "arf-rt",
+        "version": "0.9.1",
+    }
+    logging.getLogger("audit").log(
+        getattr(logging, level),
+        json.dumps(log_entry)
+    )
+
+# Usage
+audit_log("temporal_evaluation", {
+    "scenario_id": scenario_id,
+    "verdict": verdict.kind.value,
+    "path_length": len(path_edges),
+    "elimination_rate": metrics.elimination_rate,
+})
+```
+
+#### Log Retention
+```bash
+# Rotate logs daily, keep 365 days
+logrotate /etc/logrotate.d/arf-rt <<EOF
+/var/log/arf-rt/*.log {
+    daily
+    rotate 365
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0640 arf-rt arf-rt
+}
+EOF
+```
+
+### Incident Response
+
+#### Security Incident Checklist
+```markdown
+## Security Incident Response
+
+### Detection
+- [ ] Alert triggered (high infeasible rate, latency spike, error rate)
+- [ ] Logs reviewed for suspicious activity
+- [ ] Affected systems identified
+
+### Containment
+- [ ] Isolate affected systems
+- [ ] Preserve evidence (logs, database snapshots)
+- [ ] Disable compromised credentials
+
+### Eradication
+- [ ] Root cause identified
+- [ ] Vulnerability patched
+- [ ] Malicious artifacts removed
+
+### Recovery
+- [ ] Systems restored from clean backup
+- [ ] Monitoring enhanced
+- [ ] Post-incident review scheduled
+```
+
+### Compliance Checklist
+
+| Requirement | Implementation | Verification |
+|-------------|----------------|--------------|
+| GDPR Art. 25 | Data minimization, local processing | Code review |
+| GDPR Art. 32 | Encryption, audit logs | Security audit |
+| CCPA/CPRA | No PII processing | Data flow analysis |
+| SOC 2 Type II | Audit logs, access controls | SOC 2 audit |
+| ISO 27001 | Asset mgmt, access controls | ISO audit |
+| PCI-DSS Req 7/8 | Access restrictions, auth | PCI audit |
+
+---
+
+*Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
 ---
 
