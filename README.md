@@ -2552,6 +2552,762 @@ If you use ARF-RT or its temporal extensions in academic work, please cite:
 
 ---
 
+## Monitoring & Observability (v0.9.1)
+
+### Metrics Collection
+
+ARF-RT provides comprehensive metrics for monitoring temporal evaluation performance and results.
+
+#### Key Metrics
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `arf_rt_temporal_evaluations_total` | Counter | Total evaluations by verdict (FEASIBLE/INFEASIBLE/UNKNOWN) |
+| `arf_rt_temporal_latency_seconds` | Histogram | Evaluation latency distribution |
+| `arf_rt_temporal_path_length` | Histogram | Path length distribution |
+| `arf_rt_temporal_elimination_rate` | Gauge | Current elimination rate |
+| `arf_rt_temporal_unknown_rate` | Gauge | Current UNKNOWN verdict rate |
+| `arf_rt_temporal_constraint_violations` | Counter | Constraint violations by type (TC-1..TC-5) |
+| `arf_rt_temporal_active_paths` | Gauge | Number of active paths in evaluation |
+| `arf_rt_temporal_evaluation_errors` | Counter | Evaluation errors by type |
+
+#### Metrics Collection Example
+```python
+from arf_rt.temporal import TemporalEvaluator, TemporalMetricsExtended
+from prometheus_client import Counter, Histogram, Gauge, start_http_server
+
+# Initialize Prometheus metrics
+TEMPORAL_EVALUATIONS = Counter(
+    'arf_rt_temporal_evaluations_total',
+    'Total temporal evaluations',
+    ['verdict', 'constraint']
+)
+
+TEMPORAL_LATENCY = Histogram(
+    'arf_rt_temporal_latency_seconds',
+    'Temporal evaluation latency in seconds',
+    buckets=[0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0]
+)
+
+TEMPORAL_PATH_LENGTH = Histogram(
+    'arf_rt_temporal_path_length',
+    'Attack path length distribution',
+    buckets=[1, 2, 3, 4, 5, 6, 7, 8, 10, 15, 20]
+)
+
+TEMPORAL_ELIMINATION_RATE = Gauge(
+    'arf_rt_temporal_elimination_rate',
+    'Current temporal elimination rate'
+)
+
+TEMPORAL_UNKNOWN_RATE = Gauge(
+    'arf_rt_temporal_unknown_rate',
+    'Current UNKNOWN verdict rate'
+)
+
+# Initialize evaluator with metrics
+evaluator = TemporalEvaluator(config=config, enable_stats=True)
+metrics = TemporalMetricsExtended()
+
+# Evaluate with metrics
+verdict = evaluator.evaluate_with_metrics(path_edges, hints, metrics)
+
+# Record Prometheus metrics
+TEMPORAL_EVALUATIONS.labels(
+    verdict=verdict.kind.value,
+    constraint=verdict.violated_constraint or "none"
+).inc()
+
+TEMPORAL_LATENCY.observe(evaluator.stats.evaluation_time_ms / 1000)
+TEMPORAL_PATH_LENGTH.observe(len(path_edges))
+TEMPORAL_ELIMINATION_RATE.set(metrics.elimination_rate)
+TEMPORAL_UNKNOWN_RATE.set(metrics.unknown_rate)
+
+# Record constraint-specific violations
+if verdict.is_infeasible() and verdict.violated_constraint:
+    from prometheus_client import Counter
+    CONSTRAINT_VIOLATIONS = Counter(
+        'arf_rt_temporal_constraint_violations_total',
+        'Temporal constraint violations',
+        ['constraint']
+    )
+    CONSTRAINT_VIOLATIONS.labels(constraint=verdict.violated_constraint).inc()
+```
+
+### Prometheus Integration
+
+#### Metrics Endpoint
+```python
+from prometheus_client import start_http_server
+
+# Start Prometheus metrics server on port 9090
+start_http_server(9090)
+
+# Metrics available at http://localhost:9090/metrics
+```
+
+#### Prometheus Configuration
+```yaml
+# prometheus.yml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'arf-rt'
+    static_configs:
+      - targets: ['arf-rt:9090']
+        labels:
+          service: 'arf-rt'
+          environment: 'production'
+    scrape_interval: 10s
+    metrics_path: /metrics
+```
+
+#### Recording Rules
+```yaml
+# recording_rules.yml
+groups:
+- name: arf-rt-temporal
+  rules:
+  - record: arf_rt:eval_rate_5m
+    expr: rate(arf_rt_temporal_evaluations_total[5m])
+  - record: arf_rt:latency_p50_5m
+    expr: histogram_quantile(0.5, rate(arf_rt_temporal_latency_seconds_bucket[5m]))
+  - record: arf_rt:latency_p95_5m
+    expr: histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m]))
+  - record: arf_rt:latency_p99_5m
+    expr: histogram_quantile(0.99, rate(arf_rt_temporal_latency_seconds_bucket[5m]))
+  - record: arf_rt:elimination_rate_5m
+    expr: arf_rt_temporal_elimination_rate
+  - record: arf_rt:unknown_rate_5m
+    expr: arf_rt_temporal_unknown_rate
+```
+
+### Grafana Dashboard
+
+#### Dashboard Panels
+
+```json
+{
+  "dashboard": {
+    "title": "ARF-RT Temporal Analysis",
+    "panels": [
+      {
+        "title": "Evaluations/sec",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(arf_rt_temporal_evaluations_total[5m])",
+            "legendFormat": "{{verdict}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [{"format": "ops", "label": "Evaluations/sec"}]
+      },
+      {
+        "title": "Latency Percentiles (p50/p95/p99)",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.5, rate(arf_rt_temporal_latency_seconds_bucket[5m]))",
+            "legendFormat": "p50",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m]))",
+            "legendFormat": "p95",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(arf_rt_temporal_latency_seconds_bucket[5m]))",
+            "legendFormat": "p99",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [{"format": "seconds", "label": "Latency (s)"}]
+      },
+      {
+        "title": "Elimination Rate",
+        "type": "gauge",
+        "gridPos": {"x": 0, "y": 8, "w": 6, "h": 6},
+        "targets": [
+          {
+            "expr": "arf_rt_temporal_elimination_rate",
+            "legendFormat": "Elimination Rate",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "min": 0,
+            "max": 1,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 0.5},
+                {"color": "red", "value": 0.8}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "title": "UNKNOWN Rate",
+        "type": "graph",
+        "gridPos": {"x": 6, "y": 8, "w": 6, "h": 8},
+        "targets": [
+          {
+            "expr": "arf_rt_temporal_unknown_rate",
+            "legendFormat": "UNKNOWN Rate",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [{"format": "percentunit", "label": "UNKNOWN Rate"}]
+      },
+      {
+        "title": "Verdict Breakdown",
+        "type": "piechart",
+        "gridPos": {"x": 12, "y": 8, "w": 6, "h": 8},
+        "targets": [
+          {
+            "expr": "sum by (verdict) (rate(arf_rt_temporal_evaluations_total[5m]))",
+            "legendFormat": "{{verdict}}",
+            "refId": "A"
+          }
+        ],
+        "type": "piechart"
+      },
+      {
+        "title": "Constraint Violations",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 16, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(arf_rt_temporal_constraint_violations_total[5m])",
+            "legendFormat": "{{constraint}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [{"format": "ops", "label": "Violations/sec"}]
+      },
+      {
+        "title": "Path Length Distribution",
+        "type": "heatmap",
+        "gridPos": {"x": 12, "y": 16, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(arf_rt_temporal_path_length_bucket[5m])",
+            "legendFormat": "Path Length",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "title": "Evaluation Latency Heatmap",
+        "type": "heatmap",
+        "gridPos": {"x": 0, "y": 24, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(arf_rt_temporal_latency_seconds_bucket[5m])",
+            "legendFormat": "Latency",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "title": "Evaluation Errors",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 24, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(arf_rt_temporal_evaluation_errors_total[5m])",
+            "legendFormat": "{{error_type}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [{"format": "ops", "label": "Errors/sec"}]
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "10s"
+  }
+}
+```
+
+### Alerting Rules
+
+```yaml
+groups:
+- name: arf-rt-temporal
+  interval: 30s
+  rules:
+  # High infeasible rate - temporal constraints too restrictive or attack detected
+  - alert: HighInfeasibleRate
+    expr: arf_rt_temporal_elimination_rate > 0.8
+    for: 5m
+    labels:
+      severity: warning
+      component: arf-rt
+    annotations:
+      summary: "High temporal infeasible rate detected"
+      description: "Temporal elimination rate is {{ $value | humanizePercentage }} - temporal constraints may be too restrictive or active attack detected"
+      runbook_url: "https://github.com/Sneharsha001/temporal-context-aware-cloud-identity-attack-paths/wiki/HighInfeasibleRate"
+
+  - alert: CriticalInfeasibleRate
+    expr: arf_rt_temporal_elimination_rate > 0.95
+    for: 2m
+    labels:
+      severity: critical
+      component: arf-rt
+    annotations:
+      summary: "Critical temporal infeasible rate"
+      description: "Temporal elimination rate is {{ $value | humanizePercentage }} - immediate investigation required"
+      runbook_url: "https://github.com/Sneharsha001/temporal-context-aware-cloud-identity-attack-paths/wiki/CriticalInfeasibleRate"
+
+  # High latency
+  - alert: EvaluationLatencyHigh
+    expr: histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m])) > 10
+    for: 2m
+    labels:
+      severity: critical
+      component: arf-rt
+    annotations:
+      summary: "Temporal evaluation latency > 10s"
+      description: "P95 evaluation latency is {{ $value }}s - performance degradation detected"
+      runbook_url: "https://github.com/Sneharsha001/temporal-context-aware-cloud-identity-attack-paths/wiki/EvaluationLatencyHigh"
+
+  - alert: EvaluationLatencyWarning
+    expr: histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m])) > 5
+    for: 5m
+    labels:
+      severity: warning
+      component: arf-rt
+    annotations:
+      summary: "Temporal evaluation latency > 5s"
+      description: "P95 evaluation latency is {{ $value }}s - performance degradation"
+
+  # High UNKNOWN rate - missing temporal data
+  - alert: UnknownRateSpike
+    expr: rate(arf_rt_temporal_evaluations_total{verdict="UNKNOWN"}[5m]) > 0.5
+    for: 1m
+    labels:
+      severity: warning
+      component: arf-rt
+    annotations:
+      summary: "High UNKNOWN verdict rate"
+      description: "UNKNOWN verdict rate is {{ $value | humanizePercentage }} - missing temporal data in hints"
+
+  - alert: HighUnknownRate
+    expr: arf_rt_temporal_unknown_rate > 0.5
+    for: 5m
+    labels:
+      severity: warning
+      component: arf-rt
+    annotations:
+      summary: "High UNKNOWN verdict rate"
+      description: "UNKNOWN rate is {{ $value | humanizePercentage }} - missing temporal data in hints"
+
+  # Constraint-specific alerts
+  - alert: TC1CausalOrderViolations
+    expr: rate(arf_rt_temporal_constraint_violations_total{constraint="TC-1"}[5m]) > 0.1
+    for: 2m
+    labels:
+      severity: warning
+      constraint: TC-1
+    annotations:
+      summary: "High TC-1 (Causal Order) violation rate"
+      description: "Causal order violations at {{ $value }} per second"
+
+  - alert: TC2SessionExpiryViolations
+    expr: rate(arf_rt_temporal_constraint_violations_total{constraint="TC-2"}[5m]) > 0.1
+    for: 2m
+    labels:
+      severity: warning
+      constraint: TC-2
+    annotations:
+      summary: "High TC-2 (Session Expiry) violation rate"
+      description: "Session expiry violations at {{ $value }} per second"
+
+  - alert: TC3VelocityViolations
+    expr: rate(arf_rt_temporal_constraint_violations_total{constraint="TC-3"}[5m]) > 0.1
+    for: 2m
+    labels:
+      severity: warning
+      constraint: TC-3
+    annotations:
+      summary: "High TC-3 (Velocity) violation rate"
+      description: "Velocity threshold violations at {{ $value }} per second"
+
+  - alert: TC4StaleCredentialViolations
+    expr: rate(arf_rt_temporal_constraint_violations_total{constraint="TC-4"}[5m]) > 0.1
+    for: 2m
+    labels:
+      severity: warning
+      constraint: TC-4
+    annotations:
+      summary: "High TC-4 (Stale Credential) violation rate"
+      description: "Stale credential violations at {{ $value }} per second"
+
+  - alert: TC5ConcurrentSessionViolations
+    expr: rate(arf_rt_temporal_constraint_violations_total{constraint="TC-5"}[5m]) > 0.1
+    for: 2m
+    labels:
+      severity: warning
+      constraint: TC-5
+    annotations:
+      summary: "High TC-5 (Concurrent Session) violation rate"
+      description: "Concurrent session violations at {{ $value }} per second"
+
+  # Performance degradation
+  - alert: EvaluationLatencyDegradation
+    expr: |
+      histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m])) > 
+      2 * histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[1h]))
+    for: 5m
+    labels:
+      severity: warning
+      component: arf-rt
+    annotations:
+      summary: "Evaluation latency degraded"
+      description: "P95 latency increased significantly compared to 1h baseline"
+
+  # High evaluation error rate
+  - alert: EvaluationErrorRate
+    expr: rate(arf_rt_temporal_evaluation_errors_total[5m]) > 0.1
+    for: 1m
+    labels:
+      severity: critical
+      component: arf-rt
+    annotations:
+      summary: "High evaluation error rate"
+      description: "Evaluation error rate is {{ $value }} per second"
+
+  # Database issues
+  - alert: DatabaseConnectionFailed
+    expr: rate(arf_rt_temporal_evaluation_errors_total{error="database"}[5m]) > 0
+    for: 1m
+    labels:
+      severity: critical
+      component: arf-rt
+    annotations:
+      summary: "Database connection failed"
+      description: "Database connection failures detected"
+
+  # High memory usage
+  - alert: HighMemoryUsage
+    expr: (container_memory_usage_bytes{container="arf-rt"} / container_spec_memory_limit_bytes{container="arf-rt"}) > 0.9
+    for: 5m
+    labels:
+      severity: warning
+      component: arf-rt
+    annotations:
+      summary: "High memory usage"
+      description: "Memory usage at {{ $value | humanizePercentage }} of limit"
+
+  # High CPU usage
+  - alert: HighCPUUsage
+    expr: (rate(container_cpu_usage_seconds_total{container="arf-rt"}[5m])) > 0.9
+    for: 5m
+    labels:
+      severity: warning
+      component: arf-rt
+    annotations:
+      summary: "High CPU usage"
+      description: "CPU usage at {{ $value | humanizePercentage }} of limit"
+```
+
+### Log Aggregation
+
+#### Structured Logging
+```python
+import json
+import logging
+from datetime import datetime
+
+class JSONFormatter(logging.Formatter):
+    def format(self, record):
+        log_entry = {
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+            "module": record.module,
+            "function": record.funcName,
+            "line": record.lineno,
+        }
+        if hasattr(record, 'extra_fields'):
+            log_entry.update(record.extra_fields)
+        return json.dumps(log_entry)
+
+# Configure logging
+handler = logging.StreamHandler()
+handler.setFormatter(JSONFormatter())
+logging.root.handlers = [handler]
+logging.root.setLevel(logging.INFO)
+
+# Usage with extra fields
+logger = logging.getLogger(__name__)
+logger.info("Temporal evaluation completed", extra={
+    "scenario_id": scenario_id,
+    "verdict": verdict.kind.value,
+    "path_length": len(path_edges),
+    "elimination_rate": metrics.elimination_rate,
+    "latency_ms": evaluator.stats.evaluation_time_ms,
+})
+```
+
+#### ELK Stack Integration
+```yaml
+# filebeat.yml
+filebeat.inputs:
+- type: log
+  paths:
+    - /var/log/arf-rt/*.log
+  fields:
+    service: arf-rt
+    environment: production
+  fields_under_root: true
+  json:
+    keys_under_root: true
+    overwrite_keys: true
+
+output.elasticsearch:
+  hosts: ["elasticsearch:9200"]
+  index: "arf-rt-logs-%{+yyyy.MM.dd}"
+
+setup.template.name: "arf-rt"
+setup.template.pattern: "arf-rt-*"
+```
+
+#### Elasticsearch Index Template
+```json
+{
+  "index_patterns": ["arf-rt-*"],
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 1
+    },
+    "mappings": {
+      "properties": {
+        "@timestamp": {"type": "date"},
+        "level": {"type": "keyword"},
+        "service": {"type": "keyword"},
+        "scenario_id": {"type": "keyword"},
+        "verdict": {"type": "keyword"},
+        "path_length": {"type": "integer"},
+        "elimination_rate": {"type": "float"},
+        "latency_ms": {"type": "float"},
+        "message": {"type": "text"}
+      }
+    }
+  }
+}
+```
+
+### Distributed Tracing
+
+#### OpenTelemetry Integration
+```python
+from opentelemetry import trace
+from opentelemetry.exporter.jaeger.thrift import JaegerExporter
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+# Initialize tracer
+trace.set_tracer_provider(TracerProvider())
+jaeger_exporter = JaegerExporter(
+    agent_host_name="jaeger",
+    agent_port=6831,
+)
+trace.get_tracer_provider().add_span_processor(
+    BatchSpanProcessor(jaeger_exporter)
+)
+
+tracer = trace.get_tracer(__name__)
+
+# In evaluation code
+with tracer.start_as_current_span("temporal_evaluation") as span:
+    span.set_attribute("scenario_id", scenario_id)
+    span.set_attribute("path_length", len(path_edges))
+    
+    verdict = evaluator.evaluate(path_edges, hints)
+    
+    span.set_attribute("verdict", verdict.kind.value)
+    span.set_attribute("elimination_rate", metrics.elimination_rate)
+    
+    if verdict.is_infeasible():
+        span.set_attribute("violated_constraint", verdict.violated_constraint)
+        span.set_attribute("verdict_reason", verdict.reason)
+```
+
+#### Jaeger Configuration
+```yaml
+# jaeger-config.yml
+jaeger:
+  collector:
+    zipkin:
+      host: jaeger-collector
+      port: 9411
+  agent:
+    host: jaeger-agent
+    port: 6831
+```
+
+### Health Checks
+
+#### Health Check Endpoints
+```python
+from fastapi import FastAPI, HTTPException
+from arf_rt.storage import SQLiteStore
+from arf_rt.temporal import TemporalEvaluator
+
+app = FastAPI()
+
+@app.get("/health")
+async def health():
+    """Liveness probe - service is running"""
+    return {
+        "status": "healthy",
+        "version": "0.9.1",
+        "timestamp": datetime.utcnow().isoformat() + "Z"
+    }
+
+@app.get("/ready")
+async def ready():
+    """Readiness probe - service can handle requests"""
+    try:
+        # Check database connectivity
+        store = SQLiteStore("/data/arf_rt.db")
+        store.health_check()
+        
+        # Check temporal evaluator
+        evaluator = TemporalEvaluator()
+        
+        return {
+            "status": "ready",
+            "checks": {
+                "database": "healthy",
+                "evaluator": "healthy"
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=str(e))
+
+@app.get("/metrics")
+async def metrics():
+    """Prometheus metrics endpoint"""
+    return Response(content=generate_latest(), media_type="text/plain")
+```
+
+### Kubernetes Health Checks
+
+```yaml
+# Deployment health checks
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+startupProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 30
+```
+
+### Runbook Automation
+
+```bash
+#!/bin/bash
+# runbook.sh - Automated incident response for temporal violations
+
+# Usage: ./runbook.sh <alert_name> <severity>
+
+ALERT_NAME=$1
+SEVERITY=$2
+
+case $ALERT_NAME in
+  "HighInfeasibleRate")
+    echo "Running High Infeasible Rate runbook..."
+    python scripts/audit_temporal_compliance.py incident_scenario.json \
+      --frameworks CIS_AWS,NIST_800_53 \
+      --output /tmp/compliance_report.json
+    
+    python scripts/generate_remediation_plan.py incident_scenario.json \
+      --format bash \
+      --output /tmp/remediation.sh
+    
+    # Notify on-call
+    curl -X POST "$SLACK_WEBHOOK" -d "{\"text\":\"High infeasible rate detected. Remediation plan generated.\"}"
+    ;;
+    
+  "HighInfeasibleRate")
+    echo "Running Critical Infeasible Rate runbook..."
+    # Page on-call engineer
+    curl -X POST "$PAGERDUTY_API" -d "{\"summary\":\"Critical Infeasible Rate\"}"
+    
+    # Auto-remediate if enabled
+    if [ "$AUTO_REMEDIATE" = "true" ]; then
+      bash /tmp/remediation.sh
+    fi
+    ;;
+    
+  "EvaluationLatencyHigh")
+    echo "Running High Latency runbook..."
+    # Scale up replicas
+    kubectl scale deployment arf-rt --replicas=5
+    
+    # Check for resource constraints
+    kubectl top pods -l app=arf-rt
+    ;;
+    
+  "UnknownRateSpike")
+    echo "Running UNKNOWN Rate Spike runbook..."
+    python scripts/audit_temporal_coverage.py incident_scenario.json \
+      --threshold 0.5 \
+      --output /tmp/coverage_report.json
+    ;;
+    
+  *)
+    echo "Unknown alert: $ALERT_NAME"
+    exit 1
+    ;;
+esac
+```
+
+---
+
+*Last updated: November 7, 2026 — v0.9.1 documentation refresh*
+
+---
+
+---
+
 ## Deployment Guide (v0.9.1)
 
 ### Prerequisites
@@ -4783,6 +5539,762 @@ async with RetryContext(max_attempts=3) as ctx:
 
 *Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
+
+---
+
+---
+
+## Monitoring & Observability (v0.9.1)
+
+### Metrics Collection
+
+ARF-RT provides comprehensive metrics for monitoring temporal evaluation performance and results.
+
+#### Key Metrics
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `arf_rt_temporal_evaluations_total` | Counter | Total evaluations by verdict (FEASIBLE/INFEASIBLE/UNKNOWN) |
+| `arf_rt_temporal_latency_seconds` | Histogram | Evaluation latency distribution |
+| `arf_rt_temporal_path_length` | Histogram | Path length distribution |
+| `arf_rt_temporal_elimination_rate` | Gauge | Current elimination rate |
+| `arf_rt_temporal_unknown_rate` | Gauge | Current UNKNOWN verdict rate |
+| `arf_rt_temporal_constraint_violations` | Counter | Constraint violations by type (TC-1..TC-5) |
+| `arf_rt_temporal_active_paths` | Gauge | Number of active paths in evaluation |
+| `arf_rt_temporal_evaluation_errors` | Counter | Evaluation errors by type |
+
+#### Metrics Collection Example
+```python
+from arf_rt.temporal import TemporalEvaluator, TemporalMetricsExtended
+from prometheus_client import Counter, Histogram, Gauge, start_http_server
+
+# Initialize Prometheus metrics
+TEMPORAL_EVALUATIONS = Counter(
+    'arf_rt_temporal_evaluations_total',
+    'Total temporal evaluations',
+    ['verdict', 'constraint']
+)
+
+TEMPORAL_LATENCY = Histogram(
+    'arf_rt_temporal_latency_seconds',
+    'Temporal evaluation latency in seconds',
+    buckets=[0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0]
+)
+
+TEMPORAL_PATH_LENGTH = Histogram(
+    'arf_rt_temporal_path_length',
+    'Attack path length distribution',
+    buckets=[1, 2, 3, 4, 5, 6, 7, 8, 10, 15, 20]
+)
+
+TEMPORAL_ELIMINATION_RATE = Gauge(
+    'arf_rt_temporal_elimination_rate',
+    'Current temporal elimination rate'
+)
+
+TEMPORAL_UNKNOWN_RATE = Gauge(
+    'arf_rt_temporal_unknown_rate',
+    'Current UNKNOWN verdict rate'
+)
+
+# Initialize evaluator with metrics
+evaluator = TemporalEvaluator(config=config, enable_stats=True)
+metrics = TemporalMetricsExtended()
+
+# Evaluate with metrics
+verdict = evaluator.evaluate_with_metrics(path_edges, hints, metrics)
+
+# Record Prometheus metrics
+TEMPORAL_EVALUATIONS.labels(
+    verdict=verdict.kind.value,
+    constraint=verdict.violated_constraint or "none"
+).inc()
+
+TEMPORAL_LATENCY.observe(evaluator.stats.evaluation_time_ms / 1000)
+TEMPORAL_PATH_LENGTH.observe(len(path_edges))
+TEMPORAL_ELIMINATION_RATE.set(metrics.elimination_rate)
+TEMPORAL_UNKNOWN_RATE.set(metrics.unknown_rate)
+
+# Record constraint-specific violations
+if verdict.is_infeasible() and verdict.violated_constraint:
+    from prometheus_client import Counter
+    CONSTRAINT_VIOLATIONS = Counter(
+        'arf_rt_temporal_constraint_violations_total',
+        'Temporal constraint violations',
+        ['constraint']
+    )
+    CONSTRAINT_VIOLATIONS.labels(constraint=verdict.violated_constraint).inc()
+```
+
+### Prometheus Integration
+
+#### Metrics Endpoint
+```python
+from prometheus_client import start_http_server
+
+# Start Prometheus metrics server on port 9090
+start_http_server(9090)
+
+# Metrics available at http://localhost:9090/metrics
+```
+
+#### Prometheus Configuration
+```yaml
+# prometheus.yml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'arf-rt'
+    static_configs:
+      - targets: ['arf-rt:9090']
+        labels:
+          service: 'arf-rt'
+          environment: 'production'
+    scrape_interval: 10s
+    metrics_path: /metrics
+```
+
+#### Recording Rules
+```yaml
+# recording_rules.yml
+groups:
+- name: arf-rt-temporal
+  rules:
+  - record: arf_rt:eval_rate_5m
+    expr: rate(arf_rt_temporal_evaluations_total[5m])
+  - record: arf_rt:latency_p50_5m
+    expr: histogram_quantile(0.5, rate(arf_rt_temporal_latency_seconds_bucket[5m]))
+  - record: arf_rt:latency_p95_5m
+    expr: histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m]))
+  - record: arf_rt:latency_p99_5m
+    expr: histogram_quantile(0.99, rate(arf_rt_temporal_latency_seconds_bucket[5m]))
+  - record: arf_rt:elimination_rate_5m
+    expr: arf_rt_temporal_elimination_rate
+  - record: arf_rt:unknown_rate_5m
+    expr: arf_rt_temporal_unknown_rate
+```
+
+### Grafana Dashboard
+
+#### Dashboard Panels
+
+```json
+{
+  "dashboard": {
+    "title": "ARF-RT Temporal Analysis",
+    "panels": [
+      {
+        "title": "Evaluations/sec",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(arf_rt_temporal_evaluations_total[5m])",
+            "legendFormat": "{{verdict}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [{"format": "ops", "label": "Evaluations/sec"}]
+      },
+      {
+        "title": "Latency Percentiles (p50/p95/p99)",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.5, rate(arf_rt_temporal_latency_seconds_bucket[5m]))",
+            "legendFormat": "p50",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m]))",
+            "legendFormat": "p95",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(arf_rt_temporal_latency_seconds_bucket[5m]))",
+            "legendFormat": "p99",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [{"format": "seconds", "label": "Latency (s)"}]
+      },
+      {
+        "title": "Elimination Rate",
+        "type": "gauge",
+        "gridPos": {"x": 0, "y": 8, "w": 6, "h": 6},
+        "targets": [
+          {
+            "expr": "arf_rt_temporal_elimination_rate",
+            "legendFormat": "Elimination Rate",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "min": 0,
+            "max": 1,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 0.5},
+                {"color": "red", "value": 0.8}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "title": "UNKNOWN Rate",
+        "type": "graph",
+        "gridPos": {"x": 6, "y": 8, "w": 6, "h": 8},
+        "targets": [
+          {
+            "expr": "arf_rt_temporal_unknown_rate",
+            "legendFormat": "UNKNOWN Rate",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [{"format": "percentunit", "label": "UNKNOWN Rate"}]
+      },
+      {
+        "title": "Verdict Breakdown",
+        "type": "piechart",
+        "gridPos": {"x": 12, "y": 8, "w": 6, "h": 8},
+        "targets": [
+          {
+            "expr": "sum by (verdict) (rate(arf_rt_temporal_evaluations_total[5m]))",
+            "legendFormat": "{{verdict}}",
+            "refId": "A"
+          }
+        ],
+        "type": "piechart"
+      },
+      {
+        "title": "Constraint Violations",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 16, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(arf_rt_temporal_constraint_violations_total[5m])",
+            "legendFormat": "{{constraint}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [{"format": "ops", "label": "Violations/sec"}]
+      },
+      {
+        "title": "Path Length Distribution",
+        "type": "heatmap",
+        "gridPos": {"x": 12, "y": 16, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(arf_rt_temporal_path_length_bucket[5m])",
+            "legendFormat": "Path Length",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "title": "Evaluation Latency Heatmap",
+        "type": "heatmap",
+        "gridPos": {"x": 0, "y": 24, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(arf_rt_temporal_latency_seconds_bucket[5m])",
+            "legendFormat": "Latency",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "title": "Evaluation Errors",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 24, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(arf_rt_temporal_evaluation_errors_total[5m])",
+            "legendFormat": "{{error_type}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [{"format": "ops", "label": "Errors/sec"}]
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "10s"
+  }
+}
+```
+
+### Alerting Rules
+
+```yaml
+groups:
+- name: arf-rt-temporal
+  interval: 30s
+  rules:
+  # High infeasible rate - temporal constraints too restrictive or attack detected
+  - alert: HighInfeasibleRate
+    expr: arf_rt_temporal_elimination_rate > 0.8
+    for: 5m
+    labels:
+      severity: warning
+      component: arf-rt
+    annotations:
+      summary: "High temporal infeasible rate detected"
+      description: "Temporal elimination rate is {{ $value | humanizePercentage }} - temporal constraints may be too restrictive or active attack detected"
+      runbook_url: "https://github.com/Sneharsha001/temporal-context-aware-cloud-identity-attack-paths/wiki/HighInfeasibleRate"
+
+  - alert: CriticalInfeasibleRate
+    expr: arf_rt_temporal_elimination_rate > 0.95
+    for: 2m
+    labels:
+      severity: critical
+      component: arf-rt
+    annotations:
+      summary: "Critical temporal infeasible rate"
+      description: "Temporal elimination rate is {{ $value | humanizePercentage }} - immediate investigation required"
+      runbook_url: "https://github.com/Sneharsha001/temporal-context-aware-cloud-identity-attack-paths/wiki/CriticalInfeasibleRate"
+
+  # High latency
+  - alert: EvaluationLatencyHigh
+    expr: histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m])) > 10
+    for: 2m
+    labels:
+      severity: critical
+      component: arf-rt
+    annotations:
+      summary: "Temporal evaluation latency > 10s"
+      description: "P95 evaluation latency is {{ $value }}s - performance degradation detected"
+      runbook_url: "https://github.com/Sneharsha001/temporal-context-aware-cloud-identity-attack-paths/wiki/EvaluationLatencyHigh"
+
+  - alert: EvaluationLatencyWarning
+    expr: histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m])) > 5
+    for: 5m
+    labels:
+      severity: warning
+      component: arf-rt
+    annotations:
+      summary: "Temporal evaluation latency > 5s"
+      description: "P95 evaluation latency is {{ $value }}s - performance degradation"
+
+  # High UNKNOWN rate - missing temporal data
+  - alert: UnknownRateSpike
+    expr: rate(arf_rt_temporal_evaluations_total{verdict="UNKNOWN"}[5m]) > 0.5
+    for: 1m
+    labels:
+      severity: warning
+      component: arf-rt
+    annotations:
+      summary: "High UNKNOWN verdict rate"
+      description: "UNKNOWN verdict rate is {{ $value | humanizePercentage }} - missing temporal data in hints"
+
+  - alert: HighUnknownRate
+    expr: arf_rt_temporal_unknown_rate > 0.5
+    for: 5m
+    labels:
+      severity: warning
+      component: arf-rt
+    annotations:
+      summary: "High UNKNOWN verdict rate"
+      description: "UNKNOWN rate is {{ $value | humanizePercentage }} - missing temporal data in hints"
+
+  # Constraint-specific alerts
+  - alert: TC1CausalOrderViolations
+    expr: rate(arf_rt_temporal_constraint_violations_total{constraint="TC-1"}[5m]) > 0.1
+    for: 2m
+    labels:
+      severity: warning
+      constraint: TC-1
+    annotations:
+      summary: "High TC-1 (Causal Order) violation rate"
+      description: "Causal order violations at {{ $value }} per second"
+
+  - alert: TC2SessionExpiryViolations
+    expr: rate(arf_rt_temporal_constraint_violations_total{constraint="TC-2"}[5m]) > 0.1
+    for: 2m
+    labels:
+      severity: warning
+      constraint: TC-2
+    annotations:
+      summary: "High TC-2 (Session Expiry) violation rate"
+      description: "Session expiry violations at {{ $value }} per second"
+
+  - alert: TC3VelocityViolations
+    expr: rate(arf_rt_temporal_constraint_violations_total{constraint="TC-3"}[5m]) > 0.1
+    for: 2m
+    labels:
+      severity: warning
+      constraint: TC-3
+    annotations:
+      summary: "High TC-3 (Velocity) violation rate"
+      description: "Velocity threshold violations at {{ $value }} per second"
+
+  - alert: TC4StaleCredentialViolations
+    expr: rate(arf_rt_temporal_constraint_violations_total{constraint="TC-4"}[5m]) > 0.1
+    for: 2m
+    labels:
+      severity: warning
+      constraint: TC-4
+    annotations:
+      summary: "High TC-4 (Stale Credential) violation rate"
+      description: "Stale credential violations at {{ $value }} per second"
+
+  - alert: TC5ConcurrentSessionViolations
+    expr: rate(arf_rt_temporal_constraint_violations_total{constraint="TC-5"}[5m]) > 0.1
+    for: 2m
+    labels:
+      severity: warning
+      constraint: TC-5
+    annotations:
+      summary: "High TC-5 (Concurrent Session) violation rate"
+      description: "Concurrent session violations at {{ $value }} per second"
+
+  # Performance degradation
+  - alert: EvaluationLatencyDegradation
+    expr: |
+      histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m])) > 
+      2 * histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[1h]))
+    for: 5m
+    labels:
+      severity: warning
+      component: arf-rt
+    annotations:
+      summary: "Evaluation latency degraded"
+      description: "P95 latency increased significantly compared to 1h baseline"
+
+  # High evaluation error rate
+  - alert: EvaluationErrorRate
+    expr: rate(arf_rt_temporal_evaluation_errors_total[5m]) > 0.1
+    for: 1m
+    labels:
+      severity: critical
+      component: arf-rt
+    annotations:
+      summary: "High evaluation error rate"
+      description: "Evaluation error rate is {{ $value }} per second"
+
+  # Database issues
+  - alert: DatabaseConnectionFailed
+    expr: rate(arf_rt_temporal_evaluation_errors_total{error="database"}[5m]) > 0
+    for: 1m
+    labels:
+      severity: critical
+      component: arf-rt
+    annotations:
+      summary: "Database connection failed"
+      description: "Database connection failures detected"
+
+  # High memory usage
+  - alert: HighMemoryUsage
+    expr: (container_memory_usage_bytes{container="arf-rt"} / container_spec_memory_limit_bytes{container="arf-rt"}) > 0.9
+    for: 5m
+    labels:
+      severity: warning
+      component: arf-rt
+    annotations:
+      summary: "High memory usage"
+      description: "Memory usage at {{ $value | humanizePercentage }} of limit"
+
+  # High CPU usage
+  - alert: HighCPUUsage
+    expr: (rate(container_cpu_usage_seconds_total{container="arf-rt"}[5m])) > 0.9
+    for: 5m
+    labels:
+      severity: warning
+      component: arf-rt
+    annotations:
+      summary: "High CPU usage"
+      description: "CPU usage at {{ $value | humanizePercentage }} of limit"
+```
+
+### Log Aggregation
+
+#### Structured Logging
+```python
+import json
+import logging
+from datetime import datetime
+
+class JSONFormatter(logging.Formatter):
+    def format(self, record):
+        log_entry = {
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+            "module": record.module,
+            "function": record.funcName,
+            "line": record.lineno,
+        }
+        if hasattr(record, 'extra_fields'):
+            log_entry.update(record.extra_fields)
+        return json.dumps(log_entry)
+
+# Configure logging
+handler = logging.StreamHandler()
+handler.setFormatter(JSONFormatter())
+logging.root.handlers = [handler]
+logging.root.setLevel(logging.INFO)
+
+# Usage with extra fields
+logger = logging.getLogger(__name__)
+logger.info("Temporal evaluation completed", extra={
+    "scenario_id": scenario_id,
+    "verdict": verdict.kind.value,
+    "path_length": len(path_edges),
+    "elimination_rate": metrics.elimination_rate,
+    "latency_ms": evaluator.stats.evaluation_time_ms,
+})
+```
+
+#### ELK Stack Integration
+```yaml
+# filebeat.yml
+filebeat.inputs:
+- type: log
+  paths:
+    - /var/log/arf-rt/*.log
+  fields:
+    service: arf-rt
+    environment: production
+  fields_under_root: true
+  json:
+    keys_under_root: true
+    overwrite_keys: true
+
+output.elasticsearch:
+  hosts: ["elasticsearch:9200"]
+  index: "arf-rt-logs-%{+yyyy.MM.dd}"
+
+setup.template.name: "arf-rt"
+setup.template.pattern: "arf-rt-*"
+```
+
+#### Elasticsearch Index Template
+```json
+{
+  "index_patterns": ["arf-rt-*"],
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 1
+    },
+    "mappings": {
+      "properties": {
+        "@timestamp": {"type": "date"},
+        "level": {"type": "keyword"},
+        "service": {"type": "keyword"},
+        "scenario_id": {"type": "keyword"},
+        "verdict": {"type": "keyword"},
+        "path_length": {"type": "integer"},
+        "elimination_rate": {"type": "float"},
+        "latency_ms": {"type": "float"},
+        "message": {"type": "text"}
+      }
+    }
+  }
+}
+```
+
+### Distributed Tracing
+
+#### OpenTelemetry Integration
+```python
+from opentelemetry import trace
+from opentelemetry.exporter.jaeger.thrift import JaegerExporter
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+# Initialize tracer
+trace.set_tracer_provider(TracerProvider())
+jaeger_exporter = JaegerExporter(
+    agent_host_name="jaeger",
+    agent_port=6831,
+)
+trace.get_tracer_provider().add_span_processor(
+    BatchSpanProcessor(jaeger_exporter)
+)
+
+tracer = trace.get_tracer(__name__)
+
+# In evaluation code
+with tracer.start_as_current_span("temporal_evaluation") as span:
+    span.set_attribute("scenario_id", scenario_id)
+    span.set_attribute("path_length", len(path_edges))
+    
+    verdict = evaluator.evaluate(path_edges, hints)
+    
+    span.set_attribute("verdict", verdict.kind.value)
+    span.set_attribute("elimination_rate", metrics.elimination_rate)
+    
+    if verdict.is_infeasible():
+        span.set_attribute("violated_constraint", verdict.violated_constraint)
+        span.set_attribute("verdict_reason", verdict.reason)
+```
+
+#### Jaeger Configuration
+```yaml
+# jaeger-config.yml
+jaeger:
+  collector:
+    zipkin:
+      host: jaeger-collector
+      port: 9411
+  agent:
+    host: jaeger-agent
+    port: 6831
+```
+
+### Health Checks
+
+#### Health Check Endpoints
+```python
+from fastapi import FastAPI, HTTPException
+from arf_rt.storage import SQLiteStore
+from arf_rt.temporal import TemporalEvaluator
+
+app = FastAPI()
+
+@app.get("/health")
+async def health():
+    """Liveness probe - service is running"""
+    return {
+        "status": "healthy",
+        "version": "0.9.1",
+        "timestamp": datetime.utcnow().isoformat() + "Z"
+    }
+
+@app.get("/ready")
+async def ready():
+    """Readiness probe - service can handle requests"""
+    try:
+        # Check database connectivity
+        store = SQLiteStore("/data/arf_rt.db")
+        store.health_check()
+        
+        # Check temporal evaluator
+        evaluator = TemporalEvaluator()
+        
+        return {
+            "status": "ready",
+            "checks": {
+                "database": "healthy",
+                "evaluator": "healthy"
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=str(e))
+
+@app.get("/metrics")
+async def metrics():
+    """Prometheus metrics endpoint"""
+    return Response(content=generate_latest(), media_type="text/plain")
+```
+
+### Kubernetes Health Checks
+
+```yaml
+# Deployment health checks
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+startupProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 30
+```
+
+### Runbook Automation
+
+```bash
+#!/bin/bash
+# runbook.sh - Automated incident response for temporal violations
+
+# Usage: ./runbook.sh <alert_name> <severity>
+
+ALERT_NAME=$1
+SEVERITY=$2
+
+case $ALERT_NAME in
+  "HighInfeasibleRate")
+    echo "Running High Infeasible Rate runbook..."
+    python scripts/audit_temporal_compliance.py incident_scenario.json \
+      --frameworks CIS_AWS,NIST_800_53 \
+      --output /tmp/compliance_report.json
+    
+    python scripts/generate_remediation_plan.py incident_scenario.json \
+      --format bash \
+      --output /tmp/remediation.sh
+    
+    # Notify on-call
+    curl -X POST "$SLACK_WEBHOOK" -d "{\"text\":\"High infeasible rate detected. Remediation plan generated.\"}"
+    ;;
+    
+  "HighInfeasibleRate")
+    echo "Running Critical Infeasible Rate runbook..."
+    # Page on-call engineer
+    curl -X POST "$PAGERDUTY_API" -d "{\"summary\":\"Critical Infeasible Rate\"}"
+    
+    # Auto-remediate if enabled
+    if [ "$AUTO_REMEDIATE" = "true" ]; then
+      bash /tmp/remediation.sh
+    fi
+    ;;
+    
+  "EvaluationLatencyHigh")
+    echo "Running High Latency runbook..."
+    # Scale up replicas
+    kubectl scale deployment arf-rt --replicas=5
+    
+    # Check for resource constraints
+    kubectl top pods -l app=arf-rt
+    ;;
+    
+  "UnknownRateSpike")
+    echo "Running UNKNOWN Rate Spike runbook..."
+    python scripts/audit_temporal_coverage.py incident_scenario.json \
+      --threshold 0.5 \
+      --output /tmp/coverage_report.json
+    ;;
+    
+  *)
+    echo "Unknown alert: $ALERT_NAME"
+    exit 1
+    ;;
+esac
+```
+
+---
+
+*Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
 ---
 
@@ -7197,6 +8709,762 @@ resources:
 
 ---
 
+## Monitoring & Observability (v0.9.1)
+
+### Metrics Collection
+
+ARF-RT provides comprehensive metrics for monitoring temporal evaluation performance and results.
+
+#### Key Metrics
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `arf_rt_temporal_evaluations_total` | Counter | Total evaluations by verdict (FEASIBLE/INFEASIBLE/UNKNOWN) |
+| `arf_rt_temporal_latency_seconds` | Histogram | Evaluation latency distribution |
+| `arf_rt_temporal_path_length` | Histogram | Path length distribution |
+| `arf_rt_temporal_elimination_rate` | Gauge | Current elimination rate |
+| `arf_rt_temporal_unknown_rate` | Gauge | Current UNKNOWN verdict rate |
+| `arf_rt_temporal_constraint_violations` | Counter | Constraint violations by type (TC-1..TC-5) |
+| `arf_rt_temporal_active_paths` | Gauge | Number of active paths in evaluation |
+| `arf_rt_temporal_evaluation_errors` | Counter | Evaluation errors by type |
+
+#### Metrics Collection Example
+```python
+from arf_rt.temporal import TemporalEvaluator, TemporalMetricsExtended
+from prometheus_client import Counter, Histogram, Gauge, start_http_server
+
+# Initialize Prometheus metrics
+TEMPORAL_EVALUATIONS = Counter(
+    'arf_rt_temporal_evaluations_total',
+    'Total temporal evaluations',
+    ['verdict', 'constraint']
+)
+
+TEMPORAL_LATENCY = Histogram(
+    'arf_rt_temporal_latency_seconds',
+    'Temporal evaluation latency in seconds',
+    buckets=[0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0]
+)
+
+TEMPORAL_PATH_LENGTH = Histogram(
+    'arf_rt_temporal_path_length',
+    'Attack path length distribution',
+    buckets=[1, 2, 3, 4, 5, 6, 7, 8, 10, 15, 20]
+)
+
+TEMPORAL_ELIMINATION_RATE = Gauge(
+    'arf_rt_temporal_elimination_rate',
+    'Current temporal elimination rate'
+)
+
+TEMPORAL_UNKNOWN_RATE = Gauge(
+    'arf_rt_temporal_unknown_rate',
+    'Current UNKNOWN verdict rate'
+)
+
+# Initialize evaluator with metrics
+evaluator = TemporalEvaluator(config=config, enable_stats=True)
+metrics = TemporalMetricsExtended()
+
+# Evaluate with metrics
+verdict = evaluator.evaluate_with_metrics(path_edges, hints, metrics)
+
+# Record Prometheus metrics
+TEMPORAL_EVALUATIONS.labels(
+    verdict=verdict.kind.value,
+    constraint=verdict.violated_constraint or "none"
+).inc()
+
+TEMPORAL_LATENCY.observe(evaluator.stats.evaluation_time_ms / 1000)
+TEMPORAL_PATH_LENGTH.observe(len(path_edges))
+TEMPORAL_ELIMINATION_RATE.set(metrics.elimination_rate)
+TEMPORAL_UNKNOWN_RATE.set(metrics.unknown_rate)
+
+# Record constraint-specific violations
+if verdict.is_infeasible() and verdict.violated_constraint:
+    from prometheus_client import Counter
+    CONSTRAINT_VIOLATIONS = Counter(
+        'arf_rt_temporal_constraint_violations_total',
+        'Temporal constraint violations',
+        ['constraint']
+    )
+    CONSTRAINT_VIOLATIONS.labels(constraint=verdict.violated_constraint).inc()
+```
+
+### Prometheus Integration
+
+#### Metrics Endpoint
+```python
+from prometheus_client import start_http_server
+
+# Start Prometheus metrics server on port 9090
+start_http_server(9090)
+
+# Metrics available at http://localhost:9090/metrics
+```
+
+#### Prometheus Configuration
+```yaml
+# prometheus.yml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'arf-rt'
+    static_configs:
+      - targets: ['arf-rt:9090']
+        labels:
+          service: 'arf-rt'
+          environment: 'production'
+    scrape_interval: 10s
+    metrics_path: /metrics
+```
+
+#### Recording Rules
+```yaml
+# recording_rules.yml
+groups:
+- name: arf-rt-temporal
+  rules:
+  - record: arf_rt:eval_rate_5m
+    expr: rate(arf_rt_temporal_evaluations_total[5m])
+  - record: arf_rt:latency_p50_5m
+    expr: histogram_quantile(0.5, rate(arf_rt_temporal_latency_seconds_bucket[5m]))
+  - record: arf_rt:latency_p95_5m
+    expr: histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m]))
+  - record: arf_rt:latency_p99_5m
+    expr: histogram_quantile(0.99, rate(arf_rt_temporal_latency_seconds_bucket[5m]))
+  - record: arf_rt:elimination_rate_5m
+    expr: arf_rt_temporal_elimination_rate
+  - record: arf_rt:unknown_rate_5m
+    expr: arf_rt_temporal_unknown_rate
+```
+
+### Grafana Dashboard
+
+#### Dashboard Panels
+
+```json
+{
+  "dashboard": {
+    "title": "ARF-RT Temporal Analysis",
+    "panels": [
+      {
+        "title": "Evaluations/sec",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(arf_rt_temporal_evaluations_total[5m])",
+            "legendFormat": "{{verdict}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [{"format": "ops", "label": "Evaluations/sec"}]
+      },
+      {
+        "title": "Latency Percentiles (p50/p95/p99)",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.5, rate(arf_rt_temporal_latency_seconds_bucket[5m]))",
+            "legendFormat": "p50",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m]))",
+            "legendFormat": "p95",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(arf_rt_temporal_latency_seconds_bucket[5m]))",
+            "legendFormat": "p99",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [{"format": "seconds", "label": "Latency (s)"}]
+      },
+      {
+        "title": "Elimination Rate",
+        "type": "gauge",
+        "gridPos": {"x": 0, "y": 8, "w": 6, "h": 6},
+        "targets": [
+          {
+            "expr": "arf_rt_temporal_elimination_rate",
+            "legendFormat": "Elimination Rate",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "min": 0,
+            "max": 1,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 0.5},
+                {"color": "red", "value": 0.8}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "title": "UNKNOWN Rate",
+        "type": "graph",
+        "gridPos": {"x": 6, "y": 8, "w": 6, "h": 8},
+        "targets": [
+          {
+            "expr": "arf_rt_temporal_unknown_rate",
+            "legendFormat": "UNKNOWN Rate",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [{"format": "percentunit", "label": "UNKNOWN Rate"}]
+      },
+      {
+        "title": "Verdict Breakdown",
+        "type": "piechart",
+        "gridPos": {"x": 12, "y": 8, "w": 6, "h": 8},
+        "targets": [
+          {
+            "expr": "sum by (verdict) (rate(arf_rt_temporal_evaluations_total[5m]))",
+            "legendFormat": "{{verdict}}",
+            "refId": "A"
+          }
+        ],
+        "type": "piechart"
+      },
+      {
+        "title": "Constraint Violations",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 16, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(arf_rt_temporal_constraint_violations_total[5m])",
+            "legendFormat": "{{constraint}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [{"format": "ops", "label": "Violations/sec"}]
+      },
+      {
+        "title": "Path Length Distribution",
+        "type": "heatmap",
+        "gridPos": {"x": 12, "y": 16, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(arf_rt_temporal_path_length_bucket[5m])",
+            "legendFormat": "Path Length",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "title": "Evaluation Latency Heatmap",
+        "type": "heatmap",
+        "gridPos": {"x": 0, "y": 24, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(arf_rt_temporal_latency_seconds_bucket[5m])",
+            "legendFormat": "Latency",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "title": "Evaluation Errors",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 24, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(arf_rt_temporal_evaluation_errors_total[5m])",
+            "legendFormat": "{{error_type}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [{"format": "ops", "label": "Errors/sec"}]
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "10s"
+  }
+}
+```
+
+### Alerting Rules
+
+```yaml
+groups:
+- name: arf-rt-temporal
+  interval: 30s
+  rules:
+  # High infeasible rate - temporal constraints too restrictive or attack detected
+  - alert: HighInfeasibleRate
+    expr: arf_rt_temporal_elimination_rate > 0.8
+    for: 5m
+    labels:
+      severity: warning
+      component: arf-rt
+    annotations:
+      summary: "High temporal infeasible rate detected"
+      description: "Temporal elimination rate is {{ $value | humanizePercentage }} - temporal constraints may be too restrictive or active attack detected"
+      runbook_url: "https://github.com/Sneharsha001/temporal-context-aware-cloud-identity-attack-paths/wiki/HighInfeasibleRate"
+
+  - alert: CriticalInfeasibleRate
+    expr: arf_rt_temporal_elimination_rate > 0.95
+    for: 2m
+    labels:
+      severity: critical
+      component: arf-rt
+    annotations:
+      summary: "Critical temporal infeasible rate"
+      description: "Temporal elimination rate is {{ $value | humanizePercentage }} - immediate investigation required"
+      runbook_url: "https://github.com/Sneharsha001/temporal-context-aware-cloud-identity-attack-paths/wiki/CriticalInfeasibleRate"
+
+  # High latency
+  - alert: EvaluationLatencyHigh
+    expr: histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m])) > 10
+    for: 2m
+    labels:
+      severity: critical
+      component: arf-rt
+    annotations:
+      summary: "Temporal evaluation latency > 10s"
+      description: "P95 evaluation latency is {{ $value }}s - performance degradation detected"
+      runbook_url: "https://github.com/Sneharsha001/temporal-context-aware-cloud-identity-attack-paths/wiki/EvaluationLatencyHigh"
+
+  - alert: EvaluationLatencyWarning
+    expr: histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m])) > 5
+    for: 5m
+    labels:
+      severity: warning
+      component: arf-rt
+    annotations:
+      summary: "Temporal evaluation latency > 5s"
+      description: "P95 evaluation latency is {{ $value }}s - performance degradation"
+
+  # High UNKNOWN rate - missing temporal data
+  - alert: UnknownRateSpike
+    expr: rate(arf_rt_temporal_evaluations_total{verdict="UNKNOWN"}[5m]) > 0.5
+    for: 1m
+    labels:
+      severity: warning
+      component: arf-rt
+    annotations:
+      summary: "High UNKNOWN verdict rate"
+      description: "UNKNOWN verdict rate is {{ $value | humanizePercentage }} - missing temporal data in hints"
+
+  - alert: HighUnknownRate
+    expr: arf_rt_temporal_unknown_rate > 0.5
+    for: 5m
+    labels:
+      severity: warning
+      component: arf-rt
+    annotations:
+      summary: "High UNKNOWN verdict rate"
+      description: "UNKNOWN rate is {{ $value | humanizePercentage }} - missing temporal data in hints"
+
+  # Constraint-specific alerts
+  - alert: TC1CausalOrderViolations
+    expr: rate(arf_rt_temporal_constraint_violations_total{constraint="TC-1"}[5m]) > 0.1
+    for: 2m
+    labels:
+      severity: warning
+      constraint: TC-1
+    annotations:
+      summary: "High TC-1 (Causal Order) violation rate"
+      description: "Causal order violations at {{ $value }} per second"
+
+  - alert: TC2SessionExpiryViolations
+    expr: rate(arf_rt_temporal_constraint_violations_total{constraint="TC-2"}[5m]) > 0.1
+    for: 2m
+    labels:
+      severity: warning
+      constraint: TC-2
+    annotations:
+      summary: "High TC-2 (Session Expiry) violation rate"
+      description: "Session expiry violations at {{ $value }} per second"
+
+  - alert: TC3VelocityViolations
+    expr: rate(arf_rt_temporal_constraint_violations_total{constraint="TC-3"}[5m]) > 0.1
+    for: 2m
+    labels:
+      severity: warning
+      constraint: TC-3
+    annotations:
+      summary: "High TC-3 (Velocity) violation rate"
+      description: "Velocity threshold violations at {{ $value }} per second"
+
+  - alert: TC4StaleCredentialViolations
+    expr: rate(arf_rt_temporal_constraint_violations_total{constraint="TC-4"}[5m]) > 0.1
+    for: 2m
+    labels:
+      severity: warning
+      constraint: TC-4
+    annotations:
+      summary: "High TC-4 (Stale Credential) violation rate"
+      description: "Stale credential violations at {{ $value }} per second"
+
+  - alert: TC5ConcurrentSessionViolations
+    expr: rate(arf_rt_temporal_constraint_violations_total{constraint="TC-5"}[5m]) > 0.1
+    for: 2m
+    labels:
+      severity: warning
+      constraint: TC-5
+    annotations:
+      summary: "High TC-5 (Concurrent Session) violation rate"
+      description: "Concurrent session violations at {{ $value }} per second"
+
+  # Performance degradation
+  - alert: EvaluationLatencyDegradation
+    expr: |
+      histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m])) > 
+      2 * histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[1h]))
+    for: 5m
+    labels:
+      severity: warning
+      component: arf-rt
+    annotations:
+      summary: "Evaluation latency degraded"
+      description: "P95 latency increased significantly compared to 1h baseline"
+
+  # High evaluation error rate
+  - alert: EvaluationErrorRate
+    expr: rate(arf_rt_temporal_evaluation_errors_total[5m]) > 0.1
+    for: 1m
+    labels:
+      severity: critical
+      component: arf-rt
+    annotations:
+      summary: "High evaluation error rate"
+      description: "Evaluation error rate is {{ $value }} per second"
+
+  # Database issues
+  - alert: DatabaseConnectionFailed
+    expr: rate(arf_rt_temporal_evaluation_errors_total{error="database"}[5m]) > 0
+    for: 1m
+    labels:
+      severity: critical
+      component: arf-rt
+    annotations:
+      summary: "Database connection failed"
+      description: "Database connection failures detected"
+
+  # High memory usage
+  - alert: HighMemoryUsage
+    expr: (container_memory_usage_bytes{container="arf-rt"} / container_spec_memory_limit_bytes{container="arf-rt"}) > 0.9
+    for: 5m
+    labels:
+      severity: warning
+      component: arf-rt
+    annotations:
+      summary: "High memory usage"
+      description: "Memory usage at {{ $value | humanizePercentage }} of limit"
+
+  # High CPU usage
+  - alert: HighCPUUsage
+    expr: (rate(container_cpu_usage_seconds_total{container="arf-rt"}[5m])) > 0.9
+    for: 5m
+    labels:
+      severity: warning
+      component: arf-rt
+    annotations:
+      summary: "High CPU usage"
+      description: "CPU usage at {{ $value | humanizePercentage }} of limit"
+```
+
+### Log Aggregation
+
+#### Structured Logging
+```python
+import json
+import logging
+from datetime import datetime
+
+class JSONFormatter(logging.Formatter):
+    def format(self, record):
+        log_entry = {
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+            "module": record.module,
+            "function": record.funcName,
+            "line": record.lineno,
+        }
+        if hasattr(record, 'extra_fields'):
+            log_entry.update(record.extra_fields)
+        return json.dumps(log_entry)
+
+# Configure logging
+handler = logging.StreamHandler()
+handler.setFormatter(JSONFormatter())
+logging.root.handlers = [handler]
+logging.root.setLevel(logging.INFO)
+
+# Usage with extra fields
+logger = logging.getLogger(__name__)
+logger.info("Temporal evaluation completed", extra={
+    "scenario_id": scenario_id,
+    "verdict": verdict.kind.value,
+    "path_length": len(path_edges),
+    "elimination_rate": metrics.elimination_rate,
+    "latency_ms": evaluator.stats.evaluation_time_ms,
+})
+```
+
+#### ELK Stack Integration
+```yaml
+# filebeat.yml
+filebeat.inputs:
+- type: log
+  paths:
+    - /var/log/arf-rt/*.log
+  fields:
+    service: arf-rt
+    environment: production
+  fields_under_root: true
+  json:
+    keys_under_root: true
+    overwrite_keys: true
+
+output.elasticsearch:
+  hosts: ["elasticsearch:9200"]
+  index: "arf-rt-logs-%{+yyyy.MM.dd}"
+
+setup.template.name: "arf-rt"
+setup.template.pattern: "arf-rt-*"
+```
+
+#### Elasticsearch Index Template
+```json
+{
+  "index_patterns": ["arf-rt-*"],
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 1
+    },
+    "mappings": {
+      "properties": {
+        "@timestamp": {"type": "date"},
+        "level": {"type": "keyword"},
+        "service": {"type": "keyword"},
+        "scenario_id": {"type": "keyword"},
+        "verdict": {"type": "keyword"},
+        "path_length": {"type": "integer"},
+        "elimination_rate": {"type": "float"},
+        "latency_ms": {"type": "float"},
+        "message": {"type": "text"}
+      }
+    }
+  }
+}
+```
+
+### Distributed Tracing
+
+#### OpenTelemetry Integration
+```python
+from opentelemetry import trace
+from opentelemetry.exporter.jaeger.thrift import JaegerExporter
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+# Initialize tracer
+trace.set_tracer_provider(TracerProvider())
+jaeger_exporter = JaegerExporter(
+    agent_host_name="jaeger",
+    agent_port=6831,
+)
+trace.get_tracer_provider().add_span_processor(
+    BatchSpanProcessor(jaeger_exporter)
+)
+
+tracer = trace.get_tracer(__name__)
+
+# In evaluation code
+with tracer.start_as_current_span("temporal_evaluation") as span:
+    span.set_attribute("scenario_id", scenario_id)
+    span.set_attribute("path_length", len(path_edges))
+    
+    verdict = evaluator.evaluate(path_edges, hints)
+    
+    span.set_attribute("verdict", verdict.kind.value)
+    span.set_attribute("elimination_rate", metrics.elimination_rate)
+    
+    if verdict.is_infeasible():
+        span.set_attribute("violated_constraint", verdict.violated_constraint)
+        span.set_attribute("verdict_reason", verdict.reason)
+```
+
+#### Jaeger Configuration
+```yaml
+# jaeger-config.yml
+jaeger:
+  collector:
+    zipkin:
+      host: jaeger-collector
+      port: 9411
+  agent:
+    host: jaeger-agent
+    port: 6831
+```
+
+### Health Checks
+
+#### Health Check Endpoints
+```python
+from fastapi import FastAPI, HTTPException
+from arf_rt.storage import SQLiteStore
+from arf_rt.temporal import TemporalEvaluator
+
+app = FastAPI()
+
+@app.get("/health")
+async def health():
+    """Liveness probe - service is running"""
+    return {
+        "status": "healthy",
+        "version": "0.9.1",
+        "timestamp": datetime.utcnow().isoformat() + "Z"
+    }
+
+@app.get("/ready")
+async def ready():
+    """Readiness probe - service can handle requests"""
+    try:
+        # Check database connectivity
+        store = SQLiteStore("/data/arf_rt.db")
+        store.health_check()
+        
+        # Check temporal evaluator
+        evaluator = TemporalEvaluator()
+        
+        return {
+            "status": "ready",
+            "checks": {
+                "database": "healthy",
+                "evaluator": "healthy"
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=str(e))
+
+@app.get("/metrics")
+async def metrics():
+    """Prometheus metrics endpoint"""
+    return Response(content=generate_latest(), media_type="text/plain")
+```
+
+### Kubernetes Health Checks
+
+```yaml
+# Deployment health checks
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+startupProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 30
+```
+
+### Runbook Automation
+
+```bash
+#!/bin/bash
+# runbook.sh - Automated incident response for temporal violations
+
+# Usage: ./runbook.sh <alert_name> <severity>
+
+ALERT_NAME=$1
+SEVERITY=$2
+
+case $ALERT_NAME in
+  "HighInfeasibleRate")
+    echo "Running High Infeasible Rate runbook..."
+    python scripts/audit_temporal_compliance.py incident_scenario.json \
+      --frameworks CIS_AWS,NIST_800_53 \
+      --output /tmp/compliance_report.json
+    
+    python scripts/generate_remediation_plan.py incident_scenario.json \
+      --format bash \
+      --output /tmp/remediation.sh
+    
+    # Notify on-call
+    curl -X POST "$SLACK_WEBHOOK" -d "{\"text\":\"High infeasible rate detected. Remediation plan generated.\"}"
+    ;;
+    
+  "HighInfeasibleRate")
+    echo "Running Critical Infeasible Rate runbook..."
+    # Page on-call engineer
+    curl -X POST "$PAGERDUTY_API" -d "{\"summary\":\"Critical Infeasible Rate\"}"
+    
+    # Auto-remediate if enabled
+    if [ "$AUTO_REMEDIATE" = "true" ]; then
+      bash /tmp/remediation.sh
+    fi
+    ;;
+    
+  "EvaluationLatencyHigh")
+    echo "Running High Latency runbook..."
+    # Scale up replicas
+    kubectl scale deployment arf-rt --replicas=5
+    
+    # Check for resource constraints
+    kubectl top pods -l app=arf-rt
+    ;;
+    
+  "UnknownRateSpike")
+    echo "Running UNKNOWN Rate Spike runbook..."
+    python scripts/audit_temporal_coverage.py incident_scenario.json \
+      --threshold 0.5 \
+      --output /tmp/coverage_report.json
+    ;;
+    
+  *)
+    echo "Unknown alert: $ALERT_NAME"
+    exit 1
+    ;;
+esac
+```
+
+---
+
+*Last updated: November 7, 2026 — v0.9.1 documentation refresh*
+
+---
+
+---
+
 ## Deployment Guide (v0.9.1)
 
 ### Prerequisites
@@ -9428,6 +11696,762 @@ async with RetryContext(max_attempts=3) as ctx:
 
 *Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
+
+---
+
+---
+
+## Monitoring & Observability (v0.9.1)
+
+### Metrics Collection
+
+ARF-RT provides comprehensive metrics for monitoring temporal evaluation performance and results.
+
+#### Key Metrics
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `arf_rt_temporal_evaluations_total` | Counter | Total evaluations by verdict (FEASIBLE/INFEASIBLE/UNKNOWN) |
+| `arf_rt_temporal_latency_seconds` | Histogram | Evaluation latency distribution |
+| `arf_rt_temporal_path_length` | Histogram | Path length distribution |
+| `arf_rt_temporal_elimination_rate` | Gauge | Current elimination rate |
+| `arf_rt_temporal_unknown_rate` | Gauge | Current UNKNOWN verdict rate |
+| `arf_rt_temporal_constraint_violations` | Counter | Constraint violations by type (TC-1..TC-5) |
+| `arf_rt_temporal_active_paths` | Gauge | Number of active paths in evaluation |
+| `arf_rt_temporal_evaluation_errors` | Counter | Evaluation errors by type |
+
+#### Metrics Collection Example
+```python
+from arf_rt.temporal import TemporalEvaluator, TemporalMetricsExtended
+from prometheus_client import Counter, Histogram, Gauge, start_http_server
+
+# Initialize Prometheus metrics
+TEMPORAL_EVALUATIONS = Counter(
+    'arf_rt_temporal_evaluations_total',
+    'Total temporal evaluations',
+    ['verdict', 'constraint']
+)
+
+TEMPORAL_LATENCY = Histogram(
+    'arf_rt_temporal_latency_seconds',
+    'Temporal evaluation latency in seconds',
+    buckets=[0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0]
+)
+
+TEMPORAL_PATH_LENGTH = Histogram(
+    'arf_rt_temporal_path_length',
+    'Attack path length distribution',
+    buckets=[1, 2, 3, 4, 5, 6, 7, 8, 10, 15, 20]
+)
+
+TEMPORAL_ELIMINATION_RATE = Gauge(
+    'arf_rt_temporal_elimination_rate',
+    'Current temporal elimination rate'
+)
+
+TEMPORAL_UNKNOWN_RATE = Gauge(
+    'arf_rt_temporal_unknown_rate',
+    'Current UNKNOWN verdict rate'
+)
+
+# Initialize evaluator with metrics
+evaluator = TemporalEvaluator(config=config, enable_stats=True)
+metrics = TemporalMetricsExtended()
+
+# Evaluate with metrics
+verdict = evaluator.evaluate_with_metrics(path_edges, hints, metrics)
+
+# Record Prometheus metrics
+TEMPORAL_EVALUATIONS.labels(
+    verdict=verdict.kind.value,
+    constraint=verdict.violated_constraint or "none"
+).inc()
+
+TEMPORAL_LATENCY.observe(evaluator.stats.evaluation_time_ms / 1000)
+TEMPORAL_PATH_LENGTH.observe(len(path_edges))
+TEMPORAL_ELIMINATION_RATE.set(metrics.elimination_rate)
+TEMPORAL_UNKNOWN_RATE.set(metrics.unknown_rate)
+
+# Record constraint-specific violations
+if verdict.is_infeasible() and verdict.violated_constraint:
+    from prometheus_client import Counter
+    CONSTRAINT_VIOLATIONS = Counter(
+        'arf_rt_temporal_constraint_violations_total',
+        'Temporal constraint violations',
+        ['constraint']
+    )
+    CONSTRAINT_VIOLATIONS.labels(constraint=verdict.violated_constraint).inc()
+```
+
+### Prometheus Integration
+
+#### Metrics Endpoint
+```python
+from prometheus_client import start_http_server
+
+# Start Prometheus metrics server on port 9090
+start_http_server(9090)
+
+# Metrics available at http://localhost:9090/metrics
+```
+
+#### Prometheus Configuration
+```yaml
+# prometheus.yml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'arf-rt'
+    static_configs:
+      - targets: ['arf-rt:9090']
+        labels:
+          service: 'arf-rt'
+          environment: 'production'
+    scrape_interval: 10s
+    metrics_path: /metrics
+```
+
+#### Recording Rules
+```yaml
+# recording_rules.yml
+groups:
+- name: arf-rt-temporal
+  rules:
+  - record: arf_rt:eval_rate_5m
+    expr: rate(arf_rt_temporal_evaluations_total[5m])
+  - record: arf_rt:latency_p50_5m
+    expr: histogram_quantile(0.5, rate(arf_rt_temporal_latency_seconds_bucket[5m]))
+  - record: arf_rt:latency_p95_5m
+    expr: histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m]))
+  - record: arf_rt:latency_p99_5m
+    expr: histogram_quantile(0.99, rate(arf_rt_temporal_latency_seconds_bucket[5m]))
+  - record: arf_rt:elimination_rate_5m
+    expr: arf_rt_temporal_elimination_rate
+  - record: arf_rt:unknown_rate_5m
+    expr: arf_rt_temporal_unknown_rate
+```
+
+### Grafana Dashboard
+
+#### Dashboard Panels
+
+```json
+{
+  "dashboard": {
+    "title": "ARF-RT Temporal Analysis",
+    "panels": [
+      {
+        "title": "Evaluations/sec",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(arf_rt_temporal_evaluations_total[5m])",
+            "legendFormat": "{{verdict}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [{"format": "ops", "label": "Evaluations/sec"}]
+      },
+      {
+        "title": "Latency Percentiles (p50/p95/p99)",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.5, rate(arf_rt_temporal_latency_seconds_bucket[5m]))",
+            "legendFormat": "p50",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m]))",
+            "legendFormat": "p95",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(arf_rt_temporal_latency_seconds_bucket[5m]))",
+            "legendFormat": "p99",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [{"format": "seconds", "label": "Latency (s)"}]
+      },
+      {
+        "title": "Elimination Rate",
+        "type": "gauge",
+        "gridPos": {"x": 0, "y": 8, "w": 6, "h": 6},
+        "targets": [
+          {
+            "expr": "arf_rt_temporal_elimination_rate",
+            "legendFormat": "Elimination Rate",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "min": 0,
+            "max": 1,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 0.5},
+                {"color": "red", "value": 0.8}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "title": "UNKNOWN Rate",
+        "type": "graph",
+        "gridPos": {"x": 6, "y": 8, "w": 6, "h": 8},
+        "targets": [
+          {
+            "expr": "arf_rt_temporal_unknown_rate",
+            "legendFormat": "UNKNOWN Rate",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [{"format": "percentunit", "label": "UNKNOWN Rate"}]
+      },
+      {
+        "title": "Verdict Breakdown",
+        "type": "piechart",
+        "gridPos": {"x": 12, "y": 8, "w": 6, "h": 8},
+        "targets": [
+          {
+            "expr": "sum by (verdict) (rate(arf_rt_temporal_evaluations_total[5m]))",
+            "legendFormat": "{{verdict}}",
+            "refId": "A"
+          }
+        ],
+        "type": "piechart"
+      },
+      {
+        "title": "Constraint Violations",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 16, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(arf_rt_temporal_constraint_violations_total[5m])",
+            "legendFormat": "{{constraint}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [{"format": "ops", "label": "Violations/sec"}]
+      },
+      {
+        "title": "Path Length Distribution",
+        "type": "heatmap",
+        "gridPos": {"x": 12, "y": 16, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(arf_rt_temporal_path_length_bucket[5m])",
+            "legendFormat": "Path Length",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "title": "Evaluation Latency Heatmap",
+        "type": "heatmap",
+        "gridPos": {"x": 0, "y": 24, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(arf_rt_temporal_latency_seconds_bucket[5m])",
+            "legendFormat": "Latency",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "title": "Evaluation Errors",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 24, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "rate(arf_rt_temporal_evaluation_errors_total[5m])",
+            "legendFormat": "{{error_type}}",
+            "refId": "A"
+          }
+        ],
+        "yAxes": [{"format": "ops", "label": "Errors/sec"}]
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "10s"
+  }
+}
+```
+
+### Alerting Rules
+
+```yaml
+groups:
+- name: arf-rt-temporal
+  interval: 30s
+  rules:
+  # High infeasible rate - temporal constraints too restrictive or attack detected
+  - alert: HighInfeasibleRate
+    expr: arf_rt_temporal_elimination_rate > 0.8
+    for: 5m
+    labels:
+      severity: warning
+      component: arf-rt
+    annotations:
+      summary: "High temporal infeasible rate detected"
+      description: "Temporal elimination rate is {{ $value | humanizePercentage }} - temporal constraints may be too restrictive or active attack detected"
+      runbook_url: "https://github.com/Sneharsha001/temporal-context-aware-cloud-identity-attack-paths/wiki/HighInfeasibleRate"
+
+  - alert: CriticalInfeasibleRate
+    expr: arf_rt_temporal_elimination_rate > 0.95
+    for: 2m
+    labels:
+      severity: critical
+      component: arf-rt
+    annotations:
+      summary: "Critical temporal infeasible rate"
+      description: "Temporal elimination rate is {{ $value | humanizePercentage }} - immediate investigation required"
+      runbook_url: "https://github.com/Sneharsha001/temporal-context-aware-cloud-identity-attack-paths/wiki/CriticalInfeasibleRate"
+
+  # High latency
+  - alert: EvaluationLatencyHigh
+    expr: histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m])) > 10
+    for: 2m
+    labels:
+      severity: critical
+      component: arf-rt
+    annotations:
+      summary: "Temporal evaluation latency > 10s"
+      description: "P95 evaluation latency is {{ $value }}s - performance degradation detected"
+      runbook_url: "https://github.com/Sneharsha001/temporal-context-aware-cloud-identity-attack-paths/wiki/EvaluationLatencyHigh"
+
+  - alert: EvaluationLatencyWarning
+    expr: histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m])) > 5
+    for: 5m
+    labels:
+      severity: warning
+      component: arf-rt
+    annotations:
+      summary: "Temporal evaluation latency > 5s"
+      description: "P95 evaluation latency is {{ $value }}s - performance degradation"
+
+  # High UNKNOWN rate - missing temporal data
+  - alert: UnknownRateSpike
+    expr: rate(arf_rt_temporal_evaluations_total{verdict="UNKNOWN"}[5m]) > 0.5
+    for: 1m
+    labels:
+      severity: warning
+      component: arf-rt
+    annotations:
+      summary: "High UNKNOWN verdict rate"
+      description: "UNKNOWN verdict rate is {{ $value | humanizePercentage }} - missing temporal data in hints"
+
+  - alert: HighUnknownRate
+    expr: arf_rt_temporal_unknown_rate > 0.5
+    for: 5m
+    labels:
+      severity: warning
+      component: arf-rt
+    annotations:
+      summary: "High UNKNOWN verdict rate"
+      description: "UNKNOWN rate is {{ $value | humanizePercentage }} - missing temporal data in hints"
+
+  # Constraint-specific alerts
+  - alert: TC1CausalOrderViolations
+    expr: rate(arf_rt_temporal_constraint_violations_total{constraint="TC-1"}[5m]) > 0.1
+    for: 2m
+    labels:
+      severity: warning
+      constraint: TC-1
+    annotations:
+      summary: "High TC-1 (Causal Order) violation rate"
+      description: "Causal order violations at {{ $value }} per second"
+
+  - alert: TC2SessionExpiryViolations
+    expr: rate(arf_rt_temporal_constraint_violations_total{constraint="TC-2"}[5m]) > 0.1
+    for: 2m
+    labels:
+      severity: warning
+      constraint: TC-2
+    annotations:
+      summary: "High TC-2 (Session Expiry) violation rate"
+      description: "Session expiry violations at {{ $value }} per second"
+
+  - alert: TC3VelocityViolations
+    expr: rate(arf_rt_temporal_constraint_violations_total{constraint="TC-3"}[5m]) > 0.1
+    for: 2m
+    labels:
+      severity: warning
+      constraint: TC-3
+    annotations:
+      summary: "High TC-3 (Velocity) violation rate"
+      description: "Velocity threshold violations at {{ $value }} per second"
+
+  - alert: TC4StaleCredentialViolations
+    expr: rate(arf_rt_temporal_constraint_violations_total{constraint="TC-4"}[5m]) > 0.1
+    for: 2m
+    labels:
+      severity: warning
+      constraint: TC-4
+    annotations:
+      summary: "High TC-4 (Stale Credential) violation rate"
+      description: "Stale credential violations at {{ $value }} per second"
+
+  - alert: TC5ConcurrentSessionViolations
+    expr: rate(arf_rt_temporal_constraint_violations_total{constraint="TC-5"}[5m]) > 0.1
+    for: 2m
+    labels:
+      severity: warning
+      constraint: TC-5
+    annotations:
+      summary: "High TC-5 (Concurrent Session) violation rate"
+      description: "Concurrent session violations at {{ $value }} per second"
+
+  # Performance degradation
+  - alert: EvaluationLatencyDegradation
+    expr: |
+      histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m])) > 
+      2 * histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[1h]))
+    for: 5m
+    labels:
+      severity: warning
+      component: arf-rt
+    annotations:
+      summary: "Evaluation latency degraded"
+      description: "P95 latency increased significantly compared to 1h baseline"
+
+  # High evaluation error rate
+  - alert: EvaluationErrorRate
+    expr: rate(arf_rt_temporal_evaluation_errors_total[5m]) > 0.1
+    for: 1m
+    labels:
+      severity: critical
+      component: arf-rt
+    annotations:
+      summary: "High evaluation error rate"
+      description: "Evaluation error rate is {{ $value }} per second"
+
+  # Database issues
+  - alert: DatabaseConnectionFailed
+    expr: rate(arf_rt_temporal_evaluation_errors_total{error="database"}[5m]) > 0
+    for: 1m
+    labels:
+      severity: critical
+      component: arf-rt
+    annotations:
+      summary: "Database connection failed"
+      description: "Database connection failures detected"
+
+  # High memory usage
+  - alert: HighMemoryUsage
+    expr: (container_memory_usage_bytes{container="arf-rt"} / container_spec_memory_limit_bytes{container="arf-rt"}) > 0.9
+    for: 5m
+    labels:
+      severity: warning
+      component: arf-rt
+    annotations:
+      summary: "High memory usage"
+      description: "Memory usage at {{ $value | humanizePercentage }} of limit"
+
+  # High CPU usage
+  - alert: HighCPUUsage
+    expr: (rate(container_cpu_usage_seconds_total{container="arf-rt"}[5m])) > 0.9
+    for: 5m
+    labels:
+      severity: warning
+      component: arf-rt
+    annotations:
+      summary: "High CPU usage"
+      description: "CPU usage at {{ $value | humanizePercentage }} of limit"
+```
+
+### Log Aggregation
+
+#### Structured Logging
+```python
+import json
+import logging
+from datetime import datetime
+
+class JSONFormatter(logging.Formatter):
+    def format(self, record):
+        log_entry = {
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+            "module": record.module,
+            "function": record.funcName,
+            "line": record.lineno,
+        }
+        if hasattr(record, 'extra_fields'):
+            log_entry.update(record.extra_fields)
+        return json.dumps(log_entry)
+
+# Configure logging
+handler = logging.StreamHandler()
+handler.setFormatter(JSONFormatter())
+logging.root.handlers = [handler]
+logging.root.setLevel(logging.INFO)
+
+# Usage with extra fields
+logger = logging.getLogger(__name__)
+logger.info("Temporal evaluation completed", extra={
+    "scenario_id": scenario_id,
+    "verdict": verdict.kind.value,
+    "path_length": len(path_edges),
+    "elimination_rate": metrics.elimination_rate,
+    "latency_ms": evaluator.stats.evaluation_time_ms,
+})
+```
+
+#### ELK Stack Integration
+```yaml
+# filebeat.yml
+filebeat.inputs:
+- type: log
+  paths:
+    - /var/log/arf-rt/*.log
+  fields:
+    service: arf-rt
+    environment: production
+  fields_under_root: true
+  json:
+    keys_under_root: true
+    overwrite_keys: true
+
+output.elasticsearch:
+  hosts: ["elasticsearch:9200"]
+  index: "arf-rt-logs-%{+yyyy.MM.dd}"
+
+setup.template.name: "arf-rt"
+setup.template.pattern: "arf-rt-*"
+```
+
+#### Elasticsearch Index Template
+```json
+{
+  "index_patterns": ["arf-rt-*"],
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 1
+    },
+    "mappings": {
+      "properties": {
+        "@timestamp": {"type": "date"},
+        "level": {"type": "keyword"},
+        "service": {"type": "keyword"},
+        "scenario_id": {"type": "keyword"},
+        "verdict": {"type": "keyword"},
+        "path_length": {"type": "integer"},
+        "elimination_rate": {"type": "float"},
+        "latency_ms": {"type": "float"},
+        "message": {"type": "text"}
+      }
+    }
+  }
+}
+```
+
+### Distributed Tracing
+
+#### OpenTelemetry Integration
+```python
+from opentelemetry import trace
+from opentelemetry.exporter.jaeger.thrift import JaegerExporter
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+# Initialize tracer
+trace.set_tracer_provider(TracerProvider())
+jaeger_exporter = JaegerExporter(
+    agent_host_name="jaeger",
+    agent_port=6831,
+)
+trace.get_tracer_provider().add_span_processor(
+    BatchSpanProcessor(jaeger_exporter)
+)
+
+tracer = trace.get_tracer(__name__)
+
+# In evaluation code
+with tracer.start_as_current_span("temporal_evaluation") as span:
+    span.set_attribute("scenario_id", scenario_id)
+    span.set_attribute("path_length", len(path_edges))
+    
+    verdict = evaluator.evaluate(path_edges, hints)
+    
+    span.set_attribute("verdict", verdict.kind.value)
+    span.set_attribute("elimination_rate", metrics.elimination_rate)
+    
+    if verdict.is_infeasible():
+        span.set_attribute("violated_constraint", verdict.violated_constraint)
+        span.set_attribute("verdict_reason", verdict.reason)
+```
+
+#### Jaeger Configuration
+```yaml
+# jaeger-config.yml
+jaeger:
+  collector:
+    zipkin:
+      host: jaeger-collector
+      port: 9411
+  agent:
+    host: jaeger-agent
+    port: 6831
+```
+
+### Health Checks
+
+#### Health Check Endpoints
+```python
+from fastapi import FastAPI, HTTPException
+from arf_rt.storage import SQLiteStore
+from arf_rt.temporal import TemporalEvaluator
+
+app = FastAPI()
+
+@app.get("/health")
+async def health():
+    """Liveness probe - service is running"""
+    return {
+        "status": "healthy",
+        "version": "0.9.1",
+        "timestamp": datetime.utcnow().isoformat() + "Z"
+    }
+
+@app.get("/ready")
+async def ready():
+    """Readiness probe - service can handle requests"""
+    try:
+        # Check database connectivity
+        store = SQLiteStore("/data/arf_rt.db")
+        store.health_check()
+        
+        # Check temporal evaluator
+        evaluator = TemporalEvaluator()
+        
+        return {
+            "status": "ready",
+            "checks": {
+                "database": "healthy",
+                "evaluator": "healthy"
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=str(e))
+
+@app.get("/metrics")
+async def metrics():
+    """Prometheus metrics endpoint"""
+    return Response(content=generate_latest(), media_type="text/plain")
+```
+
+### Kubernetes Health Checks
+
+```yaml
+# Deployment health checks
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+startupProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 30
+```
+
+### Runbook Automation
+
+```bash
+#!/bin/bash
+# runbook.sh - Automated incident response for temporal violations
+
+# Usage: ./runbook.sh <alert_name> <severity>
+
+ALERT_NAME=$1
+SEVERITY=$2
+
+case $ALERT_NAME in
+  "HighInfeasibleRate")
+    echo "Running High Infeasible Rate runbook..."
+    python scripts/audit_temporal_compliance.py incident_scenario.json \
+      --frameworks CIS_AWS,NIST_800_53 \
+      --output /tmp/compliance_report.json
+    
+    python scripts/generate_remediation_plan.py incident_scenario.json \
+      --format bash \
+      --output /tmp/remediation.sh
+    
+    # Notify on-call
+    curl -X POST "$SLACK_WEBHOOK" -d "{\"text\":\"High infeasible rate detected. Remediation plan generated.\"}"
+    ;;
+    
+  "HighInfeasibleRate")
+    echo "Running Critical Infeasible Rate runbook..."
+    # Page on-call engineer
+    curl -X POST "$PAGERDUTY_API" -d "{\"summary\":\"Critical Infeasible Rate\"}"
+    
+    # Auto-remediate if enabled
+    if [ "$AUTO_REMEDIATE" = "true" ]; then
+      bash /tmp/remediation.sh
+    fi
+    ;;
+    
+  "EvaluationLatencyHigh")
+    echo "Running High Latency runbook..."
+    # Scale up replicas
+    kubectl scale deployment arf-rt --replicas=5
+    
+    # Check for resource constraints
+    kubectl top pods -l app=arf-rt
+    ;;
+    
+  "UnknownRateSpike")
+    echo "Running UNKNOWN Rate Spike runbook..."
+    python scripts/audit_temporal_coverage.py incident_scenario.json \
+      --threshold 0.5 \
+      --output /tmp/coverage_report.json
+    ;;
+    
+  *)
+    echo "Unknown alert: $ALERT_NAME"
+    exit 1
+    ;;
+esac
+```
+
+---
+
+*Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
 ---
 
