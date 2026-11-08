@@ -2549,8 +2549,59 @@ If you use ARF-RT or its temporal extensions in academic work, please cite:
 
 ---
 
-## Migration Guide: v0.8 → v0.9 (v0.9.1)
 
+## Quick Start Guide (v0.9.1)
+
+Get up and running with ARF-RT in under 5 minutes.
+
+### Prerequisites
+- Python 3.10+
+- Git
+- AWS credentials configured (for CloudTrail integration)
+
+### Installation
+```bash
+# Clone the repository
+git clone https://github.com/Sneharsha001/temporal-context-aware-cloud-identity-attack-paths.git
+cd temporal-context-aware-cloud-identity-attack-paths.git
+
+# Install in development mode
+pip install -e ".[dev]"
+
+# Verify installation
+arf-rt --help
+```
+
+### Your First Analysis
+```bash
+# 1. Generate a sample scenario
+python scripts/generate_diamond_scenario.py --output scenario.json
+
+# 2. Run the full analysis pipeline
+arf-rt analyze scenario.json --format both --output results/
+
+# 3. View the results
+cat results/report.md
+```
+
+### Temporal Analysis Quick Start
+```bash
+# Audit temporal compliance
+python scripts/audit_temporal_compliance.py scenario.json --frameworks CIS_AWS,NIST_800_53
+
+# Score credentials
+python scripts/score_credentials.py scenario.json --format table --top 10
+
+# Generate remediation plan
+python scripts/generate_remediation_plan.py scenario.json --format bash -o remediation.sh
+```
+
+### Next Steps
+- Explore [Configuration Reference#configuration-reference-v091]
+- Learn about [Temporal Constraints#temporal-constraints-types]
+- Review [CLI Reference#cli-commands]
+- Check out [Advanced Configuration Examples#advanced-configuration-examples-v091]
+```
 ### Breaking Changes
 | Component | v0.8 | v0.9/v0.9.1 | Migration |
 |-----------|------|-------------|-----------|
@@ -2979,8 +3030,59 @@ resources:
 
 ---
 
-## Migration Guide: v0.8 → v0.9 (v0.9.1)
 
+## Quick Start Guide (v0.9.1)
+
+Get up and running with ARF-RT in under 5 minutes.
+
+### Prerequisites
+- Python 3.10+
+- Git
+- AWS credentials configured (for CloudTrail integration)
+
+### Installation
+```bash
+# Clone the repository
+git clone https://github.com/Sneharsha001/temporal-context-aware-cloud-identity-attack-paths.git
+cd temporal-context-aware-cloud-identity-attack-paths.git
+
+# Install in development mode
+pip install -e ".[dev]"
+
+# Verify installation
+arf-rt --help
+```
+
+### Your First Analysis
+```bash
+# 1. Generate a sample scenario
+python scripts/generate_diamond_scenario.py --output scenario.json
+
+# 2. Run the full analysis pipeline
+arf-rt analyze scenario.json --format both --output results/
+
+# 3. View the results
+cat results/report.md
+```
+
+### Temporal Analysis Quick Start
+```bash
+# Audit temporal compliance
+python scripts/audit_temporal_compliance.py scenario.json --frameworks CIS_AWS,NIST_800_53
+
+# Score credentials
+python scripts/score_credentials.py scenario.json --format table --top 10
+
+# Generate remediation plan
+python scripts/generate_remediation_plan.py scenario.json --format bash -o remediation.sh
+```
+
+### Next Steps
+- Explore [Configuration Reference#configuration-reference-v091]
+- Learn about [Temporal Constraints#temporal-constraints-types]
+- Review [CLI Reference#cli-commands]
+- Check out [Advanced Configuration Examples#advanced-configuration-examples-v091]
+```
 ### Breaking Changes
 | Component | v0.8 | v0.9/v0.9.1 | Migration |
 |-----------|------|-------------|-----------|
