@@ -11,7 +11,7 @@ A Bayesian reasoning engine for cloud identity attack path analysis. ARF-RT inge
 **Scope:** Replay-only. No live cloud SDK calls.  
 **Last Updated:** 2026-11-07 — v0.9.1: enhanced utility modules (13 new), temporal evaluator enhancements, comprehensive test infrastructure, compliance mappings, formal verification artifacts (O1–O8), migration guide, and comprehensive documentation refresh.
 
--------------------------------
+-------------------------
 
 ## Active Research Track: Context-Conditioned Path Feasibility (CCPF)
 
