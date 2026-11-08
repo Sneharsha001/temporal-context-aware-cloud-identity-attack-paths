@@ -2552,6 +2552,187 @@ If you use ARF-RT or its temporal extensions in academic work, please cite:
 
 ---
 
+## Frequently Asked Questions (v0.9.1)
+
+### General Questions
+
+**Q: What is ARF-RT?**
+A: ARF-RT (Attack Risk Factor - Risk Topology) is a Bayesian reasoning engine for cloud identity attack path analysis. It ingests privilege graphs (PMapper, AWS Organizations), models policy constraints as correlated belief structures, and computes the most informative probe sequence to reduce uncertainty about path viability.
+
+**Q: What does "temporal-context-aware" mean?**
+A: ARF-RT evaluates attack paths not just based on static graph connectivity, but also considers temporal constraints (TC-1 through TC-5) such as credential expiry, session validity, causal ordering, velocity thresholds, and concurrent session detection.
+
+**Q: What is the difference between ARF-RT and PMapper/BloodHound?**
+A: PMapper and BloodHound are static graph analysis tools that find attack paths but ignore policy constraints. ARF-RT models constraints as first-class objects, correlates structurally dependent edges, and uses information theory (Expected Information Gain) to determine the most informative next probe.
+
+**Q: Is ARF-RT production-ready?**
+A: ARF-RT v0.9.1 is in active development. The core engine is stable and formally verified (128/128 tests passing), but live cloud SDK probing (LIVE mode) is not yet implemented. The replay-only mode is production-ready for analysis of exported CloudTrail/PMapper data.
+
+**Q: What cloud providers are supported?**
+A: Full support for AWS (STS, IAM, Organizations, CloudTrail). Partial support for Azure (Managed Identity, PIM) and GCP (Workload Identity Federation). Cross-cloud federation paths assume SAML/OIDC.
+
+### Installation & Setup
+
+**Q: What are the system requirements?**
+A: Python 3.10+, Git, 2GB+ RAM (4GB+ recommended for large graphs), SQLite3.
+
+**Q: How do I install ARF-RT?**
+A: `pip install -e ".[dev]"` from the repository root. For production: `pip install arf-rt` (when published to PyPI).
+
+**Q: Do I need AWS credentials to use ARF-RT?**
+A: No. ARF-RT operates in replay-only mode using exported CloudTrail logs and PMapper graphs. No live cloud SDK calls are made.
+
+**Q: Can I run ARF-RT in a container?**
+A: Yes. See the [Container Deployment](#container-deployment) section for a multi-stage Dockerfile example.
+
+### Configuration
+
+**Q: What's the difference between `strict()`, `permissive()`, and `balanced()` presets?**
+A: 
+- **Strict**: Conservative - fails UNKNOWN paths, tight velocity bounds (1.0s), short staleness (30 days), all constraints enabled.
+- **Permissive**: Recall-favoring - passes UNKNOWN, disables velocity/staleness checks, only TC-1/TC-2 enabled.
+- **Balanced**: Moderate settings (recommended for production) - 0.5s velocity, 90-day staleness, all constraints enabled.
+
+**Q: How do I disable specific temporal constraints?**
+A: 
+```python
+config = TemporalConfig(
+    enabled_constraints=frozenset({"TC-1", "TC-2"}),  # Only causal order and session validity
+)
+```
+
+**Q: What does `unknown_passthrough=True` do?**
+A: When `True` (default), paths with insufficient temporal data return `UNKNOWN` and pass through to the Bayesian layer. When `False`, UNKNOWN paths are treated as `INFEASIBLE` (conservative mode).
+
+**Q: How do I customize the stale credential threshold?**
+A: 
+```python
+config = TemporalConfig(stale_credential_days=30)  # 2 weeks instead of 90 days
+```
+
+### Temporal Constraints
+
+**Q: What are the five temporal constraints (TC-1 through TC-5)?**
+A:
+- **TC-1 (Causal Order)**: Hop B must occur after Hop A in CloudTrail timestamps
+- **TC-2 (Session Validity)**: Credential from previous hop must not be expired
+- **TC-3 (Minimum Velocity)**: Hops must be separated by at least δ_min (default 0.5s)
+- **TC-4 (Stale Credential)**: Credential last used within threshold (default 90 days)
+- **TC-5 (Concurrent Session)**: No overlapping sessions suggesting credential sharing
+
+**Q: What is the "velocity threshold" (TC-3)?**
+A: Minimum time that must elapse between consecutive hops. Default is 0.5 seconds. Paths completing hops faster than this are flagged as bot-like (INFEASIBLE via TC-3).
+
+**Q: How does TC-5 (Concurrent Session) work?**
+A: Detects when multiple hops share the same `credential_issued` timestamp, indicating possible credential sharing or concurrent session reuse across attack path hops.
+
+### Evaluation & Results
+
+**Q: What do the verdict kinds mean?**
+A:
+- **FEASIBLE**: All enabled temporal constraints passed
+- **INFEASIBLE**: At least one temporal constraint violated
+- **UNKNOWN**: Insufficient temporal data to evaluate (missing timestamps)
+
+**Q: How do I interpret the `elimination_rate`?**
+A: Fraction of paths eliminated by temporal constraints (INFEASIBLE / total paths). Higher rate = temporal constraints are more restrictive.
+
+**Q: What is the `canonical_run_hash`?**
+A: SHA-256 hash of the canonical JSON representation of the entire evaluation state. Same input → same hash. Used for reproducibility verification.
+
+**Q: How do I reproduce paper results exactly?**
+A: Use `--truth-mode scripted --truth-map tests/fixtures/primary_realistic_truth_map.json` with the primary fixture. See `scripts/reproduce_paper.py`.
+
+### Performance & Scaling
+
+**Q: What are the scaling limits?**
+A: Tested up to 25,000 nodes / 125,000 edges. Analyze time ~30s, planner ~300s at 25k nodes. Memory ~2.5 GB at XLarge scale.
+
+**Q: How do I improve performance on large graphs?**
+A: Use `TemporalConfig.permissive()`, reduce `max_path_length`, disable `enable_stats`, use `PathFeasibilityBatchRunner` with `max_workers=CPU-1`.
+
+**Q: What are the memory requirements?**
+A: Small (50 nodes): ~15MB | Medium (500 nodes): ~80MB | Large (5k nodes): ~500MB | XLarge (25k nodes): ~2.5GB
+
+### Integration & Deployment
+
+**Q: Can ARF-RT integrate with my SIEM?**
+A: Yes. Export metrics via Prometheus client, use `CredentialAlertEngine` for SIEM-ready alerts, or export to Splunk/Elastic/Sumo Logic via JSON/NDJSON.
+
+**Q: Does ARF-RT support Kubernetes?**
+A: Kubernetes RBAC temporal attack paths are planned for Q1 2027. Current version focuses on cloud IAM (AWS/Azure/GCP).
+
+**Q: Can I run ARF-RT in air-gapped environments?**
+A: Yes. ARF-RT is replay-only with no live cloud SDK calls. Use `scripts/reproduce_paper.py` for offline validation. SBOM generation available via `cyclonedx-bom`.
+
+**Q: How do I generate a Software Bill of Materials (SBOM)?**
+A: `cyclonedx-bom -o sbom.json --format json`
+
+### Security
+
+**Q: Does ARF-RT store AWS credentials?**
+A: No. ARF-RT processes ARNs and metadata only. No credentials, emails, or personal data are stored.
+
+**Q: Is ARF-RT suitable for air-gapped environments?**
+A: Yes. ARF-RT is replay-only with no live cloud SDK calls. All analysis runs locally with no telemetry or cloud uploads.
+
+**Q: How do I anonymize scenario files for sharing?**
+A: `python scripts/validate_fixtures.py --anonymize scenario.json --output scenario_anon.json`
+
+### Development
+
+**Q: How do I run tests?**
+A: 
+```bash
+# Fast feedback (unit only)
+pytest tests/unit/ -q
+
+# Full validation (CI pipeline)
+pytest tests/unit tests/golden -q
+
+# Property-based tests
+pytest tests/research/test_rdce_property_based.py -v
+
+# With coverage
+pytest tests/unit tests/golden --cov=arf_rt --cov-report=term-missing
+```
+
+**Q: How do I add a new temporal constraint?**
+A: 
+1. Add constraint ID to `TemporalConfig.enabled_constraints`
+2. Implement check in `TemporalEvaluator._check_tcX()`
+3. Add tests in `tests/temporal/test_evaluator.py`
+4. Update documentation
+
+**Q: How do I contribute?**
+A: 
+1. Fork and clone the repository
+2. Create a branch: `git checkout -b feature/your-feature`
+3. Write tests for new functionality
+4. Run validation: `python scripts/lint_check.py && python scripts/validate_fixtures.py --strict`
+5. Submit PR referencing the issue
+
+### Troubleshooting
+
+**Q: Why am I getting `ModuleNotFoundError: No module named 'arf_rt'`?**
+A: Run `pip install -e ".[dev]"` from the repository root.
+
+**Q: Why is my `canonical_run_hash` different from the paper?**
+A: Serialization details (account IDs, JSON key ordering, timestamps) don't affect quantitative metrics. See Artifact Reconciliation section.
+
+**Q: Why is evaluation slow?**
+A: Try `TemporalConfig.permissive()`, reduce `max_path_length`, disable `enable_stats`, or use batch processing.
+
+**Q: Why do I get `UNKNOWN` verdicts?**
+A: Missing temporal data in hints (earliest_observed, latest_observed, credential_issued, credential_expiry, last_used). Set `unknown_passthrough=False` to treat as INFEASIBLE.
+
+**Q: How do I report a bug?**
+A: Open a GitHub Issue with: ARF-RT version, Python version, OS, minimal reproduction scenario, expected vs actual behavior.
+
+---
+
+---
+
 ## Troubleshooting Guide (v0.9.1)
 
 ### Common Issues and Solutions
@@ -3309,6 +3490,187 @@ async with RetryContext(max_attempts=3) as ctx:
 
 *Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
+
+---
+
+---
+
+## Frequently Asked Questions (v0.9.1)
+
+### General Questions
+
+**Q: What is ARF-RT?**
+A: ARF-RT (Attack Risk Factor - Risk Topology) is a Bayesian reasoning engine for cloud identity attack path analysis. It ingests privilege graphs (PMapper, AWS Organizations), models policy constraints as correlated belief structures, and computes the most informative probe sequence to reduce uncertainty about path viability.
+
+**Q: What does "temporal-context-aware" mean?**
+A: ARF-RT evaluates attack paths not just based on static graph connectivity, but also considers temporal constraints (TC-1 through TC-5) such as credential expiry, session validity, causal ordering, velocity thresholds, and concurrent session detection.
+
+**Q: What is the difference between ARF-RT and PMapper/BloodHound?**
+A: PMapper and BloodHound are static graph analysis tools that find attack paths but ignore policy constraints. ARF-RT models constraints as first-class objects, correlates structurally dependent edges, and uses information theory (Expected Information Gain) to determine the most informative next probe.
+
+**Q: Is ARF-RT production-ready?**
+A: ARF-RT v0.9.1 is in active development. The core engine is stable and formally verified (128/128 tests passing), but live cloud SDK probing (LIVE mode) is not yet implemented. The replay-only mode is production-ready for analysis of exported CloudTrail/PMapper data.
+
+**Q: What cloud providers are supported?**
+A: Full support for AWS (STS, IAM, Organizations, CloudTrail). Partial support for Azure (Managed Identity, PIM) and GCP (Workload Identity Federation). Cross-cloud federation paths assume SAML/OIDC.
+
+### Installation & Setup
+
+**Q: What are the system requirements?**
+A: Python 3.10+, Git, 2GB+ RAM (4GB+ recommended for large graphs), SQLite3.
+
+**Q: How do I install ARF-RT?**
+A: `pip install -e ".[dev]"` from the repository root. For production: `pip install arf-rt` (when published to PyPI).
+
+**Q: Do I need AWS credentials to use ARF-RT?**
+A: No. ARF-RT operates in replay-only mode using exported CloudTrail logs and PMapper graphs. No live cloud SDK calls are made.
+
+**Q: Can I run ARF-RT in a container?**
+A: Yes. See the [Container Deployment](#container-deployment) section for a multi-stage Dockerfile example.
+
+### Configuration
+
+**Q: What's the difference between `strict()`, `permissive()`, and `balanced()` presets?**
+A: 
+- **Strict**: Conservative - fails UNKNOWN paths, tight velocity bounds (1.0s), short staleness (30 days), all constraints enabled.
+- **Permissive**: Recall-favoring - passes UNKNOWN, disables velocity/staleness checks, only TC-1/TC-2 enabled.
+- **Balanced**: Moderate settings (recommended for production) - 0.5s velocity, 90-day staleness, all constraints enabled.
+
+**Q: How do I disable specific temporal constraints?**
+A: 
+```python
+config = TemporalConfig(
+    enabled_constraints=frozenset({"TC-1", "TC-2"}),  # Only causal order and session validity
+)
+```
+
+**Q: What does `unknown_passthrough=True` do?**
+A: When `True` (default), paths with insufficient temporal data return `UNKNOWN` and pass through to the Bayesian layer. When `False`, UNKNOWN paths are treated as `INFEASIBLE` (conservative mode).
+
+**Q: How do I customize the stale credential threshold?**
+A: 
+```python
+config = TemporalConfig(stale_credential_days=30)  # 2 weeks instead of 90 days
+```
+
+### Temporal Constraints
+
+**Q: What are the five temporal constraints (TC-1 through TC-5)?**
+A:
+- **TC-1 (Causal Order)**: Hop B must occur after Hop A in CloudTrail timestamps
+- **TC-2 (Session Validity)**: Credential from previous hop must not be expired
+- **TC-3 (Minimum Velocity)**: Hops must be separated by at least δ_min (default 0.5s)
+- **TC-4 (Stale Credential)**: Credential last used within threshold (default 90 days)
+- **TC-5 (Concurrent Session)**: No overlapping sessions suggesting credential sharing
+
+**Q: What is the "velocity threshold" (TC-3)?**
+A: Minimum time that must elapse between consecutive hops. Default is 0.5 seconds. Paths completing hops faster than this are flagged as bot-like (INFEASIBLE via TC-3).
+
+**Q: How does TC-5 (Concurrent Session) work?**
+A: Detects when multiple hops share the same `credential_issued` timestamp, indicating possible credential sharing or concurrent session reuse across attack path hops.
+
+### Evaluation & Results
+
+**Q: What do the verdict kinds mean?**
+A:
+- **FEASIBLE**: All enabled temporal constraints passed
+- **INFEASIBLE**: At least one temporal constraint violated
+- **UNKNOWN**: Insufficient temporal data to evaluate (missing timestamps)
+
+**Q: How do I interpret the `elimination_rate`?**
+A: Fraction of paths eliminated by temporal constraints (INFEASIBLE / total paths). Higher rate = temporal constraints are more restrictive.
+
+**Q: What is the `canonical_run_hash`?**
+A: SHA-256 hash of the canonical JSON representation of the entire evaluation state. Same input → same hash. Used for reproducibility verification.
+
+**Q: How do I reproduce paper results exactly?**
+A: Use `--truth-mode scripted --truth-map tests/fixtures/primary_realistic_truth_map.json` with the primary fixture. See `scripts/reproduce_paper.py`.
+
+### Performance & Scaling
+
+**Q: What are the scaling limits?**
+A: Tested up to 25,000 nodes / 125,000 edges. Analyze time ~30s, planner ~300s at 25k nodes. Memory ~2.5 GB at XLarge scale.
+
+**Q: How do I improve performance on large graphs?**
+A: Use `TemporalConfig.permissive()`, reduce `max_path_length`, disable `enable_stats`, use `PathFeasibilityBatchRunner` with `max_workers=CPU-1`.
+
+**Q: What are the memory requirements?**
+A: Small (50 nodes): ~15MB | Medium (500 nodes): ~80MB | Large (5k nodes): ~500MB | XLarge (25k nodes): ~2.5GB
+
+### Integration & Deployment
+
+**Q: Can ARF-RT integrate with my SIEM?**
+A: Yes. Export metrics via Prometheus client, use `CredentialAlertEngine` for SIEM-ready alerts, or export to Splunk/Elastic/Sumo Logic via JSON/NDJSON.
+
+**Q: Does ARF-RT support Kubernetes?**
+A: Kubernetes RBAC temporal attack paths are planned for Q1 2027. Current version focuses on cloud IAM (AWS/Azure/GCP).
+
+**Q: Can I run ARF-RT in air-gapped environments?**
+A: Yes. ARF-RT is replay-only with no live cloud SDK calls. Use `scripts/reproduce_paper.py` for offline validation. SBOM generation available via `cyclonedx-bom`.
+
+**Q: How do I generate a Software Bill of Materials (SBOM)?**
+A: `cyclonedx-bom -o sbom.json --format json`
+
+### Security
+
+**Q: Does ARF-RT store AWS credentials?**
+A: No. ARF-RT processes ARNs and metadata only. No credentials, emails, or personal data are stored.
+
+**Q: Is ARF-RT suitable for air-gapped environments?**
+A: Yes. ARF-RT is replay-only with no live cloud SDK calls. All analysis runs locally with no telemetry or cloud uploads.
+
+**Q: How do I anonymize scenario files for sharing?**
+A: `python scripts/validate_fixtures.py --anonymize scenario.json --output scenario_anon.json`
+
+### Development
+
+**Q: How do I run tests?**
+A: 
+```bash
+# Fast feedback (unit only)
+pytest tests/unit/ -q
+
+# Full validation (CI pipeline)
+pytest tests/unit tests/golden -q
+
+# Property-based tests
+pytest tests/research/test_rdce_property_based.py -v
+
+# With coverage
+pytest tests/unit tests/golden --cov=arf_rt --cov-report=term-missing
+```
+
+**Q: How do I add a new temporal constraint?**
+A: 
+1. Add constraint ID to `TemporalConfig.enabled_constraints`
+2. Implement check in `TemporalEvaluator._check_tcX()`
+3. Add tests in `tests/temporal/test_evaluator.py`
+4. Update documentation
+
+**Q: How do I contribute?**
+A: 
+1. Fork and clone the repository
+2. Create a branch: `git checkout -b feature/your-feature`
+3. Write tests for new functionality
+4. Run validation: `python scripts/lint_check.py && python scripts/validate_fixtures.py --strict`
+5. Submit PR referencing the issue
+
+### Troubleshooting
+
+**Q: Why am I getting `ModuleNotFoundError: No module named 'arf_rt'`?**
+A: Run `pip install -e ".[dev]"` from the repository root.
+
+**Q: Why is my `canonical_run_hash` different from the paper?**
+A: Serialization details (account IDs, JSON key ordering, timestamps) don't affect quantitative metrics. See Artifact Reconciliation section.
+
+**Q: Why is evaluation slow?**
+A: Try `TemporalConfig.permissive()`, reduce `max_path_length`, disable `enable_stats`, or use batch processing.
+
+**Q: Why do I get `UNKNOWN` verdicts?**
+A: Missing temporal data in hints (earliest_observed, latest_observed, credential_issued, credential_expiry, last_used). Set `unknown_passthrough=False` to treat as INFEASIBLE.
+
+**Q: How do I report a bug?**
+A: Open a GitHub Issue with: ARF-RT version, Python version, OS, minimal reproduction scenario, expected vs actual behavior.
 
 ---
 
@@ -4249,6 +4611,187 @@ resources:
 
 ---
 
+## Frequently Asked Questions (v0.9.1)
+
+### General Questions
+
+**Q: What is ARF-RT?**
+A: ARF-RT (Attack Risk Factor - Risk Topology) is a Bayesian reasoning engine for cloud identity attack path analysis. It ingests privilege graphs (PMapper, AWS Organizations), models policy constraints as correlated belief structures, and computes the most informative probe sequence to reduce uncertainty about path viability.
+
+**Q: What does "temporal-context-aware" mean?**
+A: ARF-RT evaluates attack paths not just based on static graph connectivity, but also considers temporal constraints (TC-1 through TC-5) such as credential expiry, session validity, causal ordering, velocity thresholds, and concurrent session detection.
+
+**Q: What is the difference between ARF-RT and PMapper/BloodHound?**
+A: PMapper and BloodHound are static graph analysis tools that find attack paths but ignore policy constraints. ARF-RT models constraints as first-class objects, correlates structurally dependent edges, and uses information theory (Expected Information Gain) to determine the most informative next probe.
+
+**Q: Is ARF-RT production-ready?**
+A: ARF-RT v0.9.1 is in active development. The core engine is stable and formally verified (128/128 tests passing), but live cloud SDK probing (LIVE mode) is not yet implemented. The replay-only mode is production-ready for analysis of exported CloudTrail/PMapper data.
+
+**Q: What cloud providers are supported?**
+A: Full support for AWS (STS, IAM, Organizations, CloudTrail). Partial support for Azure (Managed Identity, PIM) and GCP (Workload Identity Federation). Cross-cloud federation paths assume SAML/OIDC.
+
+### Installation & Setup
+
+**Q: What are the system requirements?**
+A: Python 3.10+, Git, 2GB+ RAM (4GB+ recommended for large graphs), SQLite3.
+
+**Q: How do I install ARF-RT?**
+A: `pip install -e ".[dev]"` from the repository root. For production: `pip install arf-rt` (when published to PyPI).
+
+**Q: Do I need AWS credentials to use ARF-RT?**
+A: No. ARF-RT operates in replay-only mode using exported CloudTrail logs and PMapper graphs. No live cloud SDK calls are made.
+
+**Q: Can I run ARF-RT in a container?**
+A: Yes. See the [Container Deployment](#container-deployment) section for a multi-stage Dockerfile example.
+
+### Configuration
+
+**Q: What's the difference between `strict()`, `permissive()`, and `balanced()` presets?**
+A: 
+- **Strict**: Conservative - fails UNKNOWN paths, tight velocity bounds (1.0s), short staleness (30 days), all constraints enabled.
+- **Permissive**: Recall-favoring - passes UNKNOWN, disables velocity/staleness checks, only TC-1/TC-2 enabled.
+- **Balanced**: Moderate settings (recommended for production) - 0.5s velocity, 90-day staleness, all constraints enabled.
+
+**Q: How do I disable specific temporal constraints?**
+A: 
+```python
+config = TemporalConfig(
+    enabled_constraints=frozenset({"TC-1", "TC-2"}),  # Only causal order and session validity
+)
+```
+
+**Q: What does `unknown_passthrough=True` do?**
+A: When `True` (default), paths with insufficient temporal data return `UNKNOWN` and pass through to the Bayesian layer. When `False`, UNKNOWN paths are treated as `INFEASIBLE` (conservative mode).
+
+**Q: How do I customize the stale credential threshold?**
+A: 
+```python
+config = TemporalConfig(stale_credential_days=30)  # 2 weeks instead of 90 days
+```
+
+### Temporal Constraints
+
+**Q: What are the five temporal constraints (TC-1 through TC-5)?**
+A:
+- **TC-1 (Causal Order)**: Hop B must occur after Hop A in CloudTrail timestamps
+- **TC-2 (Session Validity)**: Credential from previous hop must not be expired
+- **TC-3 (Minimum Velocity)**: Hops must be separated by at least δ_min (default 0.5s)
+- **TC-4 (Stale Credential)**: Credential last used within threshold (default 90 days)
+- **TC-5 (Concurrent Session)**: No overlapping sessions suggesting credential sharing
+
+**Q: What is the "velocity threshold" (TC-3)?**
+A: Minimum time that must elapse between consecutive hops. Default is 0.5 seconds. Paths completing hops faster than this are flagged as bot-like (INFEASIBLE via TC-3).
+
+**Q: How does TC-5 (Concurrent Session) work?**
+A: Detects when multiple hops share the same `credential_issued` timestamp, indicating possible credential sharing or concurrent session reuse across attack path hops.
+
+### Evaluation & Results
+
+**Q: What do the verdict kinds mean?**
+A:
+- **FEASIBLE**: All enabled temporal constraints passed
+- **INFEASIBLE**: At least one temporal constraint violated
+- **UNKNOWN**: Insufficient temporal data to evaluate (missing timestamps)
+
+**Q: How do I interpret the `elimination_rate`?**
+A: Fraction of paths eliminated by temporal constraints (INFEASIBLE / total paths). Higher rate = temporal constraints are more restrictive.
+
+**Q: What is the `canonical_run_hash`?**
+A: SHA-256 hash of the canonical JSON representation of the entire evaluation state. Same input → same hash. Used for reproducibility verification.
+
+**Q: How do I reproduce paper results exactly?**
+A: Use `--truth-mode scripted --truth-map tests/fixtures/primary_realistic_truth_map.json` with the primary fixture. See `scripts/reproduce_paper.py`.
+
+### Performance & Scaling
+
+**Q: What are the scaling limits?**
+A: Tested up to 25,000 nodes / 125,000 edges. Analyze time ~30s, planner ~300s at 25k nodes. Memory ~2.5 GB at XLarge scale.
+
+**Q: How do I improve performance on large graphs?**
+A: Use `TemporalConfig.permissive()`, reduce `max_path_length`, disable `enable_stats`, use `PathFeasibilityBatchRunner` with `max_workers=CPU-1`.
+
+**Q: What are the memory requirements?**
+A: Small (50 nodes): ~15MB | Medium (500 nodes): ~80MB | Large (5k nodes): ~500MB | XLarge (25k nodes): ~2.5GB
+
+### Integration & Deployment
+
+**Q: Can ARF-RT integrate with my SIEM?**
+A: Yes. Export metrics via Prometheus client, use `CredentialAlertEngine` for SIEM-ready alerts, or export to Splunk/Elastic/Sumo Logic via JSON/NDJSON.
+
+**Q: Does ARF-RT support Kubernetes?**
+A: Kubernetes RBAC temporal attack paths are planned for Q1 2027. Current version focuses on cloud IAM (AWS/Azure/GCP).
+
+**Q: Can I run ARF-RT in air-gapped environments?**
+A: Yes. ARF-RT is replay-only with no live cloud SDK calls. Use `scripts/reproduce_paper.py` for offline validation. SBOM generation available via `cyclonedx-bom`.
+
+**Q: How do I generate a Software Bill of Materials (SBOM)?**
+A: `cyclonedx-bom -o sbom.json --format json`
+
+### Security
+
+**Q: Does ARF-RT store AWS credentials?**
+A: No. ARF-RT processes ARNs and metadata only. No credentials, emails, or personal data are stored.
+
+**Q: Is ARF-RT suitable for air-gapped environments?**
+A: Yes. ARF-RT is replay-only with no live cloud SDK calls. All analysis runs locally with no telemetry or cloud uploads.
+
+**Q: How do I anonymize scenario files for sharing?**
+A: `python scripts/validate_fixtures.py --anonymize scenario.json --output scenario_anon.json`
+
+### Development
+
+**Q: How do I run tests?**
+A: 
+```bash
+# Fast feedback (unit only)
+pytest tests/unit/ -q
+
+# Full validation (CI pipeline)
+pytest tests/unit tests/golden -q
+
+# Property-based tests
+pytest tests/research/test_rdce_property_based.py -v
+
+# With coverage
+pytest tests/unit tests/golden --cov=arf_rt --cov-report=term-missing
+```
+
+**Q: How do I add a new temporal constraint?**
+A: 
+1. Add constraint ID to `TemporalConfig.enabled_constraints`
+2. Implement check in `TemporalEvaluator._check_tcX()`
+3. Add tests in `tests/temporal/test_evaluator.py`
+4. Update documentation
+
+**Q: How do I contribute?**
+A: 
+1. Fork and clone the repository
+2. Create a branch: `git checkout -b feature/your-feature`
+3. Write tests for new functionality
+4. Run validation: `python scripts/lint_check.py && python scripts/validate_fixtures.py --strict`
+5. Submit PR referencing the issue
+
+### Troubleshooting
+
+**Q: Why am I getting `ModuleNotFoundError: No module named 'arf_rt'`?**
+A: Run `pip install -e ".[dev]"` from the repository root.
+
+**Q: Why is my `canonical_run_hash` different from the paper?**
+A: Serialization details (account IDs, JSON key ordering, timestamps) don't affect quantitative metrics. See Artifact Reconciliation section.
+
+**Q: Why is evaluation slow?**
+A: Try `TemporalConfig.permissive()`, reduce `max_path_length`, disable `enable_stats`, or use batch processing.
+
+**Q: Why do I get `UNKNOWN` verdicts?**
+A: Missing temporal data in hints (earliest_observed, latest_observed, credential_issued, credential_expiry, last_used). Set `unknown_passthrough=False` to treat as INFEASIBLE.
+
+**Q: How do I report a bug?**
+A: Open a GitHub Issue with: ARF-RT version, Python version, OS, minimal reproduction scenario, expected vs actual behavior.
+
+---
+
+---
+
 ## Troubleshooting Guide (v0.9.1)
 
 ### Common Issues and Solutions
@@ -5006,6 +5549,187 @@ async with RetryContext(max_attempts=3) as ctx:
 
 *Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
+
+---
+
+---
+
+## Frequently Asked Questions (v0.9.1)
+
+### General Questions
+
+**Q: What is ARF-RT?**
+A: ARF-RT (Attack Risk Factor - Risk Topology) is a Bayesian reasoning engine for cloud identity attack path analysis. It ingests privilege graphs (PMapper, AWS Organizations), models policy constraints as correlated belief structures, and computes the most informative probe sequence to reduce uncertainty about path viability.
+
+**Q: What does "temporal-context-aware" mean?**
+A: ARF-RT evaluates attack paths not just based on static graph connectivity, but also considers temporal constraints (TC-1 through TC-5) such as credential expiry, session validity, causal ordering, velocity thresholds, and concurrent session detection.
+
+**Q: What is the difference between ARF-RT and PMapper/BloodHound?**
+A: PMapper and BloodHound are static graph analysis tools that find attack paths but ignore policy constraints. ARF-RT models constraints as first-class objects, correlates structurally dependent edges, and uses information theory (Expected Information Gain) to determine the most informative next probe.
+
+**Q: Is ARF-RT production-ready?**
+A: ARF-RT v0.9.1 is in active development. The core engine is stable and formally verified (128/128 tests passing), but live cloud SDK probing (LIVE mode) is not yet implemented. The replay-only mode is production-ready for analysis of exported CloudTrail/PMapper data.
+
+**Q: What cloud providers are supported?**
+A: Full support for AWS (STS, IAM, Organizations, CloudTrail). Partial support for Azure (Managed Identity, PIM) and GCP (Workload Identity Federation). Cross-cloud federation paths assume SAML/OIDC.
+
+### Installation & Setup
+
+**Q: What are the system requirements?**
+A: Python 3.10+, Git, 2GB+ RAM (4GB+ recommended for large graphs), SQLite3.
+
+**Q: How do I install ARF-RT?**
+A: `pip install -e ".[dev]"` from the repository root. For production: `pip install arf-rt` (when published to PyPI).
+
+**Q: Do I need AWS credentials to use ARF-RT?**
+A: No. ARF-RT operates in replay-only mode using exported CloudTrail logs and PMapper graphs. No live cloud SDK calls are made.
+
+**Q: Can I run ARF-RT in a container?**
+A: Yes. See the [Container Deployment](#container-deployment) section for a multi-stage Dockerfile example.
+
+### Configuration
+
+**Q: What's the difference between `strict()`, `permissive()`, and `balanced()` presets?**
+A: 
+- **Strict**: Conservative - fails UNKNOWN paths, tight velocity bounds (1.0s), short staleness (30 days), all constraints enabled.
+- **Permissive**: Recall-favoring - passes UNKNOWN, disables velocity/staleness checks, only TC-1/TC-2 enabled.
+- **Balanced**: Moderate settings (recommended for production) - 0.5s velocity, 90-day staleness, all constraints enabled.
+
+**Q: How do I disable specific temporal constraints?**
+A: 
+```python
+config = TemporalConfig(
+    enabled_constraints=frozenset({"TC-1", "TC-2"}),  # Only causal order and session validity
+)
+```
+
+**Q: What does `unknown_passthrough=True` do?**
+A: When `True` (default), paths with insufficient temporal data return `UNKNOWN` and pass through to the Bayesian layer. When `False`, UNKNOWN paths are treated as `INFEASIBLE` (conservative mode).
+
+**Q: How do I customize the stale credential threshold?**
+A: 
+```python
+config = TemporalConfig(stale_credential_days=30)  # 2 weeks instead of 90 days
+```
+
+### Temporal Constraints
+
+**Q: What are the five temporal constraints (TC-1 through TC-5)?**
+A:
+- **TC-1 (Causal Order)**: Hop B must occur after Hop A in CloudTrail timestamps
+- **TC-2 (Session Validity)**: Credential from previous hop must not be expired
+- **TC-3 (Minimum Velocity)**: Hops must be separated by at least δ_min (default 0.5s)
+- **TC-4 (Stale Credential)**: Credential last used within threshold (default 90 days)
+- **TC-5 (Concurrent Session)**: No overlapping sessions suggesting credential sharing
+
+**Q: What is the "velocity threshold" (TC-3)?**
+A: Minimum time that must elapse between consecutive hops. Default is 0.5 seconds. Paths completing hops faster than this are flagged as bot-like (INFEASIBLE via TC-3).
+
+**Q: How does TC-5 (Concurrent Session) work?**
+A: Detects when multiple hops share the same `credential_issued` timestamp, indicating possible credential sharing or concurrent session reuse across attack path hops.
+
+### Evaluation & Results
+
+**Q: What do the verdict kinds mean?**
+A:
+- **FEASIBLE**: All enabled temporal constraints passed
+- **INFEASIBLE**: At least one temporal constraint violated
+- **UNKNOWN**: Insufficient temporal data to evaluate (missing timestamps)
+
+**Q: How do I interpret the `elimination_rate`?**
+A: Fraction of paths eliminated by temporal constraints (INFEASIBLE / total paths). Higher rate = temporal constraints are more restrictive.
+
+**Q: What is the `canonical_run_hash`?**
+A: SHA-256 hash of the canonical JSON representation of the entire evaluation state. Same input → same hash. Used for reproducibility verification.
+
+**Q: How do I reproduce paper results exactly?**
+A: Use `--truth-mode scripted --truth-map tests/fixtures/primary_realistic_truth_map.json` with the primary fixture. See `scripts/reproduce_paper.py`.
+
+### Performance & Scaling
+
+**Q: What are the scaling limits?**
+A: Tested up to 25,000 nodes / 125,000 edges. Analyze time ~30s, planner ~300s at 25k nodes. Memory ~2.5 GB at XLarge scale.
+
+**Q: How do I improve performance on large graphs?**
+A: Use `TemporalConfig.permissive()`, reduce `max_path_length`, disable `enable_stats`, use `PathFeasibilityBatchRunner` with `max_workers=CPU-1`.
+
+**Q: What are the memory requirements?**
+A: Small (50 nodes): ~15MB | Medium (500 nodes): ~80MB | Large (5k nodes): ~500MB | XLarge (25k nodes): ~2.5GB
+
+### Integration & Deployment
+
+**Q: Can ARF-RT integrate with my SIEM?**
+A: Yes. Export metrics via Prometheus client, use `CredentialAlertEngine` for SIEM-ready alerts, or export to Splunk/Elastic/Sumo Logic via JSON/NDJSON.
+
+**Q: Does ARF-RT support Kubernetes?**
+A: Kubernetes RBAC temporal attack paths are planned for Q1 2027. Current version focuses on cloud IAM (AWS/Azure/GCP).
+
+**Q: Can I run ARF-RT in air-gapped environments?**
+A: Yes. ARF-RT is replay-only with no live cloud SDK calls. Use `scripts/reproduce_paper.py` for offline validation. SBOM generation available via `cyclonedx-bom`.
+
+**Q: How do I generate a Software Bill of Materials (SBOM)?**
+A: `cyclonedx-bom -o sbom.json --format json`
+
+### Security
+
+**Q: Does ARF-RT store AWS credentials?**
+A: No. ARF-RT processes ARNs and metadata only. No credentials, emails, or personal data are stored.
+
+**Q: Is ARF-RT suitable for air-gapped environments?**
+A: Yes. ARF-RT is replay-only with no live cloud SDK calls. All analysis runs locally with no telemetry or cloud uploads.
+
+**Q: How do I anonymize scenario files for sharing?**
+A: `python scripts/validate_fixtures.py --anonymize scenario.json --output scenario_anon.json`
+
+### Development
+
+**Q: How do I run tests?**
+A: 
+```bash
+# Fast feedback (unit only)
+pytest tests/unit/ -q
+
+# Full validation (CI pipeline)
+pytest tests/unit tests/golden -q
+
+# Property-based tests
+pytest tests/research/test_rdce_property_based.py -v
+
+# With coverage
+pytest tests/unit tests/golden --cov=arf_rt --cov-report=term-missing
+```
+
+**Q: How do I add a new temporal constraint?**
+A: 
+1. Add constraint ID to `TemporalConfig.enabled_constraints`
+2. Implement check in `TemporalEvaluator._check_tcX()`
+3. Add tests in `tests/temporal/test_evaluator.py`
+4. Update documentation
+
+**Q: How do I contribute?**
+A: 
+1. Fork and clone the repository
+2. Create a branch: `git checkout -b feature/your-feature`
+3. Write tests for new functionality
+4. Run validation: `python scripts/lint_check.py && python scripts/validate_fixtures.py --strict`
+5. Submit PR referencing the issue
+
+### Troubleshooting
+
+**Q: Why am I getting `ModuleNotFoundError: No module named 'arf_rt'`?**
+A: Run `pip install -e ".[dev]"` from the repository root.
+
+**Q: Why is my `canonical_run_hash` different from the paper?**
+A: Serialization details (account IDs, JSON key ordering, timestamps) don't affect quantitative metrics. See Artifact Reconciliation section.
+
+**Q: Why is evaluation slow?**
+A: Try `TemporalConfig.permissive()`, reduce `max_path_length`, disable `enable_stats`, or use batch processing.
+
+**Q: Why do I get `UNKNOWN` verdicts?**
+A: Missing temporal data in hints (earliest_observed, latest_observed, credential_issued, credential_expiry, last_used). Set `unknown_passthrough=False` to treat as INFEASIBLE.
+
+**Q: How do I report a bug?**
+A: Open a GitHub Issue with: ARF-RT version, Python version, OS, minimal reproduction scenario, expected vs actual behavior.
 
 ---
 
