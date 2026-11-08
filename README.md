@@ -2552,6 +2552,312 @@ If you use ARF-RT or its temporal extensions in academic work, please cite:
 
 ---
 
+## Troubleshooting Guide (v0.9.1)
+
+### Common Issues and Solutions
+
+#### 1. Installation Issues
+
+**Problem**: `pip install -e ".[dev]"` fails with dependency conflicts
+```
+ERROR: Cannot install arf-rt because of conflicting dependencies
+```
+
+**Solution**:
+```bash
+# Create a fresh virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install --upgrade pip
+pip install -e ".[dev]"
+```
+
+**Problem**: `ModuleNotFoundError: No module named 'arf_rt'`
+```
+ModuleNotFoundError: No module named 'arf_rt'
+```
+
+**Solution**:
+```bash
+# Ensure you're in the project root and installed in development mode
+pip install -e ".[dev]"
+# Or install with pip
+pip install .
+```
+
+#### 2. Configuration Issues
+
+**Problem**: `ValidationError: min_hop_delta_seconds must be positive`
+```
+ValidationError: min_hop_delta_seconds must be positive
+```
+
+**Solution**:
+```python
+from arf_rt.temporal import TemporalConfig
+
+config = TemporalConfig(
+    min_hop_delta_seconds=0.5,  # Must be >= 0
+    stale_credential_days=90,   # Must be >= 0
+)
+```
+
+**Problem**: `TemporalConfig()` deprecation warning
+```
+UserWarning: TemporalConfig() without explicit fields is deprecated
+```
+
+**Solution**:
+```python
+# Use explicit configuration or presets
+config = TemporalConfig.balanced()  # Recommended
+# Or
+config = TemporalConfig(
+    min_hop_delta_seconds=0.5,
+    stale_credential_days=90,
+    max_path_length=10,
+    max_concurrent_sessions=5,
+)
+```
+
+#### 3. Temporal Evaluation Issues
+
+**Problem**: All verdicts return `UNKNOWN`
+```python
+verdict = evaluator.evaluate(path_edges, hints)
+# verdict.kind == VerdictKind.UNKNOWN
+```
+
+**Solution**:
+```python
+# Ensure hints have required temporal data
+hint = TemporalHint(
+    edge_id="e1",
+    earliest_observed=datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
+    latest_observed=datetime(2026, 1, 1, 12, 0, 5, tzinfo=timezone.utc),
+    credential_issued=datetime(2026, 1, 1, 11, 0, 0, tzinfo=timezone.utc),
+    credential_expiry=datetime(2026, 1, 1, 13, 0, 0, tzinfo=timezone.utc),
+    last_used=datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
+)
+
+# Or enable unknown_passthrough for development
+config = TemporalConfig(unknown_passthrough=True)
+```
+
+**Problem**: `TemporalEvaluator` returns `INFEASIBLE` for valid paths
+
+**Solution**:
+```python
+# Enable stats to debug
+evaluator = TemporalEvaluator(config=config, enable_stats=True)
+verdict = evaluator.evaluate(path_edges, hints)
+print(evaluator.stats.to_dict())
+# Check which constraint failed:
+# - TC-1: Causal order violation
+# - TC-2: Session expiry
+# - TC-3: Velocity threshold
+# - TC-4: Stale credential
+# - TC-5: Concurrent session
+```
+
+#### 4. Determinism Issues
+
+**Problem**: `canonical_run_hash` differs between runs
+```
+Expected: a1b2c3d4... but got: e5f6g7h8...
+```
+
+**Solution**:
+```bash
+# Ensure deterministic environment
+export PYTHONHASHSEED=0
+export ARF_SAFE_MODE=1
+
+# Run with fixed seed
+arf-rt analyze scenario.json --seed 42
+```
+
+**Problem**: Different `canonical_run_hash` on different machines
+
+**Solution**:
+```python
+# Ensure consistent JSON serialization
+from arf_rt.util import canonical_json
+import json
+
+# Use canonical_json for all serialization
+json_str = canonical_json(data)  # Sorted keys, no whitespace
+hash = sha256_digest(json_str)
+```
+
+#### 5. Performance Issues
+
+**Problem**: Slow evaluation on large graphs
+```
+Analysis took 45 seconds for 1000 paths
+```
+
+**Solution**:
+```python
+# Use permissive config for speed
+config = TemporalConfig.permissive()
+config.max_path_length = 5
+
+# Disable stats if not needed
+evaluator = TemporalEvaluator(config=config, enable_stats=False)
+
+# Use batch processing for multiple scenarios
+from arf_rt.temporal import PathFeasibilityBatchRunner
+runner = PathFeasibilityBatchRunner(config=config)
+results = runner.run_batch(scenarios, max_workers=4)
+```
+
+**Problem**: High memory usage
+```
+MemoryError: Unable to allocate array
+```
+
+**Solution**:
+```python
+# Disable stats and extended metrics
+evaluator = TemporalEvaluator(config=config, enable_stats=False)
+metrics = TemporalMetrics()  # Not TemporalMetricsExtended
+
+# Clear caches periodically
+import gc
+gc.collect()
+
+# Process in smaller batches
+from arf_rt.temporal import PathFeasibilityBatchRunner
+runner = PathFeasibilityBatchRunner(config=config)
+results = runner.run_batch(scenarios, max_workers=2, chunk_size=25)
+```
+
+#### 6. Database Issues
+
+**Problem**: `sqlite3.OperationalError: database is locked`
+```
+sqlite3.OperationalError: database is locked
+```
+
+**Solution**:
+```bash
+# Check for multiple processes accessing the same database
+lsof /path/to/arf_rt.db
+
+# Enable WAL mode for better concurrency
+PRAGMA journal_mode = WAL;
+PRAGMA busy_timeout = 5000;
+```
+
+**Problem**: Database corruption
+```
+sqlite3.DatabaseError: database disk image is malformed
+```
+
+**Solution**:
+```bash
+# Restore from backup
+cp arf_rt.db.backup arf_rt.db
+
+# Or rebuild from scenario
+arf-rt analyze scenario.json --rebuild-db
+```
+
+#### 7. CloudTrail Integration Issues
+
+**Problem**: No temporal hints extracted from CloudTrail
+```
+No temporal hints found in CloudTrail events
+```
+
+**Solution**:
+```python
+from arf_rt.temporal import CloudTrailParser
+
+parser = CloudTrailParser()
+hints = parser.parse_events(cloudtrail_events)
+
+# Ensure CloudTrail includes AssumeRole events
+# Check: eventName == "AssumeRole" and eventSource == "sts.amazonaws.com"
+```
+
+**Problem**: Timestamp parsing errors
+```
+ValueError: Invalid ISO 8601 timestamp: 2026-01-01T12:00:00.000Z
+```
+
+**Solution**:
+```python
+from arf_rt.util import parse_iso8601
+
+# Handles various ISO 8601 formats including Z suffix
+dt = parse_iso8601("2026-01-01T12:00:00.000Z")
+dt = parse_iso8601("2026-01-01T12:00:00+00:00")
+dt = parse_iso8601("2026-01-01T12:00:00-05:00")
+```
+
+#### 8. Memory and Performance
+
+**Problem**: Out of memory on large scenarios
+```
+MemoryError: Unable to allocate 2.5 GB
+```
+
+**Solution**:
+```bash
+# Increase swap space
+sudo fallocate -l 4G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+
+# Or use memory-efficient settings
+config = TemporalConfig.permissive()
+config.max_path_length = 5
+```
+
+**Problem**: Slow startup time
+```
+Initialization took 30 seconds
+```
+
+**Solution**:
+```python
+# Lazy load heavy modules
+from arf_rt.temporal import TemporalEvaluator  # Lazy import
+
+# Pre-compile regex patterns
+import re
+TIMESTAMP_PATTERN = re.compile(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}')
+```
+
+### Debugging Commands
+
+```bash
+# Enable debug logging
+ARF_LOG_LEVEL=DEBUG arf-rt analyze scenario.json
+
+# Enable SQL query logging
+ARF_SQL_DEBUG=1 arf-rt analyze scenario.json
+
+# Enable temporal module debug
+ARF_TEMPORAL_DEBUG=1 python scripts/audit_temporal_compliance.py scenario.json
+
+# Profile CPU usage
+python -m cProfile -o profile.stats scripts/analyze.py scenario.json
+python -m pstats profile.stats <<< "sort cumulative\nstats 20"
+
+# Profile memory
+python -m memory_profiler scripts/analyze.py scenario.json
+mprof run scripts/analyze.py scenario.json
+mprof plot
+```
+
+---
+
+---
+
 ## API Reference (v0.9.1)
 
 ### Core Classes
@@ -3003,6 +3309,312 @@ async with RetryContext(max_attempts=3) as ctx:
 
 *Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
+
+---
+
+---
+
+## Troubleshooting Guide (v0.9.1)
+
+### Common Issues and Solutions
+
+#### 1. Installation Issues
+
+**Problem**: `pip install -e ".[dev]"` fails with dependency conflicts
+```
+ERROR: Cannot install arf-rt because of conflicting dependencies
+```
+
+**Solution**:
+```bash
+# Create a fresh virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install --upgrade pip
+pip install -e ".[dev]"
+```
+
+**Problem**: `ModuleNotFoundError: No module named 'arf_rt'`
+```
+ModuleNotFoundError: No module named 'arf_rt'
+```
+
+**Solution**:
+```bash
+# Ensure you're in the project root and installed in development mode
+pip install -e ".[dev]"
+# Or install with pip
+pip install .
+```
+
+#### 2. Configuration Issues
+
+**Problem**: `ValidationError: min_hop_delta_seconds must be positive`
+```
+ValidationError: min_hop_delta_seconds must be positive
+```
+
+**Solution**:
+```python
+from arf_rt.temporal import TemporalConfig
+
+config = TemporalConfig(
+    min_hop_delta_seconds=0.5,  # Must be >= 0
+    stale_credential_days=90,   # Must be >= 0
+)
+```
+
+**Problem**: `TemporalConfig()` deprecation warning
+```
+UserWarning: TemporalConfig() without explicit fields is deprecated
+```
+
+**Solution**:
+```python
+# Use explicit configuration or presets
+config = TemporalConfig.balanced()  # Recommended
+# Or
+config = TemporalConfig(
+    min_hop_delta_seconds=0.5,
+    stale_credential_days=90,
+    max_path_length=10,
+    max_concurrent_sessions=5,
+)
+```
+
+#### 3. Temporal Evaluation Issues
+
+**Problem**: All verdicts return `UNKNOWN`
+```python
+verdict = evaluator.evaluate(path_edges, hints)
+# verdict.kind == VerdictKind.UNKNOWN
+```
+
+**Solution**:
+```python
+# Ensure hints have required temporal data
+hint = TemporalHint(
+    edge_id="e1",
+    earliest_observed=datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
+    latest_observed=datetime(2026, 1, 1, 12, 0, 5, tzinfo=timezone.utc),
+    credential_issued=datetime(2026, 1, 1, 11, 0, 0, tzinfo=timezone.utc),
+    credential_expiry=datetime(2026, 1, 1, 13, 0, 0, tzinfo=timezone.utc),
+    last_used=datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
+)
+
+# Or enable unknown_passthrough for development
+config = TemporalConfig(unknown_passthrough=True)
+```
+
+**Problem**: `TemporalEvaluator` returns `INFEASIBLE` for valid paths
+
+**Solution**:
+```python
+# Enable stats to debug
+evaluator = TemporalEvaluator(config=config, enable_stats=True)
+verdict = evaluator.evaluate(path_edges, hints)
+print(evaluator.stats.to_dict())
+# Check which constraint failed:
+# - TC-1: Causal order violation
+# - TC-2: Session expiry
+# - TC-3: Velocity threshold
+# - TC-4: Stale credential
+# - TC-5: Concurrent session
+```
+
+#### 4. Determinism Issues
+
+**Problem**: `canonical_run_hash` differs between runs
+```
+Expected: a1b2c3d4... but got: e5f6g7h8...
+```
+
+**Solution**:
+```bash
+# Ensure deterministic environment
+export PYTHONHASHSEED=0
+export ARF_SAFE_MODE=1
+
+# Run with fixed seed
+arf-rt analyze scenario.json --seed 42
+```
+
+**Problem**: Different `canonical_run_hash` on different machines
+
+**Solution**:
+```python
+# Ensure consistent JSON serialization
+from arf_rt.util import canonical_json
+import json
+
+# Use canonical_json for all serialization
+json_str = canonical_json(data)  # Sorted keys, no whitespace
+hash = sha256_digest(json_str)
+```
+
+#### 5. Performance Issues
+
+**Problem**: Slow evaluation on large graphs
+```
+Analysis took 45 seconds for 1000 paths
+```
+
+**Solution**:
+```python
+# Use permissive config for speed
+config = TemporalConfig.permissive()
+config.max_path_length = 5
+
+# Disable stats if not needed
+evaluator = TemporalEvaluator(config=config, enable_stats=False)
+
+# Use batch processing for multiple scenarios
+from arf_rt.temporal import PathFeasibilityBatchRunner
+runner = PathFeasibilityBatchRunner(config=config)
+results = runner.run_batch(scenarios, max_workers=4)
+```
+
+**Problem**: High memory usage
+```
+MemoryError: Unable to allocate array
+```
+
+**Solution**:
+```python
+# Disable stats and extended metrics
+evaluator = TemporalEvaluator(config=config, enable_stats=False)
+metrics = TemporalMetrics()  # Not TemporalMetricsExtended
+
+# Clear caches periodically
+import gc
+gc.collect()
+
+# Process in smaller batches
+from arf_rt.temporal import PathFeasibilityBatchRunner
+runner = PathFeasibilityBatchRunner(config=config)
+results = runner.run_batch(scenarios, max_workers=2, chunk_size=25)
+```
+
+#### 6. Database Issues
+
+**Problem**: `sqlite3.OperationalError: database is locked`
+```
+sqlite3.OperationalError: database is locked
+```
+
+**Solution**:
+```bash
+# Check for multiple processes accessing the same database
+lsof /path/to/arf_rt.db
+
+# Enable WAL mode for better concurrency
+PRAGMA journal_mode = WAL;
+PRAGMA busy_timeout = 5000;
+```
+
+**Problem**: Database corruption
+```
+sqlite3.DatabaseError: database disk image is malformed
+```
+
+**Solution**:
+```bash
+# Restore from backup
+cp arf_rt.db.backup arf_rt.db
+
+# Or rebuild from scenario
+arf-rt analyze scenario.json --rebuild-db
+```
+
+#### 7. CloudTrail Integration Issues
+
+**Problem**: No temporal hints extracted from CloudTrail
+```
+No temporal hints found in CloudTrail events
+```
+
+**Solution**:
+```python
+from arf_rt.temporal import CloudTrailParser
+
+parser = CloudTrailParser()
+hints = parser.parse_events(cloudtrail_events)
+
+# Ensure CloudTrail includes AssumeRole events
+# Check: eventName == "AssumeRole" and eventSource == "sts.amazonaws.com"
+```
+
+**Problem**: Timestamp parsing errors
+```
+ValueError: Invalid ISO 8601 timestamp: 2026-01-01T12:00:00.000Z
+```
+
+**Solution**:
+```python
+from arf_rt.util import parse_iso8601
+
+# Handles various ISO 8601 formats including Z suffix
+dt = parse_iso8601("2026-01-01T12:00:00.000Z")
+dt = parse_iso8601("2026-01-01T12:00:00+00:00")
+dt = parse_iso8601("2026-01-01T12:00:00-05:00")
+```
+
+#### 8. Memory and Performance
+
+**Problem**: Out of memory on large scenarios
+```
+MemoryError: Unable to allocate 2.5 GB
+```
+
+**Solution**:
+```bash
+# Increase swap space
+sudo fallocate -l 4G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+
+# Or use memory-efficient settings
+config = TemporalConfig.permissive()
+config.max_path_length = 5
+```
+
+**Problem**: Slow startup time
+```
+Initialization took 30 seconds
+```
+
+**Solution**:
+```python
+# Lazy load heavy modules
+from arf_rt.temporal import TemporalEvaluator  # Lazy import
+
+# Pre-compile regex patterns
+import re
+TIMESTAMP_PATTERN = re.compile(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}')
+```
+
+### Debugging Commands
+
+```bash
+# Enable debug logging
+ARF_LOG_LEVEL=DEBUG arf-rt analyze scenario.json
+
+# Enable SQL query logging
+ARF_SQL_DEBUG=1 arf-rt analyze scenario.json
+
+# Enable temporal module debug
+ARF_TEMPORAL_DEBUG=1 python scripts/audit_temporal_compliance.py scenario.json
+
+# Profile CPU usage
+python -m cProfile -o profile.stats scripts/analyze.py scenario.json
+python -m pstats profile.stats <<< "sort cumulative\nstats 20"
+
+# Profile memory
+python -m memory_profiler scripts/analyze.py scenario.json
+mprof run scripts/analyze.py scenario.json
+mprof plot
+```
 
 ---
 
@@ -3637,6 +4249,312 @@ resources:
 
 ---
 
+## Troubleshooting Guide (v0.9.1)
+
+### Common Issues and Solutions
+
+#### 1. Installation Issues
+
+**Problem**: `pip install -e ".[dev]"` fails with dependency conflicts
+```
+ERROR: Cannot install arf-rt because of conflicting dependencies
+```
+
+**Solution**:
+```bash
+# Create a fresh virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install --upgrade pip
+pip install -e ".[dev]"
+```
+
+**Problem**: `ModuleNotFoundError: No module named 'arf_rt'`
+```
+ModuleNotFoundError: No module named 'arf_rt'
+```
+
+**Solution**:
+```bash
+# Ensure you're in the project root and installed in development mode
+pip install -e ".[dev]"
+# Or install with pip
+pip install .
+```
+
+#### 2. Configuration Issues
+
+**Problem**: `ValidationError: min_hop_delta_seconds must be positive`
+```
+ValidationError: min_hop_delta_seconds must be positive
+```
+
+**Solution**:
+```python
+from arf_rt.temporal import TemporalConfig
+
+config = TemporalConfig(
+    min_hop_delta_seconds=0.5,  # Must be >= 0
+    stale_credential_days=90,   # Must be >= 0
+)
+```
+
+**Problem**: `TemporalConfig()` deprecation warning
+```
+UserWarning: TemporalConfig() without explicit fields is deprecated
+```
+
+**Solution**:
+```python
+# Use explicit configuration or presets
+config = TemporalConfig.balanced()  # Recommended
+# Or
+config = TemporalConfig(
+    min_hop_delta_seconds=0.5,
+    stale_credential_days=90,
+    max_path_length=10,
+    max_concurrent_sessions=5,
+)
+```
+
+#### 3. Temporal Evaluation Issues
+
+**Problem**: All verdicts return `UNKNOWN`
+```python
+verdict = evaluator.evaluate(path_edges, hints)
+# verdict.kind == VerdictKind.UNKNOWN
+```
+
+**Solution**:
+```python
+# Ensure hints have required temporal data
+hint = TemporalHint(
+    edge_id="e1",
+    earliest_observed=datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
+    latest_observed=datetime(2026, 1, 1, 12, 0, 5, tzinfo=timezone.utc),
+    credential_issued=datetime(2026, 1, 1, 11, 0, 0, tzinfo=timezone.utc),
+    credential_expiry=datetime(2026, 1, 1, 13, 0, 0, tzinfo=timezone.utc),
+    last_used=datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
+)
+
+# Or enable unknown_passthrough for development
+config = TemporalConfig(unknown_passthrough=True)
+```
+
+**Problem**: `TemporalEvaluator` returns `INFEASIBLE` for valid paths
+
+**Solution**:
+```python
+# Enable stats to debug
+evaluator = TemporalEvaluator(config=config, enable_stats=True)
+verdict = evaluator.evaluate(path_edges, hints)
+print(evaluator.stats.to_dict())
+# Check which constraint failed:
+# - TC-1: Causal order violation
+# - TC-2: Session expiry
+# - TC-3: Velocity threshold
+# - TC-4: Stale credential
+# - TC-5: Concurrent session
+```
+
+#### 4. Determinism Issues
+
+**Problem**: `canonical_run_hash` differs between runs
+```
+Expected: a1b2c3d4... but got: e5f6g7h8...
+```
+
+**Solution**:
+```bash
+# Ensure deterministic environment
+export PYTHONHASHSEED=0
+export ARF_SAFE_MODE=1
+
+# Run with fixed seed
+arf-rt analyze scenario.json --seed 42
+```
+
+**Problem**: Different `canonical_run_hash` on different machines
+
+**Solution**:
+```python
+# Ensure consistent JSON serialization
+from arf_rt.util import canonical_json
+import json
+
+# Use canonical_json for all serialization
+json_str = canonical_json(data)  # Sorted keys, no whitespace
+hash = sha256_digest(json_str)
+```
+
+#### 5. Performance Issues
+
+**Problem**: Slow evaluation on large graphs
+```
+Analysis took 45 seconds for 1000 paths
+```
+
+**Solution**:
+```python
+# Use permissive config for speed
+config = TemporalConfig.permissive()
+config.max_path_length = 5
+
+# Disable stats if not needed
+evaluator = TemporalEvaluator(config=config, enable_stats=False)
+
+# Use batch processing for multiple scenarios
+from arf_rt.temporal import PathFeasibilityBatchRunner
+runner = PathFeasibilityBatchRunner(config=config)
+results = runner.run_batch(scenarios, max_workers=4)
+```
+
+**Problem**: High memory usage
+```
+MemoryError: Unable to allocate array
+```
+
+**Solution**:
+```python
+# Disable stats and extended metrics
+evaluator = TemporalEvaluator(config=config, enable_stats=False)
+metrics = TemporalMetrics()  # Not TemporalMetricsExtended
+
+# Clear caches periodically
+import gc
+gc.collect()
+
+# Process in smaller batches
+from arf_rt.temporal import PathFeasibilityBatchRunner
+runner = PathFeasibilityBatchRunner(config=config)
+results = runner.run_batch(scenarios, max_workers=2, chunk_size=25)
+```
+
+#### 6. Database Issues
+
+**Problem**: `sqlite3.OperationalError: database is locked`
+```
+sqlite3.OperationalError: database is locked
+```
+
+**Solution**:
+```bash
+# Check for multiple processes accessing the same database
+lsof /path/to/arf_rt.db
+
+# Enable WAL mode for better concurrency
+PRAGMA journal_mode = WAL;
+PRAGMA busy_timeout = 5000;
+```
+
+**Problem**: Database corruption
+```
+sqlite3.DatabaseError: database disk image is malformed
+```
+
+**Solution**:
+```bash
+# Restore from backup
+cp arf_rt.db.backup arf_rt.db
+
+# Or rebuild from scenario
+arf-rt analyze scenario.json --rebuild-db
+```
+
+#### 7. CloudTrail Integration Issues
+
+**Problem**: No temporal hints extracted from CloudTrail
+```
+No temporal hints found in CloudTrail events
+```
+
+**Solution**:
+```python
+from arf_rt.temporal import CloudTrailParser
+
+parser = CloudTrailParser()
+hints = parser.parse_events(cloudtrail_events)
+
+# Ensure CloudTrail includes AssumeRole events
+# Check: eventName == "AssumeRole" and eventSource == "sts.amazonaws.com"
+```
+
+**Problem**: Timestamp parsing errors
+```
+ValueError: Invalid ISO 8601 timestamp: 2026-01-01T12:00:00.000Z
+```
+
+**Solution**:
+```python
+from arf_rt.util import parse_iso8601
+
+# Handles various ISO 8601 formats including Z suffix
+dt = parse_iso8601("2026-01-01T12:00:00.000Z")
+dt = parse_iso8601("2026-01-01T12:00:00+00:00")
+dt = parse_iso8601("2026-01-01T12:00:00-05:00")
+```
+
+#### 8. Memory and Performance
+
+**Problem**: Out of memory on large scenarios
+```
+MemoryError: Unable to allocate 2.5 GB
+```
+
+**Solution**:
+```bash
+# Increase swap space
+sudo fallocate -l 4G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+
+# Or use memory-efficient settings
+config = TemporalConfig.permissive()
+config.max_path_length = 5
+```
+
+**Problem**: Slow startup time
+```
+Initialization took 30 seconds
+```
+
+**Solution**:
+```python
+# Lazy load heavy modules
+from arf_rt.temporal import TemporalEvaluator  # Lazy import
+
+# Pre-compile regex patterns
+import re
+TIMESTAMP_PATTERN = re.compile(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}')
+```
+
+### Debugging Commands
+
+```bash
+# Enable debug logging
+ARF_LOG_LEVEL=DEBUG arf-rt analyze scenario.json
+
+# Enable SQL query logging
+ARF_SQL_DEBUG=1 arf-rt analyze scenario.json
+
+# Enable temporal module debug
+ARF_TEMPORAL_DEBUG=1 python scripts/audit_temporal_compliance.py scenario.json
+
+# Profile CPU usage
+python -m cProfile -o profile.stats scripts/analyze.py scenario.json
+python -m pstats profile.stats <<< "sort cumulative\nstats 20"
+
+# Profile memory
+python -m memory_profiler scripts/analyze.py scenario.json
+mprof run scripts/analyze.py scenario.json
+mprof plot
+```
+
+---
+
+---
+
 ## API Reference (v0.9.1)
 
 ### Core Classes
@@ -4088,6 +5006,312 @@ async with RetryContext(max_attempts=3) as ctx:
 
 *Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
+
+---
+
+---
+
+## Troubleshooting Guide (v0.9.1)
+
+### Common Issues and Solutions
+
+#### 1. Installation Issues
+
+**Problem**: `pip install -e ".[dev]"` fails with dependency conflicts
+```
+ERROR: Cannot install arf-rt because of conflicting dependencies
+```
+
+**Solution**:
+```bash
+# Create a fresh virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install --upgrade pip
+pip install -e ".[dev]"
+```
+
+**Problem**: `ModuleNotFoundError: No module named 'arf_rt'`
+```
+ModuleNotFoundError: No module named 'arf_rt'
+```
+
+**Solution**:
+```bash
+# Ensure you're in the project root and installed in development mode
+pip install -e ".[dev]"
+# Or install with pip
+pip install .
+```
+
+#### 2. Configuration Issues
+
+**Problem**: `ValidationError: min_hop_delta_seconds must be positive`
+```
+ValidationError: min_hop_delta_seconds must be positive
+```
+
+**Solution**:
+```python
+from arf_rt.temporal import TemporalConfig
+
+config = TemporalConfig(
+    min_hop_delta_seconds=0.5,  # Must be >= 0
+    stale_credential_days=90,   # Must be >= 0
+)
+```
+
+**Problem**: `TemporalConfig()` deprecation warning
+```
+UserWarning: TemporalConfig() without explicit fields is deprecated
+```
+
+**Solution**:
+```python
+# Use explicit configuration or presets
+config = TemporalConfig.balanced()  # Recommended
+# Or
+config = TemporalConfig(
+    min_hop_delta_seconds=0.5,
+    stale_credential_days=90,
+    max_path_length=10,
+    max_concurrent_sessions=5,
+)
+```
+
+#### 3. Temporal Evaluation Issues
+
+**Problem**: All verdicts return `UNKNOWN`
+```python
+verdict = evaluator.evaluate(path_edges, hints)
+# verdict.kind == VerdictKind.UNKNOWN
+```
+
+**Solution**:
+```python
+# Ensure hints have required temporal data
+hint = TemporalHint(
+    edge_id="e1",
+    earliest_observed=datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
+    latest_observed=datetime(2026, 1, 1, 12, 0, 5, tzinfo=timezone.utc),
+    credential_issued=datetime(2026, 1, 1, 11, 0, 0, tzinfo=timezone.utc),
+    credential_expiry=datetime(2026, 1, 1, 13, 0, 0, tzinfo=timezone.utc),
+    last_used=datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
+)
+
+# Or enable unknown_passthrough for development
+config = TemporalConfig(unknown_passthrough=True)
+```
+
+**Problem**: `TemporalEvaluator` returns `INFEASIBLE` for valid paths
+
+**Solution**:
+```python
+# Enable stats to debug
+evaluator = TemporalEvaluator(config=config, enable_stats=True)
+verdict = evaluator.evaluate(path_edges, hints)
+print(evaluator.stats.to_dict())
+# Check which constraint failed:
+# - TC-1: Causal order violation
+# - TC-2: Session expiry
+# - TC-3: Velocity threshold
+# - TC-4: Stale credential
+# - TC-5: Concurrent session
+```
+
+#### 4. Determinism Issues
+
+**Problem**: `canonical_run_hash` differs between runs
+```
+Expected: a1b2c3d4... but got: e5f6g7h8...
+```
+
+**Solution**:
+```bash
+# Ensure deterministic environment
+export PYTHONHASHSEED=0
+export ARF_SAFE_MODE=1
+
+# Run with fixed seed
+arf-rt analyze scenario.json --seed 42
+```
+
+**Problem**: Different `canonical_run_hash` on different machines
+
+**Solution**:
+```python
+# Ensure consistent JSON serialization
+from arf_rt.util import canonical_json
+import json
+
+# Use canonical_json for all serialization
+json_str = canonical_json(data)  # Sorted keys, no whitespace
+hash = sha256_digest(json_str)
+```
+
+#### 5. Performance Issues
+
+**Problem**: Slow evaluation on large graphs
+```
+Analysis took 45 seconds for 1000 paths
+```
+
+**Solution**:
+```python
+# Use permissive config for speed
+config = TemporalConfig.permissive()
+config.max_path_length = 5
+
+# Disable stats if not needed
+evaluator = TemporalEvaluator(config=config, enable_stats=False)
+
+# Use batch processing for multiple scenarios
+from arf_rt.temporal import PathFeasibilityBatchRunner
+runner = PathFeasibilityBatchRunner(config=config)
+results = runner.run_batch(scenarios, max_workers=4)
+```
+
+**Problem**: High memory usage
+```
+MemoryError: Unable to allocate array
+```
+
+**Solution**:
+```python
+# Disable stats and extended metrics
+evaluator = TemporalEvaluator(config=config, enable_stats=False)
+metrics = TemporalMetrics()  # Not TemporalMetricsExtended
+
+# Clear caches periodically
+import gc
+gc.collect()
+
+# Process in smaller batches
+from arf_rt.temporal import PathFeasibilityBatchRunner
+runner = PathFeasibilityBatchRunner(config=config)
+results = runner.run_batch(scenarios, max_workers=2, chunk_size=25)
+```
+
+#### 6. Database Issues
+
+**Problem**: `sqlite3.OperationalError: database is locked`
+```
+sqlite3.OperationalError: database is locked
+```
+
+**Solution**:
+```bash
+# Check for multiple processes accessing the same database
+lsof /path/to/arf_rt.db
+
+# Enable WAL mode for better concurrency
+PRAGMA journal_mode = WAL;
+PRAGMA busy_timeout = 5000;
+```
+
+**Problem**: Database corruption
+```
+sqlite3.DatabaseError: database disk image is malformed
+```
+
+**Solution**:
+```bash
+# Restore from backup
+cp arf_rt.db.backup arf_rt.db
+
+# Or rebuild from scenario
+arf-rt analyze scenario.json --rebuild-db
+```
+
+#### 7. CloudTrail Integration Issues
+
+**Problem**: No temporal hints extracted from CloudTrail
+```
+No temporal hints found in CloudTrail events
+```
+
+**Solution**:
+```python
+from arf_rt.temporal import CloudTrailParser
+
+parser = CloudTrailParser()
+hints = parser.parse_events(cloudtrail_events)
+
+# Ensure CloudTrail includes AssumeRole events
+# Check: eventName == "AssumeRole" and eventSource == "sts.amazonaws.com"
+```
+
+**Problem**: Timestamp parsing errors
+```
+ValueError: Invalid ISO 8601 timestamp: 2026-01-01T12:00:00.000Z
+```
+
+**Solution**:
+```python
+from arf_rt.util import parse_iso8601
+
+# Handles various ISO 8601 formats including Z suffix
+dt = parse_iso8601("2026-01-01T12:00:00.000Z")
+dt = parse_iso8601("2026-01-01T12:00:00+00:00")
+dt = parse_iso8601("2026-01-01T12:00:00-05:00")
+```
+
+#### 8. Memory and Performance
+
+**Problem**: Out of memory on large scenarios
+```
+MemoryError: Unable to allocate 2.5 GB
+```
+
+**Solution**:
+```bash
+# Increase swap space
+sudo fallocate -l 4G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+
+# Or use memory-efficient settings
+config = TemporalConfig.permissive()
+config.max_path_length = 5
+```
+
+**Problem**: Slow startup time
+```
+Initialization took 30 seconds
+```
+
+**Solution**:
+```python
+# Lazy load heavy modules
+from arf_rt.temporal import TemporalEvaluator  # Lazy import
+
+# Pre-compile regex patterns
+import re
+TIMESTAMP_PATTERN = re.compile(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}')
+```
+
+### Debugging Commands
+
+```bash
+# Enable debug logging
+ARF_LOG_LEVEL=DEBUG arf-rt analyze scenario.json
+
+# Enable SQL query logging
+ARF_SQL_DEBUG=1 arf-rt analyze scenario.json
+
+# Enable temporal module debug
+ARF_TEMPORAL_DEBUG=1 python scripts/audit_temporal_compliance.py scenario.json
+
+# Profile CPU usage
+python -m cProfile -o profile.stats scripts/analyze.py scenario.json
+python -m pstats profile.stats <<< "sort cumulative\nstats 20"
+
+# Profile memory
+python -m memory_profiler scripts/analyze.py scenario.json
+mprof run scripts/analyze.py scenario.json
+mprof plot
+```
 
 ---
 
