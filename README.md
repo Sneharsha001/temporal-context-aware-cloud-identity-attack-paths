@@ -2552,6 +2552,637 @@ If you use ARF-RT or its temporal extensions in academic work, please cite:
 
 ---
 
+## Incident Response Playbook (v0.9.1)
+
+### Overview
+
+This playbook provides structured procedures for responding to temporal analysis incidents detected by ARF-RT. It covers detection, triage, investigation, containment, eradication, and recovery phases.
+
+### Incident Classification
+
+| Severity | Definition | Response Time | Escalation |
+|----------|------------|---------------|------------|
+| **Critical** | Active attack detected, high infeasible rate >95%, or data exfiltration suspected | Immediate (5 min) | Page on-call + manager |
+| **High** | High infeasible rate >80%, evaluation latency >10s, UNKNOWN rate spike | 15 minutes | Page on-call |
+| **Medium** | Elevated infeasible rate >50%, latency >5s, constraint violations | 1 hour | Notify on-call |
+| **Low** | Minor constraint violations, performance degradation | Next business day | Ticket only |
+
+### Incident Response Phases
+
+#### Phase 1: Detection & Triage (0-15 minutes)
+
+##### Automated Detection
+```bash
+# Alert sources:
+# 1. Prometheus alerts (HighInfeasibleRate, EvaluationLatencyHigh, etc.)
+# 2. Scheduled audit runs (scripts/audit_temporal_compliance.py)
+# 3. Manual reports from security team
+# 4. SOAR platform integration
+```
+
+##### Initial Triage Checklist
+```markdown
+## Triage Checklist (Complete within 15 minutes)
+
+### Alert Verification
+- [ ] Alert is not a false positive (check alert history)
+- [ ] Alert correlates with recent changes (deployment, config change)
+- [ ] Multiple alert sources confirm (Prometheus + logs + manual check)
+
+### Impact Assessment
+- [ ] Number of affected scenarios/paths
+- [ ] Business impact (production vs staging)
+- [ ] Data sensitivity of affected paths
+- [ ] Compliance implications (PCI, SOC2, HIPAA)
+
+### Initial Classification
+- [ ] Severity assigned (Critical/High/Medium/Low)
+- [ ] Incident ID created (INC-YYYYMMDD-XXX)
+- [ ] On-call engineer notified
+- [ ] Incident channel created (Slack/Teams)
+```
+
+##### Automated Triage Script
+```bash
+#!/bin/bash
+# triage.sh - Automated initial triage
+
+ALERT_NAME=$1
+SEVERITY=$2
+SCENARIO_FILE=$3
+
+echo "=== ARF-RT Incident Triage ==="
+echo "Alert: $ALERT_NAME"
+echo "Severity: $SEVERITY"
+echo "Scenario: $SCENARIO_FILE"
+echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+# Create incident directory
+INCIDENT_ID="INC-$(date -u +%Y%m%d-%H%M%S)"
+mkdir -p "incidents/$INCIDENT_ID"
+cd "incidents/$INCIDENT_ID"
+
+# Save alert details
+cat > alert.json <<EOF
+{
+  "alert_name": "$ALERT_NAME",
+  "severity": "$SEVERITY",
+  "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "incident_id": "$INCIDENT_ID"
+}
+EOF
+
+# Run initial assessment
+echo "Running initial assessment..."
+
+# 1. Run compliance audit
+python scripts/audit_temporal_compliance.py ../scenario.json \
+  --frameworks CIS_AWS,NIST_800_53 \
+  --format json \
+  --output compliance_report.json
+
+# 2. Score credentials
+python scripts/score_credentials.py ../scenario.json \
+  --format json \
+  --output scores.json \
+  --top 50
+
+# 3. Check temporal coverage
+python scripts/report_temporal_coverage.py ../scenario.json \
+  --threshold 0.8 \
+  --output coverage.json
+
+# 4. Generate remediation plan
+python scripts/generate_remediation_plan.py ../scenario.json \
+  --format bash \
+  --output remediation.sh
+
+# 5. Generate compliance summary
+python scripts/generate_report.py \
+  --scenario ../scenario.json \
+  --output incident_report.md
+
+echo "Initial assessment complete. Results saved to $PWD"
+echo "Incident ID: $INCIDENT_ID"
+echo "Next: Run investigation phase"
+```
+
+#### Phase 2: Investigation (15-60 minutes)
+
+##### Deep Analysis
+```bash
+#!/bin/bash
+# investigate.sh - Deep dive investigation
+
+INCIDENT_DIR=$1
+cd "$INCIDENT_DIR"
+
+echo "=== Deep Investigation ==="
+
+# 1. Analyze specific constraint violations
+echo "Analyzing constraint violations..."
+python -c "
+import json
+with open('compliance_report.json') as f:
+    report = json.load(f)
+for finding in report.get('findings', []):
+    if finding['severity'] in ['CRITICAL', 'HIGH']:
+        print(f\"{finding['constraint']}: {finding['description']}\")
+"
+
+# 2. Analyze credential scores
+echo "Analyzing credential scores..."
+python -c "
+import json
+with open('scores.json') as f:
+    scores = json.load(f)
+for cred in scores[:20]:
+    if cred['risk_score'] > 0.7:
+        print(f\"HIGH RISK: {cred['credential_id']} - {cred['risk_score']}\")
+"
+
+# 3. Analyze temporal coverage gaps
+echo "Analyzing coverage gaps..."
+python -c "
+import json
+with open('coverage.json') as f:
+    cov = json.load(f)
+for gap in cov.get('gaps', []):
+    if gap['coverage'] < 0.5:
+        print(f\"LOW COVERAGE: {gap['edge_id']} - {gap['coverage']:.2%}\")
+"
+
+# 4. Timeline reconstruction
+echo "Reconstructing attack timeline..."
+python scripts/visualize_path_timeline.py ../scenario.json \
+  --hints ../hints.json \
+  --output timeline.txt
+
+# 5. Blast radius analysis
+echo "Analyzing blast radius..."
+python scripts/simulate_revocation.py ../scenario.json \
+  --paths ../paths.json \
+  --output blast_radius.json
+
+echo "Investigation complete. Results in $PWD"
+```
+
+##### Constraint-Specific Investigation
+
+```bash
+# TC-1: Causal Order Violations
+python -c "
+from arf_rt.temporal import TemporalEvaluator, TemporalConfig, TemporalHint
+from datetime import datetime, timezone
+
+config = TemporalConfig(enabled_constraints=frozenset(['TC-1']))
+evaluator = TemporalEvaluator(config=config, enable_stats=True)
+
+# Check each path for TC-1 violations
+for path in paths:
+    hints = get_hints_for_path(path)
+    verdict = evaluator.evaluate(path, hints)
+    if verdict.is_infeasible() and verdict.violated_constraint == 'TC-1':
+        print(f'TC-1 violation: {path}')
+        print(f'  Reason: {verdict.reason}')
+"
+
+# TC-2: Session Expiry
+python -c "
+# Check for expired credentials in path
+for path in paths:
+    hints = get_hints_for_path(path)
+    for edge_id, hint in hints.items():
+        if hint.credential_expiry and hint.credential_expiry < datetime.now(timezone.utc):
+            print(f'Expired credential on {edge_id}: {hint.credential_expiry}')
+"
+
+# TC-3: Minimum Velocity
+python -c "
+# Check for velocity violations
+for i in range(len(path)-1):
+    hints = get_hints_for_path(path)
+    prev = hints[path[i]]
+    curr = hints[path[i+1]]
+    if prev.latest_observed and curr.earliest_observed:
+        delta = (curr.earliest_observed - prev.latest_observed).total_seconds()
+        if delta < 0.5:  # Default threshold
+            print(f'Velocity violation: {path[i]} -> {path[i+1]} ({delta}s)')
+"
+
+# TC-4: Stale Credentials
+python -c "
+for path in paths:
+    hints = get_hints_for_path(path)
+    for edge_id, hint in hints.items():
+        if hint.last_used:
+            days = (datetime.now(timezone.utc) - hint.last_used).days
+            if days > 90:
+                print(f'Stale credential on {edge_id}: {days} days')
+"
+
+# TC-5: Concurrent Sessions
+python -c "
+# Check for duplicate credential_issued timestamps
+issued = []
+for path in paths:
+    hints = get_hints_for_path(path)
+    for hint in hints.values():
+        if hint.credential_issued:
+            issued.append(hint.credential_issued)
+# Check for duplicates
+seen = set()
+for ts in issued:
+    if ts in seen:
+        print(f'Duplicate credential_issued: {ts}')
+    seen.add(ts)
+"
+```
+
+#### Phase 3: Containment (30-60 minutes)
+
+##### Immediate Containment Actions
+```bash
+#!/bin/bash
+# contain.sh - Automated containment actions
+
+INCIDENT_DIR=$1
+ACTION=$2  # revoke, rotate, isolate, monitor
+
+cd "$INCIDENT_DIR"
+
+case $ACTION in
+  revoke)
+    echo "Revoking compromised sessions..."
+    # Parse remediation.sh for revoke commands
+    grep "aws sts revoke-session" remediation.sh | bash
+    ;;
+    
+  rotate)
+    echo "Rotating compromised credentials..."
+    grep "aws iam rotate-access-key" remediation.sh | bash
+    ;;
+    
+  isolate)
+    echo "Isolating affected principals..."
+    # Attach deny policies
+    grep "aws iam attach-user-policy.*DenyAll" remediation.sh | bash
+    ;;
+    
+  monitor)
+    echo "Enabling enhanced monitoring..."
+    # Increase log verbosity
+    kubectl set env deployment/arf-rt ARF_LOG_LEVEL=DEBUG
+    # Increase monitoring frequency
+    kubectl patch deployment arf-rt -p '{"spec":{"template":{"spec":{"containers":[{"name":"arf-rt","env":[{"name":"ARF_MONITORING_INTERVAL","value":"30"}]}]}}}'
+    ;;
+    
+  all)
+    $0 revoke
+    $0 rotate
+    $0 isolate
+    $0 monitor
+    ;;
+    
+  *)
+    echo "Usage: $0 <incident_dir> <revoke|rotate|isolate|monitor|all>"
+    exit 1
+    ;;
+esac
+```
+
+#### Automated Containment with SOAR
+```yaml
+# Splunk SOAR / Phantom playbook
+playbook: temporal_violation_containment
+steps:
+  1. enrich:
+     - query_cloudtrail: "{{path_edges}}"
+     - query_iam: "{{principal_arn}}"
+     - query_config: "{{resource_arn}}"
+  
+  2. analyze:
+     - evaluate_temporal_constraints: "{{verdict}}"
+     - calculate_blast_radius: "{{path_edges}}"
+     - identify_affected_principals: "{{principal_arn}}"
+  
+  3. remediate:
+     - revoke_session: "{{session_id}}"
+     - rotate_credential: "{{access_key}}"
+     - attach_boundary_policy: "{{principal_arn}}"
+  
+  4. notify:
+     - slack: "#security-alerts"
+     - email: "security-team@company.com"
+     - pagerduty: "temporal-violation"
+  
+  5. document:
+     - create_jira: "TEMPORAL-{{case_id}}"
+     - update_cmdb: "{{affected_resources}}"
+```
+
+#### Phase 4: Eradication (1-4 hours)
+
+##### Root Cause Analysis
+```bash
+#!/bin/bash
+# root_cause.sh - Root cause analysis
+
+INCIDENT_DIR=$1
+cd "$INCIDENT_DIR"
+
+echo "=== Root Cause Analysis ==="
+
+# 1. Check for configuration drift
+echo "Checking configuration drift..."
+python scripts/detect_temporal_drift.py \
+  baseline_scenario.json \
+  current_scenario.json \
+  --output drift_report.json
+
+# 2. Check for configuration changes
+echo "Checking recent changes..."
+git log --oneline -20 -- config/ temporal/
+git diff HEAD~5..HEAD -- config/ temporal/
+
+# 3. Check for dependency issues
+echo "Checking dependencies..."
+pip list --outdated | grep -E "(arf|temporal|boto)"
+
+# 4. Check for infrastructure changes
+echo "Checking infrastructure..."
+kubectl get events --sort-by='.lastTimestamp' -n arf-rt | tail -20
+aws cloudtrail lookup-events --lookup-attributes AttributeKey=EventName,AttributeValue=AssumeRole --max-results 50
+
+# 5. Generate root cause report
+cat > root_cause_analysis.md <<EOF
+# Root Cause Analysis - $INCIDENT_ID
+
+## Summary
+Incident: $ALERT_NAME
+Severity: $SEVERITY
+Detected: $DETECTION_TIME
+Resolved: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+## Root Cause
+[To be filled by investigator]
+
+## Contributing Factors
+1. [Factor 1]
+2. [Factor 2]
+3. [Factor 3]
+
+## Impact
+- Affected paths: [count]
+- Affected principals: [count]
+- Data exposed: [description]
+- Compliance impact: [frameworks affected]
+
+## Remediation Actions Taken
+1. [Action 1] - [timestamp]
+2. [Action 2] - [timestamp]
+3. [Action 3] - [timestamp]
+
+## Preventive Measures
+1. [Measure 1] - [owner] - [target date]
+2. [Measure 2] - [owner] - [target date]
+3. [Measure 3] - [owner] - [target date]
+
+## Lessons Learned
+[To be filled after post-incident review]
+EOF
+```
+
+#### Phase 5: Recovery (4-24 hours)
+
+##### Recovery Actions
+```bash
+#!/bin/bash
+# recover.sh - System recovery
+
+INCIDENT_DIR=$1
+cd "$INCIDENT_DIR"
+
+echo "=== Recovery Actions ==="
+
+# 1. Restore from clean backup if needed
+if [ "$RESTORE_FROM_BACKUP" = "true" ]; then
+    echo "Restoring from backup..."
+    ./restore.sh latest_backup.db.gz
+fi
+
+# 2. Verify system integrity
+echo "Verifying system integrity..."
+python scripts/validate_fixtures.py --strict
+python scripts/validate_fixtures.py scenario.json --schema
+
+# 3. Run smoke tests
+echo "Running smoke tests..."
+arf-rt analyze scenario.json --format json --output /tmp/test_output.json
+python -c "
+import json
+with open('/tmp/test_output.json') as f:
+    result = json.load(f)
+assert result['status'] == 'success'
+print('Smoke test passed')
+"
+
+# 4. Run regression tests
+echo "Running regression tests..."
+pytest tests/unit tests/golden -q --tb=short
+
+# 4. Performance validation
+echo "Validating performance..."
+python scripts/benchmark.py --runs 3 --output benchmark.json
+python scripts/compare_benchmarks.py baseline.json current.json --threshold 0.05
+
+# 5. Gradual traffic restoration
+echo "Restoring traffic gradually..."
+kubectl scale deployment arf-rt --replicas=2
+sleep 60
+kubectl scale deployment arf-rt --replicas=5
+
+# 6. Enhanced monitoring
+echo "Enabling enhanced monitoring..."
+kubectl set env deployment/arf-rt ARF_LOG_LEVEL=DEBUG
+kubectl patch deployment arf-rt -p '{"spec":{"template":{"spec":{"containers":[{"name":"arf-rt","env":[{"name":"ARF_MONITORING_INTERVAL","value":"30"}]}]}}}'
+```
+
+#### Phase 6: Post-Incident Activities (24-72 hours)
+
+##### Post-Incident Review
+```bash
+#!/bin/bash
+# post_incident.sh - Post-incident review
+
+INCIDENT_DIR=$1
+cd "$INCIDENT_DIR"
+
+echo "=== Post-Incident Review ==="
+
+# 1. Generate timeline
+cat > timeline.md <<EOF
+# Incident Timeline - $INCIDENT_ID
+
+| Time (UTC) | Event | Details |
+|------------|-------|---------|
+| $DETECTION_TIME | Detection | Alert triggered: $ALERT_NAME |
+| $TRIAGE_TIME | Triage | Severity: $SEVERITY, classified as $CLASSIFICATION |
+| $CONTAINMENT_TIME | Containment | Actions: $CONTAINMENT_ACTIONS |
+| $ERADICATION_TIME | Eradication | Root cause: $ROOT_CAUSE |
+| $RECOVERY_TIME | Recovery | Services restored |
+| $(date -u +%Y-%m-%dT%H:%M:%SZ) | Post-incident | Review started |
+EOF
+
+# 2. Calculate metrics
+python -c "
+import json
+from datetime import datetime
+
+with open('alert.json') as f:
+    alert = json.load(f)
+
+detection = datetime.fromisoformat(alert['timestamp'].replace('Z', '+00:00'))
+now = datetime.utcnow()
+
+print(f'Time to detect: 0s (automated)')
+print(f'Time to triage: {(TRIAGE_TIME - detection).total_seconds():.0f}s')
+print(f'Time to containment: {(CONTAINMENT_TIME - detection).total_seconds():.0f}s')
+print(f'Time to eradication: {(ERADICATION_TIME - detection).total_seconds():.0f}s')
+print(f'Time to recovery: {(RECOVERY_TIME - detection).total_seconds():.0f}s')
+print(f'Total incident duration: {(now - detection).total_seconds():.0f}s')
+"
+
+# 3. Generate post-incident report
+cat > post_incident_report.md <<EOF
+# Post-Incident Report: $INCIDENT_ID
+
+## Executive Summary
+Incident: $ALERT_NAME
+Severity: $SEVERITY
+Duration: \$(($END_TIME - $START_TIME)) seconds
+Status: RESOLVED
+
+## Timeline
+[See timeline.md]
+
+## Root Cause
+[To be filled]
+
+## Impact Assessment
+- Affected scenarios: [count]
+- Affected paths: [count] 
+- Affected principals: [count]
+- Data sensitivity: [classification]
+- Compliance impact: [frameworks]
+
+## What Went Well
+- [Item 1]
+- [Item 2]
+
+## What Could Be Improved
+- [Improvement 1]
+- [Improvement 2]
+
+## Action Items
+| Action | Owner | Due Date | Status |
+|--------|-------|----------|--------|
+| [Action 1] | [Owner] | [Date] | OPEN |
+| [Action 2] | [Owner] | [Date] | OPEN |
+
+## Lessons Learned
+1. [Lesson 1]
+2. [Lesson 2]
+
+## Action Items
+| Action | Owner | Due Date | Priority |
+|--------|-------|----------|----------|
+| [Fix root cause] | [Team] | [Date] | HIGH |
+| [Improve detection] | [Team] | [Date] | HIGH |
+| [Update runbook] | [Team] | [Date] | MEDIUM |
+| [Update documentation] | [Team] | [Date] | LOW |
+EOF
+
+echo "Post-incident review complete. Report saved to $PWD/post_incident_report.md"
+```
+
+### Runbook Templates
+
+#### Temporal Violation Response
+```markdown
+# Runbook: Temporal Constraint Violation
+
+## Alert: HighInfeasibleRate / CriticalInfeasibleRate
+
+### Symptoms
+- High infeasible rate (>80% or >95%)
+- Many paths marked INFEASIBLE
+- Specific constraint violations (TC-1 through TC-5)
+
+### Diagnosis
+1. Check which constraints are violated:
+   ```bash
+   python scripts/audit_temporal_compliance.py scenario.json --format json
+   ```
+
+2. Identify affected paths:
+   ```bash
+   arf-rt analyze scenario.json --format json | jq '.paths[] | select(.verdict=="INFEASIBLE")'
+   ```
+
+3. Check specific constraint violations:
+   - TC-1: Causal order violations (timestamps out of order)
+   - TC-2: Expired credentials/sessions
+   - TC-3: Velocity violations (hops too fast)
+   - TC-4: Stale credentials (>90 days)
+   - TC-5: Concurrent session reuse
+
+### Resolution Steps
+
+#### For TC-1 (Causal Order)
+1. Check CloudTrail timestamps for affected edges
+2. Verify clock synchronization across services
+2. Check for out-of-order CloudTrail ingestion
+
+#### For TC-2 (Session Expiry)
+1. Identify expired credentials
+2. Rotate expired credentials
+3. Check session duration policies
+
+#### For TC-3 (Velocity)
+1. Identify paths with sub-second hops
+2. Check for automated/bot activity
+3. Consider increasing min_hop_delta_seconds
+
+#### For TC-4 (Stale Credentials)
+1. Identify stale credentials (>90 days)
+2. Rotate or disable stale credentials
+3. Review credential rotation policies
+
+#### For TC-5 (Concurrent Session)
+1. Identify duplicate credential_issued timestamps
+2. Check for credential sharing
+3. Revoke suspicious sessions
+
+### Escalation
+- If >95% infeasible: Page manager + security lead
+- If production impact: Page manager + VP Engineering
+- If data exfiltration suspected: Page CISO + Legal
+
+### Post-Incident
+1. Update detection rules
+2. Update runbook with lessons learned
+3. Schedule post-incident review within 48 hours
+```
+
+---
+
+*Last updated: November 7, 2026 — v0.9.1 documentation refresh*
+
+---
+
+---
+
 ## Monitoring & Observability (v0.9.1)
 
 ### Metrics Collection
@@ -5539,6 +6170,637 @@ async with RetryContext(max_attempts=3) as ctx:
 
 *Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
+
+---
+
+---
+
+## Incident Response Playbook (v0.9.1)
+
+### Overview
+
+This playbook provides structured procedures for responding to temporal analysis incidents detected by ARF-RT. It covers detection, triage, investigation, containment, eradication, and recovery phases.
+
+### Incident Classification
+
+| Severity | Definition | Response Time | Escalation |
+|----------|------------|---------------|------------|
+| **Critical** | Active attack detected, high infeasible rate >95%, or data exfiltration suspected | Immediate (5 min) | Page on-call + manager |
+| **High** | High infeasible rate >80%, evaluation latency >10s, UNKNOWN rate spike | 15 minutes | Page on-call |
+| **Medium** | Elevated infeasible rate >50%, latency >5s, constraint violations | 1 hour | Notify on-call |
+| **Low** | Minor constraint violations, performance degradation | Next business day | Ticket only |
+
+### Incident Response Phases
+
+#### Phase 1: Detection & Triage (0-15 minutes)
+
+##### Automated Detection
+```bash
+# Alert sources:
+# 1. Prometheus alerts (HighInfeasibleRate, EvaluationLatencyHigh, etc.)
+# 2. Scheduled audit runs (scripts/audit_temporal_compliance.py)
+# 3. Manual reports from security team
+# 4. SOAR platform integration
+```
+
+##### Initial Triage Checklist
+```markdown
+## Triage Checklist (Complete within 15 minutes)
+
+### Alert Verification
+- [ ] Alert is not a false positive (check alert history)
+- [ ] Alert correlates with recent changes (deployment, config change)
+- [ ] Multiple alert sources confirm (Prometheus + logs + manual check)
+
+### Impact Assessment
+- [ ] Number of affected scenarios/paths
+- [ ] Business impact (production vs staging)
+- [ ] Data sensitivity of affected paths
+- [ ] Compliance implications (PCI, SOC2, HIPAA)
+
+### Initial Classification
+- [ ] Severity assigned (Critical/High/Medium/Low)
+- [ ] Incident ID created (INC-YYYYMMDD-XXX)
+- [ ] On-call engineer notified
+- [ ] Incident channel created (Slack/Teams)
+```
+
+##### Automated Triage Script
+```bash
+#!/bin/bash
+# triage.sh - Automated initial triage
+
+ALERT_NAME=$1
+SEVERITY=$2
+SCENARIO_FILE=$3
+
+echo "=== ARF-RT Incident Triage ==="
+echo "Alert: $ALERT_NAME"
+echo "Severity: $SEVERITY"
+echo "Scenario: $SCENARIO_FILE"
+echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+# Create incident directory
+INCIDENT_ID="INC-$(date -u +%Y%m%d-%H%M%S)"
+mkdir -p "incidents/$INCIDENT_ID"
+cd "incidents/$INCIDENT_ID"
+
+# Save alert details
+cat > alert.json <<EOF
+{
+  "alert_name": "$ALERT_NAME",
+  "severity": "$SEVERITY",
+  "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "incident_id": "$INCIDENT_ID"
+}
+EOF
+
+# Run initial assessment
+echo "Running initial assessment..."
+
+# 1. Run compliance audit
+python scripts/audit_temporal_compliance.py ../scenario.json \
+  --frameworks CIS_AWS,NIST_800_53 \
+  --format json \
+  --output compliance_report.json
+
+# 2. Score credentials
+python scripts/score_credentials.py ../scenario.json \
+  --format json \
+  --output scores.json \
+  --top 50
+
+# 3. Check temporal coverage
+python scripts/report_temporal_coverage.py ../scenario.json \
+  --threshold 0.8 \
+  --output coverage.json
+
+# 4. Generate remediation plan
+python scripts/generate_remediation_plan.py ../scenario.json \
+  --format bash \
+  --output remediation.sh
+
+# 5. Generate compliance summary
+python scripts/generate_report.py \
+  --scenario ../scenario.json \
+  --output incident_report.md
+
+echo "Initial assessment complete. Results saved to $PWD"
+echo "Incident ID: $INCIDENT_ID"
+echo "Next: Run investigation phase"
+```
+
+#### Phase 2: Investigation (15-60 minutes)
+
+##### Deep Analysis
+```bash
+#!/bin/bash
+# investigate.sh - Deep dive investigation
+
+INCIDENT_DIR=$1
+cd "$INCIDENT_DIR"
+
+echo "=== Deep Investigation ==="
+
+# 1. Analyze specific constraint violations
+echo "Analyzing constraint violations..."
+python -c "
+import json
+with open('compliance_report.json') as f:
+    report = json.load(f)
+for finding in report.get('findings', []):
+    if finding['severity'] in ['CRITICAL', 'HIGH']:
+        print(f\"{finding['constraint']}: {finding['description']}\")
+"
+
+# 2. Analyze credential scores
+echo "Analyzing credential scores..."
+python -c "
+import json
+with open('scores.json') as f:
+    scores = json.load(f)
+for cred in scores[:20]:
+    if cred['risk_score'] > 0.7:
+        print(f\"HIGH RISK: {cred['credential_id']} - {cred['risk_score']}\")
+"
+
+# 3. Analyze temporal coverage gaps
+echo "Analyzing coverage gaps..."
+python -c "
+import json
+with open('coverage.json') as f:
+    cov = json.load(f)
+for gap in cov.get('gaps', []):
+    if gap['coverage'] < 0.5:
+        print(f\"LOW COVERAGE: {gap['edge_id']} - {gap['coverage']:.2%}\")
+"
+
+# 4. Timeline reconstruction
+echo "Reconstructing attack timeline..."
+python scripts/visualize_path_timeline.py ../scenario.json \
+  --hints ../hints.json \
+  --output timeline.txt
+
+# 5. Blast radius analysis
+echo "Analyzing blast radius..."
+python scripts/simulate_revocation.py ../scenario.json \
+  --paths ../paths.json \
+  --output blast_radius.json
+
+echo "Investigation complete. Results in $PWD"
+```
+
+##### Constraint-Specific Investigation
+
+```bash
+# TC-1: Causal Order Violations
+python -c "
+from arf_rt.temporal import TemporalEvaluator, TemporalConfig, TemporalHint
+from datetime import datetime, timezone
+
+config = TemporalConfig(enabled_constraints=frozenset(['TC-1']))
+evaluator = TemporalEvaluator(config=config, enable_stats=True)
+
+# Check each path for TC-1 violations
+for path in paths:
+    hints = get_hints_for_path(path)
+    verdict = evaluator.evaluate(path, hints)
+    if verdict.is_infeasible() and verdict.violated_constraint == 'TC-1':
+        print(f'TC-1 violation: {path}')
+        print(f'  Reason: {verdict.reason}')
+"
+
+# TC-2: Session Expiry
+python -c "
+# Check for expired credentials in path
+for path in paths:
+    hints = get_hints_for_path(path)
+    for edge_id, hint in hints.items():
+        if hint.credential_expiry and hint.credential_expiry < datetime.now(timezone.utc):
+            print(f'Expired credential on {edge_id}: {hint.credential_expiry}')
+"
+
+# TC-3: Minimum Velocity
+python -c "
+# Check for velocity violations
+for i in range(len(path)-1):
+    hints = get_hints_for_path(path)
+    prev = hints[path[i]]
+    curr = hints[path[i+1]]
+    if prev.latest_observed and curr.earliest_observed:
+        delta = (curr.earliest_observed - prev.latest_observed).total_seconds()
+        if delta < 0.5:  # Default threshold
+            print(f'Velocity violation: {path[i]} -> {path[i+1]} ({delta}s)')
+"
+
+# TC-4: Stale Credentials
+python -c "
+for path in paths:
+    hints = get_hints_for_path(path)
+    for edge_id, hint in hints.items():
+        if hint.last_used:
+            days = (datetime.now(timezone.utc) - hint.last_used).days
+            if days > 90:
+                print(f'Stale credential on {edge_id}: {days} days')
+"
+
+# TC-5: Concurrent Sessions
+python -c "
+# Check for duplicate credential_issued timestamps
+issued = []
+for path in paths:
+    hints = get_hints_for_path(path)
+    for hint in hints.values():
+        if hint.credential_issued:
+            issued.append(hint.credential_issued)
+# Check for duplicates
+seen = set()
+for ts in issued:
+    if ts in seen:
+        print(f'Duplicate credential_issued: {ts}')
+    seen.add(ts)
+"
+```
+
+#### Phase 3: Containment (30-60 minutes)
+
+##### Immediate Containment Actions
+```bash
+#!/bin/bash
+# contain.sh - Automated containment actions
+
+INCIDENT_DIR=$1
+ACTION=$2  # revoke, rotate, isolate, monitor
+
+cd "$INCIDENT_DIR"
+
+case $ACTION in
+  revoke)
+    echo "Revoking compromised sessions..."
+    # Parse remediation.sh for revoke commands
+    grep "aws sts revoke-session" remediation.sh | bash
+    ;;
+    
+  rotate)
+    echo "Rotating compromised credentials..."
+    grep "aws iam rotate-access-key" remediation.sh | bash
+    ;;
+    
+  isolate)
+    echo "Isolating affected principals..."
+    # Attach deny policies
+    grep "aws iam attach-user-policy.*DenyAll" remediation.sh | bash
+    ;;
+    
+  monitor)
+    echo "Enabling enhanced monitoring..."
+    # Increase log verbosity
+    kubectl set env deployment/arf-rt ARF_LOG_LEVEL=DEBUG
+    # Increase monitoring frequency
+    kubectl patch deployment arf-rt -p '{"spec":{"template":{"spec":{"containers":[{"name":"arf-rt","env":[{"name":"ARF_MONITORING_INTERVAL","value":"30"}]}]}}}'
+    ;;
+    
+  all)
+    $0 revoke
+    $0 rotate
+    $0 isolate
+    $0 monitor
+    ;;
+    
+  *)
+    echo "Usage: $0 <incident_dir> <revoke|rotate|isolate|monitor|all>"
+    exit 1
+    ;;
+esac
+```
+
+#### Automated Containment with SOAR
+```yaml
+# Splunk SOAR / Phantom playbook
+playbook: temporal_violation_containment
+steps:
+  1. enrich:
+     - query_cloudtrail: "{{path_edges}}"
+     - query_iam: "{{principal_arn}}"
+     - query_config: "{{resource_arn}}"
+  
+  2. analyze:
+     - evaluate_temporal_constraints: "{{verdict}}"
+     - calculate_blast_radius: "{{path_edges}}"
+     - identify_affected_principals: "{{principal_arn}}"
+  
+  3. remediate:
+     - revoke_session: "{{session_id}}"
+     - rotate_credential: "{{access_key}}"
+     - attach_boundary_policy: "{{principal_arn}}"
+  
+  4. notify:
+     - slack: "#security-alerts"
+     - email: "security-team@company.com"
+     - pagerduty: "temporal-violation"
+  
+  5. document:
+     - create_jira: "TEMPORAL-{{case_id}}"
+     - update_cmdb: "{{affected_resources}}"
+```
+
+#### Phase 4: Eradication (1-4 hours)
+
+##### Root Cause Analysis
+```bash
+#!/bin/bash
+# root_cause.sh - Root cause analysis
+
+INCIDENT_DIR=$1
+cd "$INCIDENT_DIR"
+
+echo "=== Root Cause Analysis ==="
+
+# 1. Check for configuration drift
+echo "Checking configuration drift..."
+python scripts/detect_temporal_drift.py \
+  baseline_scenario.json \
+  current_scenario.json \
+  --output drift_report.json
+
+# 2. Check for configuration changes
+echo "Checking recent changes..."
+git log --oneline -20 -- config/ temporal/
+git diff HEAD~5..HEAD -- config/ temporal/
+
+# 3. Check for dependency issues
+echo "Checking dependencies..."
+pip list --outdated | grep -E "(arf|temporal|boto)"
+
+# 4. Check for infrastructure changes
+echo "Checking infrastructure..."
+kubectl get events --sort-by='.lastTimestamp' -n arf-rt | tail -20
+aws cloudtrail lookup-events --lookup-attributes AttributeKey=EventName,AttributeValue=AssumeRole --max-results 50
+
+# 5. Generate root cause report
+cat > root_cause_analysis.md <<EOF
+# Root Cause Analysis - $INCIDENT_ID
+
+## Summary
+Incident: $ALERT_NAME
+Severity: $SEVERITY
+Detected: $DETECTION_TIME
+Resolved: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+## Root Cause
+[To be filled by investigator]
+
+## Contributing Factors
+1. [Factor 1]
+2. [Factor 2]
+3. [Factor 3]
+
+## Impact
+- Affected paths: [count]
+- Affected principals: [count]
+- Data exposed: [description]
+- Compliance impact: [frameworks affected]
+
+## Remediation Actions Taken
+1. [Action 1] - [timestamp]
+2. [Action 2] - [timestamp]
+3. [Action 3] - [timestamp]
+
+## Preventive Measures
+1. [Measure 1] - [owner] - [target date]
+2. [Measure 2] - [owner] - [target date]
+3. [Measure 3] - [owner] - [target date]
+
+## Lessons Learned
+[To be filled after post-incident review]
+EOF
+```
+
+#### Phase 5: Recovery (4-24 hours)
+
+##### Recovery Actions
+```bash
+#!/bin/bash
+# recover.sh - System recovery
+
+INCIDENT_DIR=$1
+cd "$INCIDENT_DIR"
+
+echo "=== Recovery Actions ==="
+
+# 1. Restore from clean backup if needed
+if [ "$RESTORE_FROM_BACKUP" = "true" ]; then
+    echo "Restoring from backup..."
+    ./restore.sh latest_backup.db.gz
+fi
+
+# 2. Verify system integrity
+echo "Verifying system integrity..."
+python scripts/validate_fixtures.py --strict
+python scripts/validate_fixtures.py scenario.json --schema
+
+# 3. Run smoke tests
+echo "Running smoke tests..."
+arf-rt analyze scenario.json --format json --output /tmp/test_output.json
+python -c "
+import json
+with open('/tmp/test_output.json') as f:
+    result = json.load(f)
+assert result['status'] == 'success'
+print('Smoke test passed')
+"
+
+# 4. Run regression tests
+echo "Running regression tests..."
+pytest tests/unit tests/golden -q --tb=short
+
+# 4. Performance validation
+echo "Validating performance..."
+python scripts/benchmark.py --runs 3 --output benchmark.json
+python scripts/compare_benchmarks.py baseline.json current.json --threshold 0.05
+
+# 5. Gradual traffic restoration
+echo "Restoring traffic gradually..."
+kubectl scale deployment arf-rt --replicas=2
+sleep 60
+kubectl scale deployment arf-rt --replicas=5
+
+# 6. Enhanced monitoring
+echo "Enabling enhanced monitoring..."
+kubectl set env deployment/arf-rt ARF_LOG_LEVEL=DEBUG
+kubectl patch deployment arf-rt -p '{"spec":{"template":{"spec":{"containers":[{"name":"arf-rt","env":[{"name":"ARF_MONITORING_INTERVAL","value":"30"}]}]}}}'
+```
+
+#### Phase 6: Post-Incident Activities (24-72 hours)
+
+##### Post-Incident Review
+```bash
+#!/bin/bash
+# post_incident.sh - Post-incident review
+
+INCIDENT_DIR=$1
+cd "$INCIDENT_DIR"
+
+echo "=== Post-Incident Review ==="
+
+# 1. Generate timeline
+cat > timeline.md <<EOF
+# Incident Timeline - $INCIDENT_ID
+
+| Time (UTC) | Event | Details |
+|------------|-------|---------|
+| $DETECTION_TIME | Detection | Alert triggered: $ALERT_NAME |
+| $TRIAGE_TIME | Triage | Severity: $SEVERITY, classified as $CLASSIFICATION |
+| $CONTAINMENT_TIME | Containment | Actions: $CONTAINMENT_ACTIONS |
+| $ERADICATION_TIME | Eradication | Root cause: $ROOT_CAUSE |
+| $RECOVERY_TIME | Recovery | Services restored |
+| $(date -u +%Y-%m-%dT%H:%M:%SZ) | Post-incident | Review started |
+EOF
+
+# 2. Calculate metrics
+python -c "
+import json
+from datetime import datetime
+
+with open('alert.json') as f:
+    alert = json.load(f)
+
+detection = datetime.fromisoformat(alert['timestamp'].replace('Z', '+00:00'))
+now = datetime.utcnow()
+
+print(f'Time to detect: 0s (automated)')
+print(f'Time to triage: {(TRIAGE_TIME - detection).total_seconds():.0f}s')
+print(f'Time to containment: {(CONTAINMENT_TIME - detection).total_seconds():.0f}s')
+print(f'Time to eradication: {(ERADICATION_TIME - detection).total_seconds():.0f}s')
+print(f'Time to recovery: {(RECOVERY_TIME - detection).total_seconds():.0f}s')
+print(f'Total incident duration: {(now - detection).total_seconds():.0f}s')
+"
+
+# 3. Generate post-incident report
+cat > post_incident_report.md <<EOF
+# Post-Incident Report: $INCIDENT_ID
+
+## Executive Summary
+Incident: $ALERT_NAME
+Severity: $SEVERITY
+Duration: \$(($END_TIME - $START_TIME)) seconds
+Status: RESOLVED
+
+## Timeline
+[See timeline.md]
+
+## Root Cause
+[To be filled]
+
+## Impact Assessment
+- Affected scenarios: [count]
+- Affected paths: [count] 
+- Affected principals: [count]
+- Data sensitivity: [classification]
+- Compliance impact: [frameworks]
+
+## What Went Well
+- [Item 1]
+- [Item 2]
+
+## What Could Be Improved
+- [Improvement 1]
+- [Improvement 2]
+
+## Action Items
+| Action | Owner | Due Date | Status |
+|--------|-------|----------|--------|
+| [Action 1] | [Owner] | [Date] | OPEN |
+| [Action 2] | [Owner] | [Date] | OPEN |
+
+## Lessons Learned
+1. [Lesson 1]
+2. [Lesson 2]
+
+## Action Items
+| Action | Owner | Due Date | Priority |
+|--------|-------|----------|----------|
+| [Fix root cause] | [Team] | [Date] | HIGH |
+| [Improve detection] | [Team] | [Date] | HIGH |
+| [Update runbook] | [Team] | [Date] | MEDIUM |
+| [Update documentation] | [Team] | [Date] | LOW |
+EOF
+
+echo "Post-incident review complete. Report saved to $PWD/post_incident_report.md"
+```
+
+### Runbook Templates
+
+#### Temporal Violation Response
+```markdown
+# Runbook: Temporal Constraint Violation
+
+## Alert: HighInfeasibleRate / CriticalInfeasibleRate
+
+### Symptoms
+- High infeasible rate (>80% or >95%)
+- Many paths marked INFEASIBLE
+- Specific constraint violations (TC-1 through TC-5)
+
+### Diagnosis
+1. Check which constraints are violated:
+   ```bash
+   python scripts/audit_temporal_compliance.py scenario.json --format json
+   ```
+
+2. Identify affected paths:
+   ```bash
+   arf-rt analyze scenario.json --format json | jq '.paths[] | select(.verdict=="INFEASIBLE")'
+   ```
+
+3. Check specific constraint violations:
+   - TC-1: Causal order violations (timestamps out of order)
+   - TC-2: Expired credentials/sessions
+   - TC-3: Velocity violations (hops too fast)
+   - TC-4: Stale credentials (>90 days)
+   - TC-5: Concurrent session reuse
+
+### Resolution Steps
+
+#### For TC-1 (Causal Order)
+1. Check CloudTrail timestamps for affected edges
+2. Verify clock synchronization across services
+2. Check for out-of-order CloudTrail ingestion
+
+#### For TC-2 (Session Expiry)
+1. Identify expired credentials
+2. Rotate expired credentials
+3. Check session duration policies
+
+#### For TC-3 (Velocity)
+1. Identify paths with sub-second hops
+2. Check for automated/bot activity
+3. Consider increasing min_hop_delta_seconds
+
+#### For TC-4 (Stale Credentials)
+1. Identify stale credentials (>90 days)
+2. Rotate or disable stale credentials
+3. Review credential rotation policies
+
+#### For TC-5 (Concurrent Session)
+1. Identify duplicate credential_issued timestamps
+2. Check for credential sharing
+3. Revoke suspicious sessions
+
+### Escalation
+- If >95% infeasible: Page manager + security lead
+- If production impact: Page manager + VP Engineering
+- If data exfiltration suspected: Page CISO + Legal
+
+### Post-Incident
+1. Update detection rules
+2. Update runbook with lessons learned
+3. Schedule post-incident review within 48 hours
+```
+
+---
+
+*Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
 ---
 
@@ -8709,6 +9971,637 @@ resources:
 
 ---
 
+## Incident Response Playbook (v0.9.1)
+
+### Overview
+
+This playbook provides structured procedures for responding to temporal analysis incidents detected by ARF-RT. It covers detection, triage, investigation, containment, eradication, and recovery phases.
+
+### Incident Classification
+
+| Severity | Definition | Response Time | Escalation |
+|----------|------------|---------------|------------|
+| **Critical** | Active attack detected, high infeasible rate >95%, or data exfiltration suspected | Immediate (5 min) | Page on-call + manager |
+| **High** | High infeasible rate >80%, evaluation latency >10s, UNKNOWN rate spike | 15 minutes | Page on-call |
+| **Medium** | Elevated infeasible rate >50%, latency >5s, constraint violations | 1 hour | Notify on-call |
+| **Low** | Minor constraint violations, performance degradation | Next business day | Ticket only |
+
+### Incident Response Phases
+
+#### Phase 1: Detection & Triage (0-15 minutes)
+
+##### Automated Detection
+```bash
+# Alert sources:
+# 1. Prometheus alerts (HighInfeasibleRate, EvaluationLatencyHigh, etc.)
+# 2. Scheduled audit runs (scripts/audit_temporal_compliance.py)
+# 3. Manual reports from security team
+# 4. SOAR platform integration
+```
+
+##### Initial Triage Checklist
+```markdown
+## Triage Checklist (Complete within 15 minutes)
+
+### Alert Verification
+- [ ] Alert is not a false positive (check alert history)
+- [ ] Alert correlates with recent changes (deployment, config change)
+- [ ] Multiple alert sources confirm (Prometheus + logs + manual check)
+
+### Impact Assessment
+- [ ] Number of affected scenarios/paths
+- [ ] Business impact (production vs staging)
+- [ ] Data sensitivity of affected paths
+- [ ] Compliance implications (PCI, SOC2, HIPAA)
+
+### Initial Classification
+- [ ] Severity assigned (Critical/High/Medium/Low)
+- [ ] Incident ID created (INC-YYYYMMDD-XXX)
+- [ ] On-call engineer notified
+- [ ] Incident channel created (Slack/Teams)
+```
+
+##### Automated Triage Script
+```bash
+#!/bin/bash
+# triage.sh - Automated initial triage
+
+ALERT_NAME=$1
+SEVERITY=$2
+SCENARIO_FILE=$3
+
+echo "=== ARF-RT Incident Triage ==="
+echo "Alert: $ALERT_NAME"
+echo "Severity: $SEVERITY"
+echo "Scenario: $SCENARIO_FILE"
+echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+# Create incident directory
+INCIDENT_ID="INC-$(date -u +%Y%m%d-%H%M%S)"
+mkdir -p "incidents/$INCIDENT_ID"
+cd "incidents/$INCIDENT_ID"
+
+# Save alert details
+cat > alert.json <<EOF
+{
+  "alert_name": "$ALERT_NAME",
+  "severity": "$SEVERITY",
+  "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "incident_id": "$INCIDENT_ID"
+}
+EOF
+
+# Run initial assessment
+echo "Running initial assessment..."
+
+# 1. Run compliance audit
+python scripts/audit_temporal_compliance.py ../scenario.json \
+  --frameworks CIS_AWS,NIST_800_53 \
+  --format json \
+  --output compliance_report.json
+
+# 2. Score credentials
+python scripts/score_credentials.py ../scenario.json \
+  --format json \
+  --output scores.json \
+  --top 50
+
+# 3. Check temporal coverage
+python scripts/report_temporal_coverage.py ../scenario.json \
+  --threshold 0.8 \
+  --output coverage.json
+
+# 4. Generate remediation plan
+python scripts/generate_remediation_plan.py ../scenario.json \
+  --format bash \
+  --output remediation.sh
+
+# 5. Generate compliance summary
+python scripts/generate_report.py \
+  --scenario ../scenario.json \
+  --output incident_report.md
+
+echo "Initial assessment complete. Results saved to $PWD"
+echo "Incident ID: $INCIDENT_ID"
+echo "Next: Run investigation phase"
+```
+
+#### Phase 2: Investigation (15-60 minutes)
+
+##### Deep Analysis
+```bash
+#!/bin/bash
+# investigate.sh - Deep dive investigation
+
+INCIDENT_DIR=$1
+cd "$INCIDENT_DIR"
+
+echo "=== Deep Investigation ==="
+
+# 1. Analyze specific constraint violations
+echo "Analyzing constraint violations..."
+python -c "
+import json
+with open('compliance_report.json') as f:
+    report = json.load(f)
+for finding in report.get('findings', []):
+    if finding['severity'] in ['CRITICAL', 'HIGH']:
+        print(f\"{finding['constraint']}: {finding['description']}\")
+"
+
+# 2. Analyze credential scores
+echo "Analyzing credential scores..."
+python -c "
+import json
+with open('scores.json') as f:
+    scores = json.load(f)
+for cred in scores[:20]:
+    if cred['risk_score'] > 0.7:
+        print(f\"HIGH RISK: {cred['credential_id']} - {cred['risk_score']}\")
+"
+
+# 3. Analyze temporal coverage gaps
+echo "Analyzing coverage gaps..."
+python -c "
+import json
+with open('coverage.json') as f:
+    cov = json.load(f)
+for gap in cov.get('gaps', []):
+    if gap['coverage'] < 0.5:
+        print(f\"LOW COVERAGE: {gap['edge_id']} - {gap['coverage']:.2%}\")
+"
+
+# 4. Timeline reconstruction
+echo "Reconstructing attack timeline..."
+python scripts/visualize_path_timeline.py ../scenario.json \
+  --hints ../hints.json \
+  --output timeline.txt
+
+# 5. Blast radius analysis
+echo "Analyzing blast radius..."
+python scripts/simulate_revocation.py ../scenario.json \
+  --paths ../paths.json \
+  --output blast_radius.json
+
+echo "Investigation complete. Results in $PWD"
+```
+
+##### Constraint-Specific Investigation
+
+```bash
+# TC-1: Causal Order Violations
+python -c "
+from arf_rt.temporal import TemporalEvaluator, TemporalConfig, TemporalHint
+from datetime import datetime, timezone
+
+config = TemporalConfig(enabled_constraints=frozenset(['TC-1']))
+evaluator = TemporalEvaluator(config=config, enable_stats=True)
+
+# Check each path for TC-1 violations
+for path in paths:
+    hints = get_hints_for_path(path)
+    verdict = evaluator.evaluate(path, hints)
+    if verdict.is_infeasible() and verdict.violated_constraint == 'TC-1':
+        print(f'TC-1 violation: {path}')
+        print(f'  Reason: {verdict.reason}')
+"
+
+# TC-2: Session Expiry
+python -c "
+# Check for expired credentials in path
+for path in paths:
+    hints = get_hints_for_path(path)
+    for edge_id, hint in hints.items():
+        if hint.credential_expiry and hint.credential_expiry < datetime.now(timezone.utc):
+            print(f'Expired credential on {edge_id}: {hint.credential_expiry}')
+"
+
+# TC-3: Minimum Velocity
+python -c "
+# Check for velocity violations
+for i in range(len(path)-1):
+    hints = get_hints_for_path(path)
+    prev = hints[path[i]]
+    curr = hints[path[i+1]]
+    if prev.latest_observed and curr.earliest_observed:
+        delta = (curr.earliest_observed - prev.latest_observed).total_seconds()
+        if delta < 0.5:  # Default threshold
+            print(f'Velocity violation: {path[i]} -> {path[i+1]} ({delta}s)')
+"
+
+# TC-4: Stale Credentials
+python -c "
+for path in paths:
+    hints = get_hints_for_path(path)
+    for edge_id, hint in hints.items():
+        if hint.last_used:
+            days = (datetime.now(timezone.utc) - hint.last_used).days
+            if days > 90:
+                print(f'Stale credential on {edge_id}: {days} days')
+"
+
+# TC-5: Concurrent Sessions
+python -c "
+# Check for duplicate credential_issued timestamps
+issued = []
+for path in paths:
+    hints = get_hints_for_path(path)
+    for hint in hints.values():
+        if hint.credential_issued:
+            issued.append(hint.credential_issued)
+# Check for duplicates
+seen = set()
+for ts in issued:
+    if ts in seen:
+        print(f'Duplicate credential_issued: {ts}')
+    seen.add(ts)
+"
+```
+
+#### Phase 3: Containment (30-60 minutes)
+
+##### Immediate Containment Actions
+```bash
+#!/bin/bash
+# contain.sh - Automated containment actions
+
+INCIDENT_DIR=$1
+ACTION=$2  # revoke, rotate, isolate, monitor
+
+cd "$INCIDENT_DIR"
+
+case $ACTION in
+  revoke)
+    echo "Revoking compromised sessions..."
+    # Parse remediation.sh for revoke commands
+    grep "aws sts revoke-session" remediation.sh | bash
+    ;;
+    
+  rotate)
+    echo "Rotating compromised credentials..."
+    grep "aws iam rotate-access-key" remediation.sh | bash
+    ;;
+    
+  isolate)
+    echo "Isolating affected principals..."
+    # Attach deny policies
+    grep "aws iam attach-user-policy.*DenyAll" remediation.sh | bash
+    ;;
+    
+  monitor)
+    echo "Enabling enhanced monitoring..."
+    # Increase log verbosity
+    kubectl set env deployment/arf-rt ARF_LOG_LEVEL=DEBUG
+    # Increase monitoring frequency
+    kubectl patch deployment arf-rt -p '{"spec":{"template":{"spec":{"containers":[{"name":"arf-rt","env":[{"name":"ARF_MONITORING_INTERVAL","value":"30"}]}]}}}'
+    ;;
+    
+  all)
+    $0 revoke
+    $0 rotate
+    $0 isolate
+    $0 monitor
+    ;;
+    
+  *)
+    echo "Usage: $0 <incident_dir> <revoke|rotate|isolate|monitor|all>"
+    exit 1
+    ;;
+esac
+```
+
+#### Automated Containment with SOAR
+```yaml
+# Splunk SOAR / Phantom playbook
+playbook: temporal_violation_containment
+steps:
+  1. enrich:
+     - query_cloudtrail: "{{path_edges}}"
+     - query_iam: "{{principal_arn}}"
+     - query_config: "{{resource_arn}}"
+  
+  2. analyze:
+     - evaluate_temporal_constraints: "{{verdict}}"
+     - calculate_blast_radius: "{{path_edges}}"
+     - identify_affected_principals: "{{principal_arn}}"
+  
+  3. remediate:
+     - revoke_session: "{{session_id}}"
+     - rotate_credential: "{{access_key}}"
+     - attach_boundary_policy: "{{principal_arn}}"
+  
+  4. notify:
+     - slack: "#security-alerts"
+     - email: "security-team@company.com"
+     - pagerduty: "temporal-violation"
+  
+  5. document:
+     - create_jira: "TEMPORAL-{{case_id}}"
+     - update_cmdb: "{{affected_resources}}"
+```
+
+#### Phase 4: Eradication (1-4 hours)
+
+##### Root Cause Analysis
+```bash
+#!/bin/bash
+# root_cause.sh - Root cause analysis
+
+INCIDENT_DIR=$1
+cd "$INCIDENT_DIR"
+
+echo "=== Root Cause Analysis ==="
+
+# 1. Check for configuration drift
+echo "Checking configuration drift..."
+python scripts/detect_temporal_drift.py \
+  baseline_scenario.json \
+  current_scenario.json \
+  --output drift_report.json
+
+# 2. Check for configuration changes
+echo "Checking recent changes..."
+git log --oneline -20 -- config/ temporal/
+git diff HEAD~5..HEAD -- config/ temporal/
+
+# 3. Check for dependency issues
+echo "Checking dependencies..."
+pip list --outdated | grep -E "(arf|temporal|boto)"
+
+# 4. Check for infrastructure changes
+echo "Checking infrastructure..."
+kubectl get events --sort-by='.lastTimestamp' -n arf-rt | tail -20
+aws cloudtrail lookup-events --lookup-attributes AttributeKey=EventName,AttributeValue=AssumeRole --max-results 50
+
+# 5. Generate root cause report
+cat > root_cause_analysis.md <<EOF
+# Root Cause Analysis - $INCIDENT_ID
+
+## Summary
+Incident: $ALERT_NAME
+Severity: $SEVERITY
+Detected: $DETECTION_TIME
+Resolved: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+## Root Cause
+[To be filled by investigator]
+
+## Contributing Factors
+1. [Factor 1]
+2. [Factor 2]
+3. [Factor 3]
+
+## Impact
+- Affected paths: [count]
+- Affected principals: [count]
+- Data exposed: [description]
+- Compliance impact: [frameworks affected]
+
+## Remediation Actions Taken
+1. [Action 1] - [timestamp]
+2. [Action 2] - [timestamp]
+3. [Action 3] - [timestamp]
+
+## Preventive Measures
+1. [Measure 1] - [owner] - [target date]
+2. [Measure 2] - [owner] - [target date]
+3. [Measure 3] - [owner] - [target date]
+
+## Lessons Learned
+[To be filled after post-incident review]
+EOF
+```
+
+#### Phase 5: Recovery (4-24 hours)
+
+##### Recovery Actions
+```bash
+#!/bin/bash
+# recover.sh - System recovery
+
+INCIDENT_DIR=$1
+cd "$INCIDENT_DIR"
+
+echo "=== Recovery Actions ==="
+
+# 1. Restore from clean backup if needed
+if [ "$RESTORE_FROM_BACKUP" = "true" ]; then
+    echo "Restoring from backup..."
+    ./restore.sh latest_backup.db.gz
+fi
+
+# 2. Verify system integrity
+echo "Verifying system integrity..."
+python scripts/validate_fixtures.py --strict
+python scripts/validate_fixtures.py scenario.json --schema
+
+# 3. Run smoke tests
+echo "Running smoke tests..."
+arf-rt analyze scenario.json --format json --output /tmp/test_output.json
+python -c "
+import json
+with open('/tmp/test_output.json') as f:
+    result = json.load(f)
+assert result['status'] == 'success'
+print('Smoke test passed')
+"
+
+# 4. Run regression tests
+echo "Running regression tests..."
+pytest tests/unit tests/golden -q --tb=short
+
+# 4. Performance validation
+echo "Validating performance..."
+python scripts/benchmark.py --runs 3 --output benchmark.json
+python scripts/compare_benchmarks.py baseline.json current.json --threshold 0.05
+
+# 5. Gradual traffic restoration
+echo "Restoring traffic gradually..."
+kubectl scale deployment arf-rt --replicas=2
+sleep 60
+kubectl scale deployment arf-rt --replicas=5
+
+# 6. Enhanced monitoring
+echo "Enabling enhanced monitoring..."
+kubectl set env deployment/arf-rt ARF_LOG_LEVEL=DEBUG
+kubectl patch deployment arf-rt -p '{"spec":{"template":{"spec":{"containers":[{"name":"arf-rt","env":[{"name":"ARF_MONITORING_INTERVAL","value":"30"}]}]}}}'
+```
+
+#### Phase 6: Post-Incident Activities (24-72 hours)
+
+##### Post-Incident Review
+```bash
+#!/bin/bash
+# post_incident.sh - Post-incident review
+
+INCIDENT_DIR=$1
+cd "$INCIDENT_DIR"
+
+echo "=== Post-Incident Review ==="
+
+# 1. Generate timeline
+cat > timeline.md <<EOF
+# Incident Timeline - $INCIDENT_ID
+
+| Time (UTC) | Event | Details |
+|------------|-------|---------|
+| $DETECTION_TIME | Detection | Alert triggered: $ALERT_NAME |
+| $TRIAGE_TIME | Triage | Severity: $SEVERITY, classified as $CLASSIFICATION |
+| $CONTAINMENT_TIME | Containment | Actions: $CONTAINMENT_ACTIONS |
+| $ERADICATION_TIME | Eradication | Root cause: $ROOT_CAUSE |
+| $RECOVERY_TIME | Recovery | Services restored |
+| $(date -u +%Y-%m-%dT%H:%M:%SZ) | Post-incident | Review started |
+EOF
+
+# 2. Calculate metrics
+python -c "
+import json
+from datetime import datetime
+
+with open('alert.json') as f:
+    alert = json.load(f)
+
+detection = datetime.fromisoformat(alert['timestamp'].replace('Z', '+00:00'))
+now = datetime.utcnow()
+
+print(f'Time to detect: 0s (automated)')
+print(f'Time to triage: {(TRIAGE_TIME - detection).total_seconds():.0f}s')
+print(f'Time to containment: {(CONTAINMENT_TIME - detection).total_seconds():.0f}s')
+print(f'Time to eradication: {(ERADICATION_TIME - detection).total_seconds():.0f}s')
+print(f'Time to recovery: {(RECOVERY_TIME - detection).total_seconds():.0f}s')
+print(f'Total incident duration: {(now - detection).total_seconds():.0f}s')
+"
+
+# 3. Generate post-incident report
+cat > post_incident_report.md <<EOF
+# Post-Incident Report: $INCIDENT_ID
+
+## Executive Summary
+Incident: $ALERT_NAME
+Severity: $SEVERITY
+Duration: \$(($END_TIME - $START_TIME)) seconds
+Status: RESOLVED
+
+## Timeline
+[See timeline.md]
+
+## Root Cause
+[To be filled]
+
+## Impact Assessment
+- Affected scenarios: [count]
+- Affected paths: [count] 
+- Affected principals: [count]
+- Data sensitivity: [classification]
+- Compliance impact: [frameworks]
+
+## What Went Well
+- [Item 1]
+- [Item 2]
+
+## What Could Be Improved
+- [Improvement 1]
+- [Improvement 2]
+
+## Action Items
+| Action | Owner | Due Date | Status |
+|--------|-------|----------|--------|
+| [Action 1] | [Owner] | [Date] | OPEN |
+| [Action 2] | [Owner] | [Date] | OPEN |
+
+## Lessons Learned
+1. [Lesson 1]
+2. [Lesson 2]
+
+## Action Items
+| Action | Owner | Due Date | Priority |
+|--------|-------|----------|----------|
+| [Fix root cause] | [Team] | [Date] | HIGH |
+| [Improve detection] | [Team] | [Date] | HIGH |
+| [Update runbook] | [Team] | [Date] | MEDIUM |
+| [Update documentation] | [Team] | [Date] | LOW |
+EOF
+
+echo "Post-incident review complete. Report saved to $PWD/post_incident_report.md"
+```
+
+### Runbook Templates
+
+#### Temporal Violation Response
+```markdown
+# Runbook: Temporal Constraint Violation
+
+## Alert: HighInfeasibleRate / CriticalInfeasibleRate
+
+### Symptoms
+- High infeasible rate (>80% or >95%)
+- Many paths marked INFEASIBLE
+- Specific constraint violations (TC-1 through TC-5)
+
+### Diagnosis
+1. Check which constraints are violated:
+   ```bash
+   python scripts/audit_temporal_compliance.py scenario.json --format json
+   ```
+
+2. Identify affected paths:
+   ```bash
+   arf-rt analyze scenario.json --format json | jq '.paths[] | select(.verdict=="INFEASIBLE")'
+   ```
+
+3. Check specific constraint violations:
+   - TC-1: Causal order violations (timestamps out of order)
+   - TC-2: Expired credentials/sessions
+   - TC-3: Velocity violations (hops too fast)
+   - TC-4: Stale credentials (>90 days)
+   - TC-5: Concurrent session reuse
+
+### Resolution Steps
+
+#### For TC-1 (Causal Order)
+1. Check CloudTrail timestamps for affected edges
+2. Verify clock synchronization across services
+2. Check for out-of-order CloudTrail ingestion
+
+#### For TC-2 (Session Expiry)
+1. Identify expired credentials
+2. Rotate expired credentials
+3. Check session duration policies
+
+#### For TC-3 (Velocity)
+1. Identify paths with sub-second hops
+2. Check for automated/bot activity
+3. Consider increasing min_hop_delta_seconds
+
+#### For TC-4 (Stale Credentials)
+1. Identify stale credentials (>90 days)
+2. Rotate or disable stale credentials
+3. Review credential rotation policies
+
+#### For TC-5 (Concurrent Session)
+1. Identify duplicate credential_issued timestamps
+2. Check for credential sharing
+3. Revoke suspicious sessions
+
+### Escalation
+- If >95% infeasible: Page manager + security lead
+- If production impact: Page manager + VP Engineering
+- If data exfiltration suspected: Page CISO + Legal
+
+### Post-Incident
+1. Update detection rules
+2. Update runbook with lessons learned
+3. Schedule post-incident review within 48 hours
+```
+
+---
+
+*Last updated: November 7, 2026 — v0.9.1 documentation refresh*
+
+---
+
+---
+
 ## Monitoring & Observability (v0.9.1)
 
 ### Metrics Collection
@@ -11696,6 +13589,637 @@ async with RetryContext(max_attempts=3) as ctx:
 
 *Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
+
+---
+
+---
+
+## Incident Response Playbook (v0.9.1)
+
+### Overview
+
+This playbook provides structured procedures for responding to temporal analysis incidents detected by ARF-RT. It covers detection, triage, investigation, containment, eradication, and recovery phases.
+
+### Incident Classification
+
+| Severity | Definition | Response Time | Escalation |
+|----------|------------|---------------|------------|
+| **Critical** | Active attack detected, high infeasible rate >95%, or data exfiltration suspected | Immediate (5 min) | Page on-call + manager |
+| **High** | High infeasible rate >80%, evaluation latency >10s, UNKNOWN rate spike | 15 minutes | Page on-call |
+| **Medium** | Elevated infeasible rate >50%, latency >5s, constraint violations | 1 hour | Notify on-call |
+| **Low** | Minor constraint violations, performance degradation | Next business day | Ticket only |
+
+### Incident Response Phases
+
+#### Phase 1: Detection & Triage (0-15 minutes)
+
+##### Automated Detection
+```bash
+# Alert sources:
+# 1. Prometheus alerts (HighInfeasibleRate, EvaluationLatencyHigh, etc.)
+# 2. Scheduled audit runs (scripts/audit_temporal_compliance.py)
+# 3. Manual reports from security team
+# 4. SOAR platform integration
+```
+
+##### Initial Triage Checklist
+```markdown
+## Triage Checklist (Complete within 15 minutes)
+
+### Alert Verification
+- [ ] Alert is not a false positive (check alert history)
+- [ ] Alert correlates with recent changes (deployment, config change)
+- [ ] Multiple alert sources confirm (Prometheus + logs + manual check)
+
+### Impact Assessment
+- [ ] Number of affected scenarios/paths
+- [ ] Business impact (production vs staging)
+- [ ] Data sensitivity of affected paths
+- [ ] Compliance implications (PCI, SOC2, HIPAA)
+
+### Initial Classification
+- [ ] Severity assigned (Critical/High/Medium/Low)
+- [ ] Incident ID created (INC-YYYYMMDD-XXX)
+- [ ] On-call engineer notified
+- [ ] Incident channel created (Slack/Teams)
+```
+
+##### Automated Triage Script
+```bash
+#!/bin/bash
+# triage.sh - Automated initial triage
+
+ALERT_NAME=$1
+SEVERITY=$2
+SCENARIO_FILE=$3
+
+echo "=== ARF-RT Incident Triage ==="
+echo "Alert: $ALERT_NAME"
+echo "Severity: $SEVERITY"
+echo "Scenario: $SCENARIO_FILE"
+echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+# Create incident directory
+INCIDENT_ID="INC-$(date -u +%Y%m%d-%H%M%S)"
+mkdir -p "incidents/$INCIDENT_ID"
+cd "incidents/$INCIDENT_ID"
+
+# Save alert details
+cat > alert.json <<EOF
+{
+  "alert_name": "$ALERT_NAME",
+  "severity": "$SEVERITY",
+  "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "incident_id": "$INCIDENT_ID"
+}
+EOF
+
+# Run initial assessment
+echo "Running initial assessment..."
+
+# 1. Run compliance audit
+python scripts/audit_temporal_compliance.py ../scenario.json \
+  --frameworks CIS_AWS,NIST_800_53 \
+  --format json \
+  --output compliance_report.json
+
+# 2. Score credentials
+python scripts/score_credentials.py ../scenario.json \
+  --format json \
+  --output scores.json \
+  --top 50
+
+# 3. Check temporal coverage
+python scripts/report_temporal_coverage.py ../scenario.json \
+  --threshold 0.8 \
+  --output coverage.json
+
+# 4. Generate remediation plan
+python scripts/generate_remediation_plan.py ../scenario.json \
+  --format bash \
+  --output remediation.sh
+
+# 5. Generate compliance summary
+python scripts/generate_report.py \
+  --scenario ../scenario.json \
+  --output incident_report.md
+
+echo "Initial assessment complete. Results saved to $PWD"
+echo "Incident ID: $INCIDENT_ID"
+echo "Next: Run investigation phase"
+```
+
+#### Phase 2: Investigation (15-60 minutes)
+
+##### Deep Analysis
+```bash
+#!/bin/bash
+# investigate.sh - Deep dive investigation
+
+INCIDENT_DIR=$1
+cd "$INCIDENT_DIR"
+
+echo "=== Deep Investigation ==="
+
+# 1. Analyze specific constraint violations
+echo "Analyzing constraint violations..."
+python -c "
+import json
+with open('compliance_report.json') as f:
+    report = json.load(f)
+for finding in report.get('findings', []):
+    if finding['severity'] in ['CRITICAL', 'HIGH']:
+        print(f\"{finding['constraint']}: {finding['description']}\")
+"
+
+# 2. Analyze credential scores
+echo "Analyzing credential scores..."
+python -c "
+import json
+with open('scores.json') as f:
+    scores = json.load(f)
+for cred in scores[:20]:
+    if cred['risk_score'] > 0.7:
+        print(f\"HIGH RISK: {cred['credential_id']} - {cred['risk_score']}\")
+"
+
+# 3. Analyze temporal coverage gaps
+echo "Analyzing coverage gaps..."
+python -c "
+import json
+with open('coverage.json') as f:
+    cov = json.load(f)
+for gap in cov.get('gaps', []):
+    if gap['coverage'] < 0.5:
+        print(f\"LOW COVERAGE: {gap['edge_id']} - {gap['coverage']:.2%}\")
+"
+
+# 4. Timeline reconstruction
+echo "Reconstructing attack timeline..."
+python scripts/visualize_path_timeline.py ../scenario.json \
+  --hints ../hints.json \
+  --output timeline.txt
+
+# 5. Blast radius analysis
+echo "Analyzing blast radius..."
+python scripts/simulate_revocation.py ../scenario.json \
+  --paths ../paths.json \
+  --output blast_radius.json
+
+echo "Investigation complete. Results in $PWD"
+```
+
+##### Constraint-Specific Investigation
+
+```bash
+# TC-1: Causal Order Violations
+python -c "
+from arf_rt.temporal import TemporalEvaluator, TemporalConfig, TemporalHint
+from datetime import datetime, timezone
+
+config = TemporalConfig(enabled_constraints=frozenset(['TC-1']))
+evaluator = TemporalEvaluator(config=config, enable_stats=True)
+
+# Check each path for TC-1 violations
+for path in paths:
+    hints = get_hints_for_path(path)
+    verdict = evaluator.evaluate(path, hints)
+    if verdict.is_infeasible() and verdict.violated_constraint == 'TC-1':
+        print(f'TC-1 violation: {path}')
+        print(f'  Reason: {verdict.reason}')
+"
+
+# TC-2: Session Expiry
+python -c "
+# Check for expired credentials in path
+for path in paths:
+    hints = get_hints_for_path(path)
+    for edge_id, hint in hints.items():
+        if hint.credential_expiry and hint.credential_expiry < datetime.now(timezone.utc):
+            print(f'Expired credential on {edge_id}: {hint.credential_expiry}')
+"
+
+# TC-3: Minimum Velocity
+python -c "
+# Check for velocity violations
+for i in range(len(path)-1):
+    hints = get_hints_for_path(path)
+    prev = hints[path[i]]
+    curr = hints[path[i+1]]
+    if prev.latest_observed and curr.earliest_observed:
+        delta = (curr.earliest_observed - prev.latest_observed).total_seconds()
+        if delta < 0.5:  # Default threshold
+            print(f'Velocity violation: {path[i]} -> {path[i+1]} ({delta}s)')
+"
+
+# TC-4: Stale Credentials
+python -c "
+for path in paths:
+    hints = get_hints_for_path(path)
+    for edge_id, hint in hints.items():
+        if hint.last_used:
+            days = (datetime.now(timezone.utc) - hint.last_used).days
+            if days > 90:
+                print(f'Stale credential on {edge_id}: {days} days')
+"
+
+# TC-5: Concurrent Sessions
+python -c "
+# Check for duplicate credential_issued timestamps
+issued = []
+for path in paths:
+    hints = get_hints_for_path(path)
+    for hint in hints.values():
+        if hint.credential_issued:
+            issued.append(hint.credential_issued)
+# Check for duplicates
+seen = set()
+for ts in issued:
+    if ts in seen:
+        print(f'Duplicate credential_issued: {ts}')
+    seen.add(ts)
+"
+```
+
+#### Phase 3: Containment (30-60 minutes)
+
+##### Immediate Containment Actions
+```bash
+#!/bin/bash
+# contain.sh - Automated containment actions
+
+INCIDENT_DIR=$1
+ACTION=$2  # revoke, rotate, isolate, monitor
+
+cd "$INCIDENT_DIR"
+
+case $ACTION in
+  revoke)
+    echo "Revoking compromised sessions..."
+    # Parse remediation.sh for revoke commands
+    grep "aws sts revoke-session" remediation.sh | bash
+    ;;
+    
+  rotate)
+    echo "Rotating compromised credentials..."
+    grep "aws iam rotate-access-key" remediation.sh | bash
+    ;;
+    
+  isolate)
+    echo "Isolating affected principals..."
+    # Attach deny policies
+    grep "aws iam attach-user-policy.*DenyAll" remediation.sh | bash
+    ;;
+    
+  monitor)
+    echo "Enabling enhanced monitoring..."
+    # Increase log verbosity
+    kubectl set env deployment/arf-rt ARF_LOG_LEVEL=DEBUG
+    # Increase monitoring frequency
+    kubectl patch deployment arf-rt -p '{"spec":{"template":{"spec":{"containers":[{"name":"arf-rt","env":[{"name":"ARF_MONITORING_INTERVAL","value":"30"}]}]}}}'
+    ;;
+    
+  all)
+    $0 revoke
+    $0 rotate
+    $0 isolate
+    $0 monitor
+    ;;
+    
+  *)
+    echo "Usage: $0 <incident_dir> <revoke|rotate|isolate|monitor|all>"
+    exit 1
+    ;;
+esac
+```
+
+#### Automated Containment with SOAR
+```yaml
+# Splunk SOAR / Phantom playbook
+playbook: temporal_violation_containment
+steps:
+  1. enrich:
+     - query_cloudtrail: "{{path_edges}}"
+     - query_iam: "{{principal_arn}}"
+     - query_config: "{{resource_arn}}"
+  
+  2. analyze:
+     - evaluate_temporal_constraints: "{{verdict}}"
+     - calculate_blast_radius: "{{path_edges}}"
+     - identify_affected_principals: "{{principal_arn}}"
+  
+  3. remediate:
+     - revoke_session: "{{session_id}}"
+     - rotate_credential: "{{access_key}}"
+     - attach_boundary_policy: "{{principal_arn}}"
+  
+  4. notify:
+     - slack: "#security-alerts"
+     - email: "security-team@company.com"
+     - pagerduty: "temporal-violation"
+  
+  5. document:
+     - create_jira: "TEMPORAL-{{case_id}}"
+     - update_cmdb: "{{affected_resources}}"
+```
+
+#### Phase 4: Eradication (1-4 hours)
+
+##### Root Cause Analysis
+```bash
+#!/bin/bash
+# root_cause.sh - Root cause analysis
+
+INCIDENT_DIR=$1
+cd "$INCIDENT_DIR"
+
+echo "=== Root Cause Analysis ==="
+
+# 1. Check for configuration drift
+echo "Checking configuration drift..."
+python scripts/detect_temporal_drift.py \
+  baseline_scenario.json \
+  current_scenario.json \
+  --output drift_report.json
+
+# 2. Check for configuration changes
+echo "Checking recent changes..."
+git log --oneline -20 -- config/ temporal/
+git diff HEAD~5..HEAD -- config/ temporal/
+
+# 3. Check for dependency issues
+echo "Checking dependencies..."
+pip list --outdated | grep -E "(arf|temporal|boto)"
+
+# 4. Check for infrastructure changes
+echo "Checking infrastructure..."
+kubectl get events --sort-by='.lastTimestamp' -n arf-rt | tail -20
+aws cloudtrail lookup-events --lookup-attributes AttributeKey=EventName,AttributeValue=AssumeRole --max-results 50
+
+# 5. Generate root cause report
+cat > root_cause_analysis.md <<EOF
+# Root Cause Analysis - $INCIDENT_ID
+
+## Summary
+Incident: $ALERT_NAME
+Severity: $SEVERITY
+Detected: $DETECTION_TIME
+Resolved: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+## Root Cause
+[To be filled by investigator]
+
+## Contributing Factors
+1. [Factor 1]
+2. [Factor 2]
+3. [Factor 3]
+
+## Impact
+- Affected paths: [count]
+- Affected principals: [count]
+- Data exposed: [description]
+- Compliance impact: [frameworks affected]
+
+## Remediation Actions Taken
+1. [Action 1] - [timestamp]
+2. [Action 2] - [timestamp]
+3. [Action 3] - [timestamp]
+
+## Preventive Measures
+1. [Measure 1] - [owner] - [target date]
+2. [Measure 2] - [owner] - [target date]
+3. [Measure 3] - [owner] - [target date]
+
+## Lessons Learned
+[To be filled after post-incident review]
+EOF
+```
+
+#### Phase 5: Recovery (4-24 hours)
+
+##### Recovery Actions
+```bash
+#!/bin/bash
+# recover.sh - System recovery
+
+INCIDENT_DIR=$1
+cd "$INCIDENT_DIR"
+
+echo "=== Recovery Actions ==="
+
+# 1. Restore from clean backup if needed
+if [ "$RESTORE_FROM_BACKUP" = "true" ]; then
+    echo "Restoring from backup..."
+    ./restore.sh latest_backup.db.gz
+fi
+
+# 2. Verify system integrity
+echo "Verifying system integrity..."
+python scripts/validate_fixtures.py --strict
+python scripts/validate_fixtures.py scenario.json --schema
+
+# 3. Run smoke tests
+echo "Running smoke tests..."
+arf-rt analyze scenario.json --format json --output /tmp/test_output.json
+python -c "
+import json
+with open('/tmp/test_output.json') as f:
+    result = json.load(f)
+assert result['status'] == 'success'
+print('Smoke test passed')
+"
+
+# 4. Run regression tests
+echo "Running regression tests..."
+pytest tests/unit tests/golden -q --tb=short
+
+# 4. Performance validation
+echo "Validating performance..."
+python scripts/benchmark.py --runs 3 --output benchmark.json
+python scripts/compare_benchmarks.py baseline.json current.json --threshold 0.05
+
+# 5. Gradual traffic restoration
+echo "Restoring traffic gradually..."
+kubectl scale deployment arf-rt --replicas=2
+sleep 60
+kubectl scale deployment arf-rt --replicas=5
+
+# 6. Enhanced monitoring
+echo "Enabling enhanced monitoring..."
+kubectl set env deployment/arf-rt ARF_LOG_LEVEL=DEBUG
+kubectl patch deployment arf-rt -p '{"spec":{"template":{"spec":{"containers":[{"name":"arf-rt","env":[{"name":"ARF_MONITORING_INTERVAL","value":"30"}]}]}}}'
+```
+
+#### Phase 6: Post-Incident Activities (24-72 hours)
+
+##### Post-Incident Review
+```bash
+#!/bin/bash
+# post_incident.sh - Post-incident review
+
+INCIDENT_DIR=$1
+cd "$INCIDENT_DIR"
+
+echo "=== Post-Incident Review ==="
+
+# 1. Generate timeline
+cat > timeline.md <<EOF
+# Incident Timeline - $INCIDENT_ID
+
+| Time (UTC) | Event | Details |
+|------------|-------|---------|
+| $DETECTION_TIME | Detection | Alert triggered: $ALERT_NAME |
+| $TRIAGE_TIME | Triage | Severity: $SEVERITY, classified as $CLASSIFICATION |
+| $CONTAINMENT_TIME | Containment | Actions: $CONTAINMENT_ACTIONS |
+| $ERADICATION_TIME | Eradication | Root cause: $ROOT_CAUSE |
+| $RECOVERY_TIME | Recovery | Services restored |
+| $(date -u +%Y-%m-%dT%H:%M:%SZ) | Post-incident | Review started |
+EOF
+
+# 2. Calculate metrics
+python -c "
+import json
+from datetime import datetime
+
+with open('alert.json') as f:
+    alert = json.load(f)
+
+detection = datetime.fromisoformat(alert['timestamp'].replace('Z', '+00:00'))
+now = datetime.utcnow()
+
+print(f'Time to detect: 0s (automated)')
+print(f'Time to triage: {(TRIAGE_TIME - detection).total_seconds():.0f}s')
+print(f'Time to containment: {(CONTAINMENT_TIME - detection).total_seconds():.0f}s')
+print(f'Time to eradication: {(ERADICATION_TIME - detection).total_seconds():.0f}s')
+print(f'Time to recovery: {(RECOVERY_TIME - detection).total_seconds():.0f}s')
+print(f'Total incident duration: {(now - detection).total_seconds():.0f}s')
+"
+
+# 3. Generate post-incident report
+cat > post_incident_report.md <<EOF
+# Post-Incident Report: $INCIDENT_ID
+
+## Executive Summary
+Incident: $ALERT_NAME
+Severity: $SEVERITY
+Duration: \$(($END_TIME - $START_TIME)) seconds
+Status: RESOLVED
+
+## Timeline
+[See timeline.md]
+
+## Root Cause
+[To be filled]
+
+## Impact Assessment
+- Affected scenarios: [count]
+- Affected paths: [count] 
+- Affected principals: [count]
+- Data sensitivity: [classification]
+- Compliance impact: [frameworks]
+
+## What Went Well
+- [Item 1]
+- [Item 2]
+
+## What Could Be Improved
+- [Improvement 1]
+- [Improvement 2]
+
+## Action Items
+| Action | Owner | Due Date | Status |
+|--------|-------|----------|--------|
+| [Action 1] | [Owner] | [Date] | OPEN |
+| [Action 2] | [Owner] | [Date] | OPEN |
+
+## Lessons Learned
+1. [Lesson 1]
+2. [Lesson 2]
+
+## Action Items
+| Action | Owner | Due Date | Priority |
+|--------|-------|----------|----------|
+| [Fix root cause] | [Team] | [Date] | HIGH |
+| [Improve detection] | [Team] | [Date] | HIGH |
+| [Update runbook] | [Team] | [Date] | MEDIUM |
+| [Update documentation] | [Team] | [Date] | LOW |
+EOF
+
+echo "Post-incident review complete. Report saved to $PWD/post_incident_report.md"
+```
+
+### Runbook Templates
+
+#### Temporal Violation Response
+```markdown
+# Runbook: Temporal Constraint Violation
+
+## Alert: HighInfeasibleRate / CriticalInfeasibleRate
+
+### Symptoms
+- High infeasible rate (>80% or >95%)
+- Many paths marked INFEASIBLE
+- Specific constraint violations (TC-1 through TC-5)
+
+### Diagnosis
+1. Check which constraints are violated:
+   ```bash
+   python scripts/audit_temporal_compliance.py scenario.json --format json
+   ```
+
+2. Identify affected paths:
+   ```bash
+   arf-rt analyze scenario.json --format json | jq '.paths[] | select(.verdict=="INFEASIBLE")'
+   ```
+
+3. Check specific constraint violations:
+   - TC-1: Causal order violations (timestamps out of order)
+   - TC-2: Expired credentials/sessions
+   - TC-3: Velocity violations (hops too fast)
+   - TC-4: Stale credentials (>90 days)
+   - TC-5: Concurrent session reuse
+
+### Resolution Steps
+
+#### For TC-1 (Causal Order)
+1. Check CloudTrail timestamps for affected edges
+2. Verify clock synchronization across services
+2. Check for out-of-order CloudTrail ingestion
+
+#### For TC-2 (Session Expiry)
+1. Identify expired credentials
+2. Rotate expired credentials
+3. Check session duration policies
+
+#### For TC-3 (Velocity)
+1. Identify paths with sub-second hops
+2. Check for automated/bot activity
+3. Consider increasing min_hop_delta_seconds
+
+#### For TC-4 (Stale Credentials)
+1. Identify stale credentials (>90 days)
+2. Rotate or disable stale credentials
+3. Review credential rotation policies
+
+#### For TC-5 (Concurrent Session)
+1. Identify duplicate credential_issued timestamps
+2. Check for credential sharing
+3. Revoke suspicious sessions
+
+### Escalation
+- If >95% infeasible: Page manager + security lead
+- If production impact: Page manager + VP Engineering
+- If data exfiltration suspected: Page CISO + Legal
+
+### Post-Incident
+1. Update detection rules
+2. Update runbook with lessons learned
+3. Schedule post-incident review within 48 hours
+```
+
+---
+
+*Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
 ---
 
