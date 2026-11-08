@@ -2547,6 +2547,65 @@ If you use ARF-RT or its temporal extensions in academic work, please cite:
 
 *Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
+
+
+---
+
+## Architecture Overview (v0.9.1)
+
+### System Components
+
+```
++-----------------------------------------------------------------+
+|                        ARF-RT Architecture                       |
++-----------------------------------------------------------------+
+|  +----------------+  +----------------+  +----------------------+  |
+|  |   Adapters     |  |   Engine       |  |   Temporal Subsys  |  |
+|  |                |  |                |  |                    |  |
+|  | * PMapper      |  | * Belief       |  | * Evaluator        |  |
+|  | * AWS Org      |  | * Correlation  |  | * Metrics          |  |
+|  | * Trust Pol    |  | * Paths        |  | * Compliance       |  |
+|  | * Scenario     |  | * Planner      |  | * Drift Detector   |  |
+|  +-------+--------+  +-------+--------+  +--------+-----------+  |
+|          |                 |                      |              |
+|          +-----------------+----------------------+              |
+|                           |                                     |
+|                           v                                     |
+|                 +----------------------+                         |
+|                 |   Storage (SQLite)   |                         |
+|                 |  * Beliefs           |                         |
+|                 |  * Snapshots         |                         |
+|                 |  * Audit Logs        |                         |
+|                 +----------------------+                         |
++-----------------------------------------------------------------+
+```
+
+### Core Modules
+
+| Module | Purpose | Key Classes |
+|--------|---------|-------------|
+| `arf_rt.adapters` | Data ingestion & scenario building | `ScenarioBuilder`, `PMapperAdapter`, `AWSOrgAdapter` |
+| `arf_rt.engine` | Core Bayesian reasoning | `BeliefUpdater`, `CorrelationEngine`, `PathFinder`, `Planner` |
+| `arf_rt.temporal` | Temporal analysis & compliance | `TemporalEvaluator`, `TemporalMetrics`, `ComplianceAuditor` |
+| `arf_rt.storage` | Persistence & replay | `SQLiteStore`, `SnapshotManager` |
+| `arf_rt.util` | Shared utilities | `datetime_helpers`, `network`, `hashing`, `retry` |
+| `arf_rt.cli` | Command-line interface | `analyze`, `plan`, `episode`, `whatif` |
+
+### Data Flow
+
+```
+Scenario JSON -> validate -> ingest -> apply observations -> validate constraints
+  -> correlation (union-find) -> Top-K path search -> snapshot -> report
+```
+
+### Key Design Principles
+
+1. **Deterministic Replay** -- Same input -> same `canonical_run_hash`
+2. **Correlation-Aware** -- Union-find for constraint correlation
+3. **Temporal First-Class** -- TC-1..TC-5 as first-class constraints
+4. **Formal Verification** -- O1-O8 proofs with 128/128 tests passing
+5. **Zero-Trust** -- Never trust, always verify temporal assumptions
+
 ---
 
 
@@ -2700,6 +2759,65 @@ async with RetryContext(max_attempts=3) as ctx:
 ---
 
 *Last updated: November 7, 2026 — v0.9.1 documentation refresh*
+
+
+
+---
+
+## Architecture Overview (v0.9.1)
+
+### System Components
+
+```
++-----------------------------------------------------------------+
+|                        ARF-RT Architecture                       |
++-----------------------------------------------------------------+
+|  +----------------+  +----------------+  +----------------------+  |
+|  |   Adapters     |  |   Engine       |  |   Temporal Subsys  |  |
+|  |                |  |                |  |                    |  |
+|  | * PMapper      |  | * Belief       |  | * Evaluator        |  |
+|  | * AWS Org      |  | * Correlation  |  | * Metrics          |  |
+|  | * Trust Pol    |  | * Paths        |  | * Compliance       |  |
+|  | * Scenario     |  | * Planner      |  | * Drift Detector   |  |
+|  +-------+--------+  +-------+--------+  +--------+-----------+  |
+|          |                 |                      |              |
+|          +-----------------+----------------------+              |
+|                           |                                     |
+|                           v                                     |
+|                 +----------------------+                         |
+|                 |   Storage (SQLite)   |                         |
+|                 |  * Beliefs           |                         |
+|                 |  * Snapshots         |                         |
+|                 |  * Audit Logs        |                         |
+|                 +----------------------+                         |
++-----------------------------------------------------------------+
+```
+
+### Core Modules
+
+| Module | Purpose | Key Classes |
+|--------|---------|-------------|
+| `arf_rt.adapters` | Data ingestion & scenario building | `ScenarioBuilder`, `PMapperAdapter`, `AWSOrgAdapter` |
+| `arf_rt.engine` | Core Bayesian reasoning | `BeliefUpdater`, `CorrelationEngine`, `PathFinder`, `Planner` |
+| `arf_rt.temporal` | Temporal analysis & compliance | `TemporalEvaluator`, `TemporalMetrics`, `ComplianceAuditor` |
+| `arf_rt.storage` | Persistence & replay | `SQLiteStore`, `SnapshotManager` |
+| `arf_rt.util` | Shared utilities | `datetime_helpers`, `network`, `hashing`, `retry` |
+| `arf_rt.cli` | Command-line interface | `analyze`, `plan`, `episode`, `whatif` |
+
+### Data Flow
+
+```
+Scenario JSON -> validate -> ingest -> apply observations -> validate constraints
+  -> correlation (union-find) -> Top-K path search -> snapshot -> report
+```
+
+### Key Design Principles
+
+1. **Deterministic Replay** -- Same input -> same `canonical_run_hash`
+2. **Correlation-Aware** -- Union-find for constraint correlation
+3. **Temporal First-Class** -- TC-1..TC-5 as first-class constraints
+4. **Formal Verification** -- O1-O8 proofs with 128/128 tests passing
+5. **Zero-Trust** -- Never trust, always verify temporal assumptions
 
 
 ---
@@ -3028,6 +3146,65 @@ resources:
 
 *Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
+
+
+---
+
+## Architecture Overview (v0.9.1)
+
+### System Components
+
+```
++-----------------------------------------------------------------+
+|                        ARF-RT Architecture                       |
++-----------------------------------------------------------------+
+|  +----------------+  +----------------+  +----------------------+  |
+|  |   Adapters     |  |   Engine       |  |   Temporal Subsys  |  |
+|  |                |  |                |  |                    |  |
+|  | * PMapper      |  | * Belief       |  | * Evaluator        |  |
+|  | * AWS Org      |  | * Correlation  |  | * Metrics          |  |
+|  | * Trust Pol    |  | * Paths        |  | * Compliance       |  |
+|  | * Scenario     |  | * Planner      |  | * Drift Detector   |  |
+|  +-------+--------+  +-------+--------+  +--------+-----------+  |
+|          |                 |                      |              |
+|          +-----------------+----------------------+              |
+|                           |                                     |
+|                           v                                     |
+|                 +----------------------+                         |
+|                 |   Storage (SQLite)   |                         |
+|                 |  * Beliefs           |                         |
+|                 |  * Snapshots         |                         |
+|                 |  * Audit Logs        |                         |
+|                 +----------------------+                         |
++-----------------------------------------------------------------+
+```
+
+### Core Modules
+
+| Module | Purpose | Key Classes |
+|--------|---------|-------------|
+| `arf_rt.adapters` | Data ingestion & scenario building | `ScenarioBuilder`, `PMapperAdapter`, `AWSOrgAdapter` |
+| `arf_rt.engine` | Core Bayesian reasoning | `BeliefUpdater`, `CorrelationEngine`, `PathFinder`, `Planner` |
+| `arf_rt.temporal` | Temporal analysis & compliance | `TemporalEvaluator`, `TemporalMetrics`, `ComplianceAuditor` |
+| `arf_rt.storage` | Persistence & replay | `SQLiteStore`, `SnapshotManager` |
+| `arf_rt.util` | Shared utilities | `datetime_helpers`, `network`, `hashing`, `retry` |
+| `arf_rt.cli` | Command-line interface | `analyze`, `plan`, `episode`, `whatif` |
+
+### Data Flow
+
+```
+Scenario JSON -> validate -> ingest -> apply observations -> validate constraints
+  -> correlation (union-find) -> Top-K path search -> snapshot -> report
+```
+
+### Key Design Principles
+
+1. **Deterministic Replay** -- Same input -> same `canonical_run_hash`
+2. **Correlation-Aware** -- Union-find for constraint correlation
+3. **Temporal First-Class** -- TC-1..TC-5 as first-class constraints
+4. **Formal Verification** -- O1-O8 proofs with 128/128 tests passing
+5. **Zero-Trust** -- Never trust, always verify temporal assumptions
+
 ---
 
 
@@ -3181,3 +3358,62 @@ async with RetryContext(max_attempts=3) as ctx:
 ---
 
 *Last updated: November 7, 2026 — v0.9.1 documentation refresh*
+
+
+
+---
+
+## Architecture Overview (v0.9.1)
+
+### System Components
+
+```
++-----------------------------------------------------------------+
+|                        ARF-RT Architecture                       |
++-----------------------------------------------------------------+
+|  +----------------+  +----------------+  +----------------------+  |
+|  |   Adapters     |  |   Engine       |  |   Temporal Subsys  |  |
+|  |                |  |                |  |                    |  |
+|  | * PMapper      |  | * Belief       |  | * Evaluator        |  |
+|  | * AWS Org      |  | * Correlation  |  | * Metrics          |  |
+|  | * Trust Pol    |  | * Paths        |  | * Compliance       |  |
+|  | * Scenario     |  | * Planner      |  | * Drift Detector   |  |
+|  +-------+--------+  +-------+--------+  +--------+-----------+  |
+|          |                 |                      |              |
+|          +-----------------+----------------------+              |
+|                           |                                     |
+|                           v                                     |
+|                 +----------------------+                         |
+|                 |   Storage (SQLite)   |                         |
+|                 |  * Beliefs           |                         |
+|                 |  * Snapshots         |                         |
+|                 |  * Audit Logs        |                         |
+|                 +----------------------+                         |
++-----------------------------------------------------------------+
+```
+
+### Core Modules
+
+| Module | Purpose | Key Classes |
+|--------|---------|-------------|
+| `arf_rt.adapters` | Data ingestion & scenario building | `ScenarioBuilder`, `PMapperAdapter`, `AWSOrgAdapter` |
+| `arf_rt.engine` | Core Bayesian reasoning | `BeliefUpdater`, `CorrelationEngine`, `PathFinder`, `Planner` |
+| `arf_rt.temporal` | Temporal analysis & compliance | `TemporalEvaluator`, `TemporalMetrics`, `ComplianceAuditor` |
+| `arf_rt.storage` | Persistence & replay | `SQLiteStore`, `SnapshotManager` |
+| `arf_rt.util` | Shared utilities | `datetime_helpers`, `network`, `hashing`, `retry` |
+| `arf_rt.cli` | Command-line interface | `analyze`, `plan`, `episode`, `whatif` |
+
+### Data Flow
+
+```
+Scenario JSON -> validate -> ingest -> apply observations -> validate constraints
+  -> correlation (union-find) -> Top-K path search -> snapshot -> report
+```
+
+### Key Design Principles
+
+1. **Deterministic Replay** -- Same input -> same `canonical_run_hash`
+2. **Correlation-Aware** -- Union-find for constraint correlation
+3. **Temporal First-Class** -- TC-1..TC-5 as first-class constraints
+4. **Formal Verification** -- O1-O8 proofs with 128/128 tests passing
+5. **Zero-Trust** -- Never trust, always verify temporal assumptions
