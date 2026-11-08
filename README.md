@@ -2552,6 +2552,610 @@ If you use ARF-RT or its temporal extensions in academic work, please cite:
 
 ---
 
+## Deployment Guide (v0.9.1)
+
+### Prerequisites
+
+- Python 3.10+
+- Git
+- SQLite 3.35+
+- 2GB+ RAM (4GB+ recommended)
+- 1GB+ disk space
+- AWS credentials (for CloudTrail integration, optional)
+
+### Local Development Setup
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/Sneharsha001/temporal-context-aware-cloud-identity-attack-paths.git
+cd temporal-context-aware-cloud-identity-attack-paths
+
+# 2. Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# 3. Install dependencies
+pip install --upgrade pip
+pip install -e ".[dev]"
+
+# 4. Verify installation
+arf-rt --help
+```
+
+### Docker Deployment
+
+#### Development Container
+```dockerfile
+# Dockerfile.dev
+FROM python:3.11-slim
+WORKDIR /app
+COPY pyproject.toml README.md ./
+COPY arf_rt/ ./arf_rt/
+COPY tests/ ./tests/
+COPY scripts/ ./scripts/
+RUN pip install --no-cache-dir -e ".[dev]"
+WORKDIR /app
+ENTRYPOINT ["arf-rt"]
+```
+
+```bash
+# Build and run
+docker build -f Dockerfile.dev -t arf-rt:dev .
+docker run -it --rm -v $(pwd):/app arf-rt:dev arf-rt --help
+```
+
+#### Production Container
+```dockerfile
+# Dockerfile.prod
+FROM python:3.11-slim as builder
+WORKDIR /app
+COPY . .
+RUN pip install --no-cache-dir -e ".[dev]" \
+    && pip install --no-cache-dir --target=/app/deps .
+
+FROM python:3.11-slim
+WORKDIR /app
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /app /app
+USER 1000:1000
+ENTRYPOINT ["arf-rt"]
+```
+
+```bash
+# Build production image
+docker build -f Dockerfile.prod -t arf-rt:prod .
+docker run --rm arf-rt:prod arf-rt analyze scenario.json --format json
+```
+
+### Kubernetes Deployment
+
+#### Deployment Manifest
+```yaml
+# k8s/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: arf-rt
+  labels:
+    app: arf-rt
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: arf-rt
+  template:
+    metadata:
+      labels:
+        app: arf-rt
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+      - name: arf-rt
+        image: ghcr.io/sneharsha001/arf-rt:latest
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        env:
+        - name: ARF_LOG_LEVEL
+          value: "INFO"
+        - name: ARF_SAFE_MODE
+          value: "1"
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        - name: config
+          mountPath: /config
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: arf-rt-data
+      - name: config
+        configMap:
+          name: arf-rt-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: arf-rt
+spec:
+  selector:
+    app: arf-rt
+  ports:
+  - port: 8080
+    targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: arf-rt-data
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: arf-rt-config
+data:
+  config.yaml: |
+    profile: production
+    max_path_length: 10
+    stale_credential_days: 90
+```
+
+#### Apply Deployment
+```bash
+# Apply Kubernetes manifests
+kubectl apply -f k8s/deployment.yaml
+
+# Check deployment status
+kubectl rollout status deployment/arf-rt
+
+# Check pods
+kubectl get pods -l app=arf-rt
+
+# View logs
+kubectl logs -l app=arf-rt -f
+```
+
+### Docker Compose (Development)
+
+```yaml
+# docker-compose.yml
+version: '3.8'
+services:
+  arf-rt:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/app
+      - arf-rt-data:/data
+    environment:
+      - ARF_LOG_LEVEL=DEBUG
+      - ARF_SAFE_MODE=1
+    ports:
+      - "8080:8080"
+    command: arf-rt analyze scenario.json --format both
+
+volumes:
+  arf-rt-data:
+```
+
+```bash
+# Start development environment
+docker-compose up -d
+
+# View logs
+docker-compose logs -f arf-rt
+
+# Run analysis
+docker-compose exec arf-rt arf-rt analyze scenario.json --format both
+```
+
+### Configuration Management
+
+#### Environment-Based Configuration
+```python
+# config/production.py
+from arf_rt.temporal import TemporalConfig
+
+config = TemporalConfig.balanced().with_overrides(
+    max_path_length=10,
+    stale_credential_days=90,
+    max_concurrent_sessions=5,
+    credential_reuse_window_seconds=3600,
+)
+
+# config/staging.py
+from arf_rt.temporal import TemporalConfig
+
+config = TemporalConfig.balanced().with_overrides(
+    max_path_length=5,
+    stale_credential_days=30,
+    max_concurrent_sessions=2,
+)
+
+# config/development.py
+from arf_rt.temporal import TemporalConfig
+
+config = TemporalConfig.permissive().with_overrides(
+    max_path_length=5,
+    stale_credential_days=7,
+)
+```
+
+#### Configuration Files
+```yaml
+# config/production.yaml
+profile: production
+q8_precision: 8
+max_path_depth: 6
+top_k_paths: 5
+safe_replay_mode: true
+max_path_length: 10
+stale_credential_days: 90
+max_concurrent_sessions: 5
+credential_reuse_window_seconds: 3600
+```
+
+```bash
+# Load configuration
+arf-rt analyze scenario.json --config config/production.yaml
+
+# Or set via environment
+export ARF_PROFILE=production
+export ARF_MAX_DEPTH=10
+export ARF_TOP_K=5
+arf-rt analyze scenario.json
+```
+
+### CI/CD Pipeline
+
+#### GitHub Actions
+```yaml
+# .github/workflows/ci.yml
+name: CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+      - name: Lint
+        run: python scripts/lint_check.py
+      - name: Validate fixtures
+        run: python scripts/validate_fixtures.py --strict
+      - name: Unit tests
+        run: pytest tests/unit tests/golden -q
+      - name: Property-based tests
+        run: pytest tests/research/test_rdce_property_based.py -v
+      - name: Security scan
+        run: |
+          pip install bandit safety
+          bandit -r arf_rt/
+          safety check
+
+  benchmark:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run benchmarks
+        run: |
+          pip install -e ".[dev]"
+          python scripts/benchmark.py --runs 5 --output benchmark.json
+      - name: Compare with baseline
+        run: |
+          python scripts/compare_benchmarks.py baseline.json current.json --threshold 0.05
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker build -f Dockerfile.prod -t arf-rt:${{ github.sha }} .
+      - name: Push to registry
+        run: |
+          echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker tag arf-rt:${{ github.sha }} ghcr.io/${{ github.repository }}:${{ github.sha }}
+          docker push ghcr.io/${{ github.repository }}:${{ github.sha }}
+```
+
+### Monitoring & Alerting
+
+#### Prometheus Metrics
+```python
+# metrics.py
+from prometheus_client import Counter, Histogram, Gauge, start_http_server
+
+TEMPORAL_EVALUATIONS = Counter('arf_rt_temporal_evaluations_total', 'Total evaluations', ['verdict'])
+TEMPORAL_LATENCY = Histogram('arf_rt_temporal_latency_seconds', 'Evaluation latency')
+TEMPORAL_PATH_LENGTH = Histogram('arf_rt_temporal_path_length', 'Path length distribution')
+TEMPORAL_ELIMINATION_RATE = Gauge('arf_rt_temporal_elimination_rate', 'Current elimination rate')
+
+# In evaluation loop
+TEMPORAL_EVALUATIONS.labels(verdict=verdict.kind.value).inc()
+TEMPORAL_LATENCY.observe(evaluator.stats.evaluation_time_ms / 1000)
+TEMPORAL_PATH_LENGTH.observe(len(path_edges))
+TEMPORAL_ELIMINATION_RATE.set(metrics.elimination_rate)
+
+# Start metrics server
+start_http_server(9090)
+```
+
+#### Prometheus Configuration
+```yaml
+# prometheus.yml
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'arf-rt'
+    static_configs:
+      - targets: ['arf-rt:9090']
+```
+
+#### Grafana Dashboard Panels
+```json
+{
+  "panels": [
+    {
+      "title": "Evaluations/sec",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(arf_rt_temporal_evaluations_total[5m])",
+          "legendFormat": "{{verdict}}"
+        }
+      ]
+    },
+    {
+      "title": "Latency p50/p95/p99",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.5, rate(arf_rt_temporal_latency_seconds_bucket[5m]))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m]))",
+          "legendFormat": "p95"
+        },
+        {
+          "expr": "histogram_quantile(0.99, rate(arf_rt_temporal_latency_seconds_bucket[5m]))",
+          "legendFormat": "p99"
+        }
+      ]
+    },
+    {
+      "title": "Elimination Rate",
+      "type": "gauge",
+      "targets": [
+        {
+          "expr": "arf_rt_temporal_elimination_rate",
+          "legendFormat": "Elimination Rate"
+        }
+      ]
+    },
+    {
+      "title": "Verdict Breakdown",
+      "type": "piechart",
+      "targets": [
+        {
+          "expr": "sum by (verdict) (rate(arf_rt_temporal_evaluations_total[5m]))",
+          "legendFormat": "{{verdict}}"
+        }
+      ]
+    }
+  ]
+}
+```
+
+#### Alerting Rules
+```yaml
+groups:
+- name: arf-rt-temporal
+  rules:
+  - alert: HighInfeasibleRate
+    expr: arf_rt_temporal_elimination_rate > 0.8
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High temporal infeasible rate detected"
+      
+  - alert: EvaluationLatencyHigh
+    expr: histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m])) > 10
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Temporal evaluation latency > 10s"
+
+  - alert: UnknownRateSpike
+    expr: rate(arf_rt_temporal_evaluations_total{verdict="UNKNOWN"}[5m]) > 0.5
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High UNKNOWN verdict rate - missing temporal data"
+```
+
+### Backup & Disaster Recovery
+
+#### Database Backup
+```bash
+#!/bin/bash
+# backup.sh - Daily database backup
+
+BACKUP_DIR="/backups/arf-rt"
+DATE=$(date +%Y%m%d_%H%M%S)
+DB_PATH="/data/arf_rt.db"
+BACKUP_FILE="${BACKUP_DIR}/arf_rt_${DATE}.db"
+
+# Create backup directory
+mkdir -p ${BACKUP_DIR}
+
+# Create backup using SQLite backup API
+sqlite3 ${DB_PATH} ".backup ${BACKUP_FILE}"
+
+# Compress backup
+gzip ${BACKUP_FILE}
+
+# Upload to S3 (optional)
+aws s3 cp ${BACKUP_FILE}.gz s3://my-bucket/arf-rt-backups/
+
+# Cleanup old backups (keep 30 days)
+find ${BACKUP_DIR} -name "*.db.gz" -mtime +30 -delete
+```
+
+```bash
+# Schedule daily backup
+# crontab -e
+# 0 2 * * * /path/to/backup.sh >> /var/log/arf-rt-backup.log 2>&1
+```
+
+#### Disaster Recovery
+```bash
+#!/bin/bash
+# restore.sh - Restore from backup
+
+BACKUP_FILE=$1
+DB_PATH="/data/arf_rt.db"
+
+if [ -z "$BACKUP_FILE" ]; then
+    echo "Usage: $0 <backup_file>"
+    exit 1
+fi
+
+# Stop service
+systemctl stop arf-rt
+
+# Restore database
+gunzip -c ${BACKUP_FILE} > /data/arf_rt.db
+
+# Verify integrity
+sqlite3 /data/arf_rt.db "PRAGMA integrity_check;"
+
+# Restart service
+systemctl start arf-rt
+
+echo "Restore complete"
+```
+
+### Health Checks
+
+#### Liveness Probe
+```yaml
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+```
+
+#### Readiness Probe
+```yaml
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+```
+
+#### Health Check Endpoint
+```python
+# In arf_rt/cli.py or separate health module
+from fastapi import FastAPI
+from arf_rt.storage import SQLiteStore
+
+app = FastAPI()
+
+@app.get("/health")
+async def health():
+    return {"status": "healthy", "version": "0.9.1"}
+
+@app.get("/ready")
+async def ready():
+    try:
+        store = SQLiteStore("/data/arf_rt.db")
+        store.health_check()
+        return {"status": "ready"}
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=str(e))
+```
+
+### Rollback Procedure
+
+```bash
+#!/bin/bash
+# rollback.sh - Rollback to previous version
+
+PREVIOUS_VERSION=$1
+
+if [ -z "$PREVIOUS_VERSION" ]; then
+    echo "Usage: $0 <previous_version_tag>"
+    exit 1
+fi
+
+# Rollback Kubernetes deployment
+kubectl rollout undo deployment/arf-rt --to-revision=${PREVIOUS_VERSION}
+
+# Wait for rollback
+kubectl rollout status deployment/arf-rt
+
+# Verify
+kubectl get pods -l app=arf-rt
+```
+
+---
+
+*Last updated: November 7, 2026 — v0.9.1 documentation refresh*
+
+---
+
+---
+
 ## Security Hardening Guide (v0.9.1)
 
 ### Threat Model
@@ -4179,6 +4783,610 @@ async with RetryContext(max_attempts=3) as ctx:
 
 *Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
+
+---
+
+---
+
+## Deployment Guide (v0.9.1)
+
+### Prerequisites
+
+- Python 3.10+
+- Git
+- SQLite 3.35+
+- 2GB+ RAM (4GB+ recommended)
+- 1GB+ disk space
+- AWS credentials (for CloudTrail integration, optional)
+
+### Local Development Setup
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/Sneharsha001/temporal-context-aware-cloud-identity-attack-paths.git
+cd temporal-context-aware-cloud-identity-attack-paths
+
+# 2. Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# 3. Install dependencies
+pip install --upgrade pip
+pip install -e ".[dev]"
+
+# 4. Verify installation
+arf-rt --help
+```
+
+### Docker Deployment
+
+#### Development Container
+```dockerfile
+# Dockerfile.dev
+FROM python:3.11-slim
+WORKDIR /app
+COPY pyproject.toml README.md ./
+COPY arf_rt/ ./arf_rt/
+COPY tests/ ./tests/
+COPY scripts/ ./scripts/
+RUN pip install --no-cache-dir -e ".[dev]"
+WORKDIR /app
+ENTRYPOINT ["arf-rt"]
+```
+
+```bash
+# Build and run
+docker build -f Dockerfile.dev -t arf-rt:dev .
+docker run -it --rm -v $(pwd):/app arf-rt:dev arf-rt --help
+```
+
+#### Production Container
+```dockerfile
+# Dockerfile.prod
+FROM python:3.11-slim as builder
+WORKDIR /app
+COPY . .
+RUN pip install --no-cache-dir -e ".[dev]" \
+    && pip install --no-cache-dir --target=/app/deps .
+
+FROM python:3.11-slim
+WORKDIR /app
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /app /app
+USER 1000:1000
+ENTRYPOINT ["arf-rt"]
+```
+
+```bash
+# Build production image
+docker build -f Dockerfile.prod -t arf-rt:prod .
+docker run --rm arf-rt:prod arf-rt analyze scenario.json --format json
+```
+
+### Kubernetes Deployment
+
+#### Deployment Manifest
+```yaml
+# k8s/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: arf-rt
+  labels:
+    app: arf-rt
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: arf-rt
+  template:
+    metadata:
+      labels:
+        app: arf-rt
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+      - name: arf-rt
+        image: ghcr.io/sneharsha001/arf-rt:latest
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        env:
+        - name: ARF_LOG_LEVEL
+          value: "INFO"
+        - name: ARF_SAFE_MODE
+          value: "1"
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        - name: config
+          mountPath: /config
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: arf-rt-data
+      - name: config
+        configMap:
+          name: arf-rt-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: arf-rt
+spec:
+  selector:
+    app: arf-rt
+  ports:
+  - port: 8080
+    targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: arf-rt-data
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: arf-rt-config
+data:
+  config.yaml: |
+    profile: production
+    max_path_length: 10
+    stale_credential_days: 90
+```
+
+#### Apply Deployment
+```bash
+# Apply Kubernetes manifests
+kubectl apply -f k8s/deployment.yaml
+
+# Check deployment status
+kubectl rollout status deployment/arf-rt
+
+# Check pods
+kubectl get pods -l app=arf-rt
+
+# View logs
+kubectl logs -l app=arf-rt -f
+```
+
+### Docker Compose (Development)
+
+```yaml
+# docker-compose.yml
+version: '3.8'
+services:
+  arf-rt:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/app
+      - arf-rt-data:/data
+    environment:
+      - ARF_LOG_LEVEL=DEBUG
+      - ARF_SAFE_MODE=1
+    ports:
+      - "8080:8080"
+    command: arf-rt analyze scenario.json --format both
+
+volumes:
+  arf-rt-data:
+```
+
+```bash
+# Start development environment
+docker-compose up -d
+
+# View logs
+docker-compose logs -f arf-rt
+
+# Run analysis
+docker-compose exec arf-rt arf-rt analyze scenario.json --format both
+```
+
+### Configuration Management
+
+#### Environment-Based Configuration
+```python
+# config/production.py
+from arf_rt.temporal import TemporalConfig
+
+config = TemporalConfig.balanced().with_overrides(
+    max_path_length=10,
+    stale_credential_days=90,
+    max_concurrent_sessions=5,
+    credential_reuse_window_seconds=3600,
+)
+
+# config/staging.py
+from arf_rt.temporal import TemporalConfig
+
+config = TemporalConfig.balanced().with_overrides(
+    max_path_length=5,
+    stale_credential_days=30,
+    max_concurrent_sessions=2,
+)
+
+# config/development.py
+from arf_rt.temporal import TemporalConfig
+
+config = TemporalConfig.permissive().with_overrides(
+    max_path_length=5,
+    stale_credential_days=7,
+)
+```
+
+#### Configuration Files
+```yaml
+# config/production.yaml
+profile: production
+q8_precision: 8
+max_path_depth: 6
+top_k_paths: 5
+safe_replay_mode: true
+max_path_length: 10
+stale_credential_days: 90
+max_concurrent_sessions: 5
+credential_reuse_window_seconds: 3600
+```
+
+```bash
+# Load configuration
+arf-rt analyze scenario.json --config config/production.yaml
+
+# Or set via environment
+export ARF_PROFILE=production
+export ARF_MAX_DEPTH=10
+export ARF_TOP_K=5
+arf-rt analyze scenario.json
+```
+
+### CI/CD Pipeline
+
+#### GitHub Actions
+```yaml
+# .github/workflows/ci.yml
+name: CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+      - name: Lint
+        run: python scripts/lint_check.py
+      - name: Validate fixtures
+        run: python scripts/validate_fixtures.py --strict
+      - name: Unit tests
+        run: pytest tests/unit tests/golden -q
+      - name: Property-based tests
+        run: pytest tests/research/test_rdce_property_based.py -v
+      - name: Security scan
+        run: |
+          pip install bandit safety
+          bandit -r arf_rt/
+          safety check
+
+  benchmark:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run benchmarks
+        run: |
+          pip install -e ".[dev]"
+          python scripts/benchmark.py --runs 5 --output benchmark.json
+      - name: Compare with baseline
+        run: |
+          python scripts/compare_benchmarks.py baseline.json current.json --threshold 0.05
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker build -f Dockerfile.prod -t arf-rt:${{ github.sha }} .
+      - name: Push to registry
+        run: |
+          echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker tag arf-rt:${{ github.sha }} ghcr.io/${{ github.repository }}:${{ github.sha }}
+          docker push ghcr.io/${{ github.repository }}:${{ github.sha }}
+```
+
+### Monitoring & Alerting
+
+#### Prometheus Metrics
+```python
+# metrics.py
+from prometheus_client import Counter, Histogram, Gauge, start_http_server
+
+TEMPORAL_EVALUATIONS = Counter('arf_rt_temporal_evaluations_total', 'Total evaluations', ['verdict'])
+TEMPORAL_LATENCY = Histogram('arf_rt_temporal_latency_seconds', 'Evaluation latency')
+TEMPORAL_PATH_LENGTH = Histogram('arf_rt_temporal_path_length', 'Path length distribution')
+TEMPORAL_ELIMINATION_RATE = Gauge('arf_rt_temporal_elimination_rate', 'Current elimination rate')
+
+# In evaluation loop
+TEMPORAL_EVALUATIONS.labels(verdict=verdict.kind.value).inc()
+TEMPORAL_LATENCY.observe(evaluator.stats.evaluation_time_ms / 1000)
+TEMPORAL_PATH_LENGTH.observe(len(path_edges))
+TEMPORAL_ELIMINATION_RATE.set(metrics.elimination_rate)
+
+# Start metrics server
+start_http_server(9090)
+```
+
+#### Prometheus Configuration
+```yaml
+# prometheus.yml
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'arf-rt'
+    static_configs:
+      - targets: ['arf-rt:9090']
+```
+
+#### Grafana Dashboard Panels
+```json
+{
+  "panels": [
+    {
+      "title": "Evaluations/sec",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(arf_rt_temporal_evaluations_total[5m])",
+          "legendFormat": "{{verdict}}"
+        }
+      ]
+    },
+    {
+      "title": "Latency p50/p95/p99",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.5, rate(arf_rt_temporal_latency_seconds_bucket[5m]))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m]))",
+          "legendFormat": "p95"
+        },
+        {
+          "expr": "histogram_quantile(0.99, rate(arf_rt_temporal_latency_seconds_bucket[5m]))",
+          "legendFormat": "p99"
+        }
+      ]
+    },
+    {
+      "title": "Elimination Rate",
+      "type": "gauge",
+      "targets": [
+        {
+          "expr": "arf_rt_temporal_elimination_rate",
+          "legendFormat": "Elimination Rate"
+        }
+      ]
+    },
+    {
+      "title": "Verdict Breakdown",
+      "type": "piechart",
+      "targets": [
+        {
+          "expr": "sum by (verdict) (rate(arf_rt_temporal_evaluations_total[5m]))",
+          "legendFormat": "{{verdict}}"
+        }
+      ]
+    }
+  ]
+}
+```
+
+#### Alerting Rules
+```yaml
+groups:
+- name: arf-rt-temporal
+  rules:
+  - alert: HighInfeasibleRate
+    expr: arf_rt_temporal_elimination_rate > 0.8
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High temporal infeasible rate detected"
+      
+  - alert: EvaluationLatencyHigh
+    expr: histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m])) > 10
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Temporal evaluation latency > 10s"
+
+  - alert: UnknownRateSpike
+    expr: rate(arf_rt_temporal_evaluations_total{verdict="UNKNOWN"}[5m]) > 0.5
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High UNKNOWN verdict rate - missing temporal data"
+```
+
+### Backup & Disaster Recovery
+
+#### Database Backup
+```bash
+#!/bin/bash
+# backup.sh - Daily database backup
+
+BACKUP_DIR="/backups/arf-rt"
+DATE=$(date +%Y%m%d_%H%M%S)
+DB_PATH="/data/arf_rt.db"
+BACKUP_FILE="${BACKUP_DIR}/arf_rt_${DATE}.db"
+
+# Create backup directory
+mkdir -p ${BACKUP_DIR}
+
+# Create backup using SQLite backup API
+sqlite3 ${DB_PATH} ".backup ${BACKUP_FILE}"
+
+# Compress backup
+gzip ${BACKUP_FILE}
+
+# Upload to S3 (optional)
+aws s3 cp ${BACKUP_FILE}.gz s3://my-bucket/arf-rt-backups/
+
+# Cleanup old backups (keep 30 days)
+find ${BACKUP_DIR} -name "*.db.gz" -mtime +30 -delete
+```
+
+```bash
+# Schedule daily backup
+# crontab -e
+# 0 2 * * * /path/to/backup.sh >> /var/log/arf-rt-backup.log 2>&1
+```
+
+#### Disaster Recovery
+```bash
+#!/bin/bash
+# restore.sh - Restore from backup
+
+BACKUP_FILE=$1
+DB_PATH="/data/arf_rt.db"
+
+if [ -z "$BACKUP_FILE" ]; then
+    echo "Usage: $0 <backup_file>"
+    exit 1
+fi
+
+# Stop service
+systemctl stop arf-rt
+
+# Restore database
+gunzip -c ${BACKUP_FILE} > /data/arf_rt.db
+
+# Verify integrity
+sqlite3 /data/arf_rt.db "PRAGMA integrity_check;"
+
+# Restart service
+systemctl start arf-rt
+
+echo "Restore complete"
+```
+
+### Health Checks
+
+#### Liveness Probe
+```yaml
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+```
+
+#### Readiness Probe
+```yaml
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+```
+
+#### Health Check Endpoint
+```python
+# In arf_rt/cli.py or separate health module
+from fastapi import FastAPI
+from arf_rt.storage import SQLiteStore
+
+app = FastAPI()
+
+@app.get("/health")
+async def health():
+    return {"status": "healthy", "version": "0.9.1"}
+
+@app.get("/ready")
+async def ready():
+    try:
+        store = SQLiteStore("/data/arf_rt.db")
+        store.health_check()
+        return {"status": "ready"}
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=str(e))
+```
+
+### Rollback Procedure
+
+```bash
+#!/bin/bash
+# rollback.sh - Rollback to previous version
+
+PREVIOUS_VERSION=$1
+
+if [ -z "$PREVIOUS_VERSION" ]; then
+    echo "Usage: $0 <previous_version_tag>"
+    exit 1
+fi
+
+# Rollback Kubernetes deployment
+kubectl rollout undo deployment/arf-rt --to-revision=${PREVIOUS_VERSION}
+
+# Wait for rollback
+kubectl rollout status deployment/arf-rt
+
+# Verify
+kubectl get pods -l app=arf-rt
+```
+
+---
+
+*Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
 ---
 
@@ -5989,6 +7197,610 @@ resources:
 
 ---
 
+## Deployment Guide (v0.9.1)
+
+### Prerequisites
+
+- Python 3.10+
+- Git
+- SQLite 3.35+
+- 2GB+ RAM (4GB+ recommended)
+- 1GB+ disk space
+- AWS credentials (for CloudTrail integration, optional)
+
+### Local Development Setup
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/Sneharsha001/temporal-context-aware-cloud-identity-attack-paths.git
+cd temporal-context-aware-cloud-identity-attack-paths
+
+# 2. Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# 3. Install dependencies
+pip install --upgrade pip
+pip install -e ".[dev]"
+
+# 4. Verify installation
+arf-rt --help
+```
+
+### Docker Deployment
+
+#### Development Container
+```dockerfile
+# Dockerfile.dev
+FROM python:3.11-slim
+WORKDIR /app
+COPY pyproject.toml README.md ./
+COPY arf_rt/ ./arf_rt/
+COPY tests/ ./tests/
+COPY scripts/ ./scripts/
+RUN pip install --no-cache-dir -e ".[dev]"
+WORKDIR /app
+ENTRYPOINT ["arf-rt"]
+```
+
+```bash
+# Build and run
+docker build -f Dockerfile.dev -t arf-rt:dev .
+docker run -it --rm -v $(pwd):/app arf-rt:dev arf-rt --help
+```
+
+#### Production Container
+```dockerfile
+# Dockerfile.prod
+FROM python:3.11-slim as builder
+WORKDIR /app
+COPY . .
+RUN pip install --no-cache-dir -e ".[dev]" \
+    && pip install --no-cache-dir --target=/app/deps .
+
+FROM python:3.11-slim
+WORKDIR /app
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /app /app
+USER 1000:1000
+ENTRYPOINT ["arf-rt"]
+```
+
+```bash
+# Build production image
+docker build -f Dockerfile.prod -t arf-rt:prod .
+docker run --rm arf-rt:prod arf-rt analyze scenario.json --format json
+```
+
+### Kubernetes Deployment
+
+#### Deployment Manifest
+```yaml
+# k8s/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: arf-rt
+  labels:
+    app: arf-rt
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: arf-rt
+  template:
+    metadata:
+      labels:
+        app: arf-rt
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+      - name: arf-rt
+        image: ghcr.io/sneharsha001/arf-rt:latest
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        env:
+        - name: ARF_LOG_LEVEL
+          value: "INFO"
+        - name: ARF_SAFE_MODE
+          value: "1"
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        - name: config
+          mountPath: /config
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: arf-rt-data
+      - name: config
+        configMap:
+          name: arf-rt-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: arf-rt
+spec:
+  selector:
+    app: arf-rt
+  ports:
+  - port: 8080
+    targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: arf-rt-data
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: arf-rt-config
+data:
+  config.yaml: |
+    profile: production
+    max_path_length: 10
+    stale_credential_days: 90
+```
+
+#### Apply Deployment
+```bash
+# Apply Kubernetes manifests
+kubectl apply -f k8s/deployment.yaml
+
+# Check deployment status
+kubectl rollout status deployment/arf-rt
+
+# Check pods
+kubectl get pods -l app=arf-rt
+
+# View logs
+kubectl logs -l app=arf-rt -f
+```
+
+### Docker Compose (Development)
+
+```yaml
+# docker-compose.yml
+version: '3.8'
+services:
+  arf-rt:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/app
+      - arf-rt-data:/data
+    environment:
+      - ARF_LOG_LEVEL=DEBUG
+      - ARF_SAFE_MODE=1
+    ports:
+      - "8080:8080"
+    command: arf-rt analyze scenario.json --format both
+
+volumes:
+  arf-rt-data:
+```
+
+```bash
+# Start development environment
+docker-compose up -d
+
+# View logs
+docker-compose logs -f arf-rt
+
+# Run analysis
+docker-compose exec arf-rt arf-rt analyze scenario.json --format both
+```
+
+### Configuration Management
+
+#### Environment-Based Configuration
+```python
+# config/production.py
+from arf_rt.temporal import TemporalConfig
+
+config = TemporalConfig.balanced().with_overrides(
+    max_path_length=10,
+    stale_credential_days=90,
+    max_concurrent_sessions=5,
+    credential_reuse_window_seconds=3600,
+)
+
+# config/staging.py
+from arf_rt.temporal import TemporalConfig
+
+config = TemporalConfig.balanced().with_overrides(
+    max_path_length=5,
+    stale_credential_days=30,
+    max_concurrent_sessions=2,
+)
+
+# config/development.py
+from arf_rt.temporal import TemporalConfig
+
+config = TemporalConfig.permissive().with_overrides(
+    max_path_length=5,
+    stale_credential_days=7,
+)
+```
+
+#### Configuration Files
+```yaml
+# config/production.yaml
+profile: production
+q8_precision: 8
+max_path_depth: 6
+top_k_paths: 5
+safe_replay_mode: true
+max_path_length: 10
+stale_credential_days: 90
+max_concurrent_sessions: 5
+credential_reuse_window_seconds: 3600
+```
+
+```bash
+# Load configuration
+arf-rt analyze scenario.json --config config/production.yaml
+
+# Or set via environment
+export ARF_PROFILE=production
+export ARF_MAX_DEPTH=10
+export ARF_TOP_K=5
+arf-rt analyze scenario.json
+```
+
+### CI/CD Pipeline
+
+#### GitHub Actions
+```yaml
+# .github/workflows/ci.yml
+name: CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+      - name: Lint
+        run: python scripts/lint_check.py
+      - name: Validate fixtures
+        run: python scripts/validate_fixtures.py --strict
+      - name: Unit tests
+        run: pytest tests/unit tests/golden -q
+      - name: Property-based tests
+        run: pytest tests/research/test_rdce_property_based.py -v
+      - name: Security scan
+        run: |
+          pip install bandit safety
+          bandit -r arf_rt/
+          safety check
+
+  benchmark:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run benchmarks
+        run: |
+          pip install -e ".[dev]"
+          python scripts/benchmark.py --runs 5 --output benchmark.json
+      - name: Compare with baseline
+        run: |
+          python scripts/compare_benchmarks.py baseline.json current.json --threshold 0.05
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker build -f Dockerfile.prod -t arf-rt:${{ github.sha }} .
+      - name: Push to registry
+        run: |
+          echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker tag arf-rt:${{ github.sha }} ghcr.io/${{ github.repository }}:${{ github.sha }}
+          docker push ghcr.io/${{ github.repository }}:${{ github.sha }}
+```
+
+### Monitoring & Alerting
+
+#### Prometheus Metrics
+```python
+# metrics.py
+from prometheus_client import Counter, Histogram, Gauge, start_http_server
+
+TEMPORAL_EVALUATIONS = Counter('arf_rt_temporal_evaluations_total', 'Total evaluations', ['verdict'])
+TEMPORAL_LATENCY = Histogram('arf_rt_temporal_latency_seconds', 'Evaluation latency')
+TEMPORAL_PATH_LENGTH = Histogram('arf_rt_temporal_path_length', 'Path length distribution')
+TEMPORAL_ELIMINATION_RATE = Gauge('arf_rt_temporal_elimination_rate', 'Current elimination rate')
+
+# In evaluation loop
+TEMPORAL_EVALUATIONS.labels(verdict=verdict.kind.value).inc()
+TEMPORAL_LATENCY.observe(evaluator.stats.evaluation_time_ms / 1000)
+TEMPORAL_PATH_LENGTH.observe(len(path_edges))
+TEMPORAL_ELIMINATION_RATE.set(metrics.elimination_rate)
+
+# Start metrics server
+start_http_server(9090)
+```
+
+#### Prometheus Configuration
+```yaml
+# prometheus.yml
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'arf-rt'
+    static_configs:
+      - targets: ['arf-rt:9090']
+```
+
+#### Grafana Dashboard Panels
+```json
+{
+  "panels": [
+    {
+      "title": "Evaluations/sec",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(arf_rt_temporal_evaluations_total[5m])",
+          "legendFormat": "{{verdict}}"
+        }
+      ]
+    },
+    {
+      "title": "Latency p50/p95/p99",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.5, rate(arf_rt_temporal_latency_seconds_bucket[5m]))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m]))",
+          "legendFormat": "p95"
+        },
+        {
+          "expr": "histogram_quantile(0.99, rate(arf_rt_temporal_latency_seconds_bucket[5m]))",
+          "legendFormat": "p99"
+        }
+      ]
+    },
+    {
+      "title": "Elimination Rate",
+      "type": "gauge",
+      "targets": [
+        {
+          "expr": "arf_rt_temporal_elimination_rate",
+          "legendFormat": "Elimination Rate"
+        }
+      ]
+    },
+    {
+      "title": "Verdict Breakdown",
+      "type": "piechart",
+      "targets": [
+        {
+          "expr": "sum by (verdict) (rate(arf_rt_temporal_evaluations_total[5m]))",
+          "legendFormat": "{{verdict}}"
+        }
+      ]
+    }
+  ]
+}
+```
+
+#### Alerting Rules
+```yaml
+groups:
+- name: arf-rt-temporal
+  rules:
+  - alert: HighInfeasibleRate
+    expr: arf_rt_temporal_elimination_rate > 0.8
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High temporal infeasible rate detected"
+      
+  - alert: EvaluationLatencyHigh
+    expr: histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m])) > 10
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Temporal evaluation latency > 10s"
+
+  - alert: UnknownRateSpike
+    expr: rate(arf_rt_temporal_evaluations_total{verdict="UNKNOWN"}[5m]) > 0.5
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High UNKNOWN verdict rate - missing temporal data"
+```
+
+### Backup & Disaster Recovery
+
+#### Database Backup
+```bash
+#!/bin/bash
+# backup.sh - Daily database backup
+
+BACKUP_DIR="/backups/arf-rt"
+DATE=$(date +%Y%m%d_%H%M%S)
+DB_PATH="/data/arf_rt.db"
+BACKUP_FILE="${BACKUP_DIR}/arf_rt_${DATE}.db"
+
+# Create backup directory
+mkdir -p ${BACKUP_DIR}
+
+# Create backup using SQLite backup API
+sqlite3 ${DB_PATH} ".backup ${BACKUP_FILE}"
+
+# Compress backup
+gzip ${BACKUP_FILE}
+
+# Upload to S3 (optional)
+aws s3 cp ${BACKUP_FILE}.gz s3://my-bucket/arf-rt-backups/
+
+# Cleanup old backups (keep 30 days)
+find ${BACKUP_DIR} -name "*.db.gz" -mtime +30 -delete
+```
+
+```bash
+# Schedule daily backup
+# crontab -e
+# 0 2 * * * /path/to/backup.sh >> /var/log/arf-rt-backup.log 2>&1
+```
+
+#### Disaster Recovery
+```bash
+#!/bin/bash
+# restore.sh - Restore from backup
+
+BACKUP_FILE=$1
+DB_PATH="/data/arf_rt.db"
+
+if [ -z "$BACKUP_FILE" ]; then
+    echo "Usage: $0 <backup_file>"
+    exit 1
+fi
+
+# Stop service
+systemctl stop arf-rt
+
+# Restore database
+gunzip -c ${BACKUP_FILE} > /data/arf_rt.db
+
+# Verify integrity
+sqlite3 /data/arf_rt.db "PRAGMA integrity_check;"
+
+# Restart service
+systemctl start arf-rt
+
+echo "Restore complete"
+```
+
+### Health Checks
+
+#### Liveness Probe
+```yaml
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+```
+
+#### Readiness Probe
+```yaml
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+```
+
+#### Health Check Endpoint
+```python
+# In arf_rt/cli.py or separate health module
+from fastapi import FastAPI
+from arf_rt.storage import SQLiteStore
+
+app = FastAPI()
+
+@app.get("/health")
+async def health():
+    return {"status": "healthy", "version": "0.9.1"}
+
+@app.get("/ready")
+async def ready():
+    try:
+        store = SQLiteStore("/data/arf_rt.db")
+        store.health_check()
+        return {"status": "ready"}
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=str(e))
+```
+
+### Rollback Procedure
+
+```bash
+#!/bin/bash
+# rollback.sh - Rollback to previous version
+
+PREVIOUS_VERSION=$1
+
+if [ -z "$PREVIOUS_VERSION" ]; then
+    echo "Usage: $0 <previous_version_tag>"
+    exit 1
+fi
+
+# Rollback Kubernetes deployment
+kubectl rollout undo deployment/arf-rt --to-revision=${PREVIOUS_VERSION}
+
+# Wait for rollback
+kubectl rollout status deployment/arf-rt
+
+# Verify
+kubectl get pods -l app=arf-rt
+```
+
+---
+
+*Last updated: November 7, 2026 — v0.9.1 documentation refresh*
+
+---
+
+---
+
 ## Security Hardening Guide (v0.9.1)
 
 ### Threat Model
@@ -7616,6 +9428,610 @@ async with RetryContext(max_attempts=3) as ctx:
 
 *Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
+
+---
+
+---
+
+## Deployment Guide (v0.9.1)
+
+### Prerequisites
+
+- Python 3.10+
+- Git
+- SQLite 3.35+
+- 2GB+ RAM (4GB+ recommended)
+- 1GB+ disk space
+- AWS credentials (for CloudTrail integration, optional)
+
+### Local Development Setup
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/Sneharsha001/temporal-context-aware-cloud-identity-attack-paths.git
+cd temporal-context-aware-cloud-identity-attack-paths
+
+# 2. Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# 3. Install dependencies
+pip install --upgrade pip
+pip install -e ".[dev]"
+
+# 4. Verify installation
+arf-rt --help
+```
+
+### Docker Deployment
+
+#### Development Container
+```dockerfile
+# Dockerfile.dev
+FROM python:3.11-slim
+WORKDIR /app
+COPY pyproject.toml README.md ./
+COPY arf_rt/ ./arf_rt/
+COPY tests/ ./tests/
+COPY scripts/ ./scripts/
+RUN pip install --no-cache-dir -e ".[dev]"
+WORKDIR /app
+ENTRYPOINT ["arf-rt"]
+```
+
+```bash
+# Build and run
+docker build -f Dockerfile.dev -t arf-rt:dev .
+docker run -it --rm -v $(pwd):/app arf-rt:dev arf-rt --help
+```
+
+#### Production Container
+```dockerfile
+# Dockerfile.prod
+FROM python:3.11-slim as builder
+WORKDIR /app
+COPY . .
+RUN pip install --no-cache-dir -e ".[dev]" \
+    && pip install --no-cache-dir --target=/app/deps .
+
+FROM python:3.11-slim
+WORKDIR /app
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=builder /app /app
+USER 1000:1000
+ENTRYPOINT ["arf-rt"]
+```
+
+```bash
+# Build production image
+docker build -f Dockerfile.prod -t arf-rt:prod .
+docker run --rm arf-rt:prod arf-rt analyze scenario.json --format json
+```
+
+### Kubernetes Deployment
+
+#### Deployment Manifest
+```yaml
+# k8s/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: arf-rt
+  labels:
+    app: arf-rt
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: arf-rt
+  template:
+    metadata:
+      labels:
+        app: arf-rt
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+      - name: arf-rt
+        image: ghcr.io/sneharsha001/arf-rt:latest
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        env:
+        - name: ARF_LOG_LEVEL
+          value: "INFO"
+        - name: ARF_SAFE_MODE
+          value: "1"
+        volumeMounts:
+        - name: data
+          mountPath: /data
+        - name: config
+          mountPath: /config
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: arf-rt-data
+      - name: config
+        configMap:
+          name: arf-rt-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: arf-rt
+spec:
+  selector:
+    app: arf-rt
+  ports:
+  - port: 8080
+    targetPort: 8080
+  type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: arf-rt-data
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: arf-rt-config
+data:
+  config.yaml: |
+    profile: production
+    max_path_length: 10
+    stale_credential_days: 90
+```
+
+#### Apply Deployment
+```bash
+# Apply Kubernetes manifests
+kubectl apply -f k8s/deployment.yaml
+
+# Check deployment status
+kubectl rollout status deployment/arf-rt
+
+# Check pods
+kubectl get pods -l app=arf-rt
+
+# View logs
+kubectl logs -l app=arf-rt -f
+```
+
+### Docker Compose (Development)
+
+```yaml
+# docker-compose.yml
+version: '3.8'
+services:
+  arf-rt:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/app
+      - arf-rt-data:/data
+    environment:
+      - ARF_LOG_LEVEL=DEBUG
+      - ARF_SAFE_MODE=1
+    ports:
+      - "8080:8080"
+    command: arf-rt analyze scenario.json --format both
+
+volumes:
+  arf-rt-data:
+```
+
+```bash
+# Start development environment
+docker-compose up -d
+
+# View logs
+docker-compose logs -f arf-rt
+
+# Run analysis
+docker-compose exec arf-rt arf-rt analyze scenario.json --format both
+```
+
+### Configuration Management
+
+#### Environment-Based Configuration
+```python
+# config/production.py
+from arf_rt.temporal import TemporalConfig
+
+config = TemporalConfig.balanced().with_overrides(
+    max_path_length=10,
+    stale_credential_days=90,
+    max_concurrent_sessions=5,
+    credential_reuse_window_seconds=3600,
+)
+
+# config/staging.py
+from arf_rt.temporal import TemporalConfig
+
+config = TemporalConfig.balanced().with_overrides(
+    max_path_length=5,
+    stale_credential_days=30,
+    max_concurrent_sessions=2,
+)
+
+# config/development.py
+from arf_rt.temporal import TemporalConfig
+
+config = TemporalConfig.permissive().with_overrides(
+    max_path_length=5,
+    stale_credential_days=7,
+)
+```
+
+#### Configuration Files
+```yaml
+# config/production.yaml
+profile: production
+q8_precision: 8
+max_path_depth: 6
+top_k_paths: 5
+safe_replay_mode: true
+max_path_length: 10
+stale_credential_days: 90
+max_concurrent_sessions: 5
+credential_reuse_window_seconds: 3600
+```
+
+```bash
+# Load configuration
+arf-rt analyze scenario.json --config config/production.yaml
+
+# Or set via environment
+export ARF_PROFILE=production
+export ARF_MAX_DEPTH=10
+export ARF_TOP_K=5
+arf-rt analyze scenario.json
+```
+
+### CI/CD Pipeline
+
+#### GitHub Actions
+```yaml
+# .github/workflows/ci.yml
+name: CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+      - name: Lint
+        run: python scripts/lint_check.py
+      - name: Validate fixtures
+        run: python scripts/validate_fixtures.py --strict
+      - name: Unit tests
+        run: pytest tests/unit tests/golden -q
+      - name: Property-based tests
+        run: pytest tests/research/test_rdce_property_based.py -v
+      - name: Security scan
+        run: |
+          pip install bandit safety
+          bandit -r arf_rt/
+          safety check
+
+  benchmark:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run benchmarks
+        run: |
+          pip install -e ".[dev]"
+          python scripts/benchmark.py --runs 5 --output benchmark.json
+      - name: Compare with baseline
+        run: |
+          python scripts/compare_benchmarks.py baseline.json current.json --threshold 0.05
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker build -f Dockerfile.prod -t arf-rt:${{ github.sha }} .
+      - name: Push to registry
+        run: |
+          echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker tag arf-rt:${{ github.sha }} ghcr.io/${{ github.repository }}:${{ github.sha }}
+          docker push ghcr.io/${{ github.repository }}:${{ github.sha }}
+```
+
+### Monitoring & Alerting
+
+#### Prometheus Metrics
+```python
+# metrics.py
+from prometheus_client import Counter, Histogram, Gauge, start_http_server
+
+TEMPORAL_EVALUATIONS = Counter('arf_rt_temporal_evaluations_total', 'Total evaluations', ['verdict'])
+TEMPORAL_LATENCY = Histogram('arf_rt_temporal_latency_seconds', 'Evaluation latency')
+TEMPORAL_PATH_LENGTH = Histogram('arf_rt_temporal_path_length', 'Path length distribution')
+TEMPORAL_ELIMINATION_RATE = Gauge('arf_rt_temporal_elimination_rate', 'Current elimination rate')
+
+# In evaluation loop
+TEMPORAL_EVALUATIONS.labels(verdict=verdict.kind.value).inc()
+TEMPORAL_LATENCY.observe(evaluator.stats.evaluation_time_ms / 1000)
+TEMPORAL_PATH_LENGTH.observe(len(path_edges))
+TEMPORAL_ELIMINATION_RATE.set(metrics.elimination_rate)
+
+# Start metrics server
+start_http_server(9090)
+```
+
+#### Prometheus Configuration
+```yaml
+# prometheus.yml
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'arf-rt'
+    static_configs:
+      - targets: ['arf-rt:9090']
+```
+
+#### Grafana Dashboard Panels
+```json
+{
+  "panels": [
+    {
+      "title": "Evaluations/sec",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(arf_rt_temporal_evaluations_total[5m])",
+          "legendFormat": "{{verdict}}"
+        }
+      ]
+    },
+    {
+      "title": "Latency p50/p95/p99",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.5, rate(arf_rt_temporal_latency_seconds_bucket[5m]))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m]))",
+          "legendFormat": "p95"
+        },
+        {
+          "expr": "histogram_quantile(0.99, rate(arf_rt_temporal_latency_seconds_bucket[5m]))",
+          "legendFormat": "p99"
+        }
+      ]
+    },
+    {
+      "title": "Elimination Rate",
+      "type": "gauge",
+      "targets": [
+        {
+          "expr": "arf_rt_temporal_elimination_rate",
+          "legendFormat": "Elimination Rate"
+        }
+      ]
+    },
+    {
+      "title": "Verdict Breakdown",
+      "type": "piechart",
+      "targets": [
+        {
+          "expr": "sum by (verdict) (rate(arf_rt_temporal_evaluations_total[5m]))",
+          "legendFormat": "{{verdict}}"
+        }
+      ]
+    }
+  ]
+}
+```
+
+#### Alerting Rules
+```yaml
+groups:
+- name: arf-rt-temporal
+  rules:
+  - alert: HighInfeasibleRate
+    expr: arf_rt_temporal_elimination_rate > 0.8
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High temporal infeasible rate detected"
+      
+  - alert: EvaluationLatencyHigh
+    expr: histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m])) > 10
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Temporal evaluation latency > 10s"
+
+  - alert: UnknownRateSpike
+    expr: rate(arf_rt_temporal_evaluations_total{verdict="UNKNOWN"}[5m]) > 0.5
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High UNKNOWN verdict rate - missing temporal data"
+```
+
+### Backup & Disaster Recovery
+
+#### Database Backup
+```bash
+#!/bin/bash
+# backup.sh - Daily database backup
+
+BACKUP_DIR="/backups/arf-rt"
+DATE=$(date +%Y%m%d_%H%M%S)
+DB_PATH="/data/arf_rt.db"
+BACKUP_FILE="${BACKUP_DIR}/arf_rt_${DATE}.db"
+
+# Create backup directory
+mkdir -p ${BACKUP_DIR}
+
+# Create backup using SQLite backup API
+sqlite3 ${DB_PATH} ".backup ${BACKUP_FILE}"
+
+# Compress backup
+gzip ${BACKUP_FILE}
+
+# Upload to S3 (optional)
+aws s3 cp ${BACKUP_FILE}.gz s3://my-bucket/arf-rt-backups/
+
+# Cleanup old backups (keep 30 days)
+find ${BACKUP_DIR} -name "*.db.gz" -mtime +30 -delete
+```
+
+```bash
+# Schedule daily backup
+# crontab -e
+# 0 2 * * * /path/to/backup.sh >> /var/log/arf-rt-backup.log 2>&1
+```
+
+#### Disaster Recovery
+```bash
+#!/bin/bash
+# restore.sh - Restore from backup
+
+BACKUP_FILE=$1
+DB_PATH="/data/arf_rt.db"
+
+if [ -z "$BACKUP_FILE" ]; then
+    echo "Usage: $0 <backup_file>"
+    exit 1
+fi
+
+# Stop service
+systemctl stop arf-rt
+
+# Restore database
+gunzip -c ${BACKUP_FILE} > /data/arf_rt.db
+
+# Verify integrity
+sqlite3 /data/arf_rt.db "PRAGMA integrity_check;"
+
+# Restart service
+systemctl start arf-rt
+
+echo "Restore complete"
+```
+
+### Health Checks
+
+#### Liveness Probe
+```yaml
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+```
+
+#### Readiness Probe
+```yaml
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+```
+
+#### Health Check Endpoint
+```python
+# In arf_rt/cli.py or separate health module
+from fastapi import FastAPI
+from arf_rt.storage import SQLiteStore
+
+app = FastAPI()
+
+@app.get("/health")
+async def health():
+    return {"status": "healthy", "version": "0.9.1"}
+
+@app.get("/ready")
+async def ready():
+    try:
+        store = SQLiteStore("/data/arf_rt.db")
+        store.health_check()
+        return {"status": "ready"}
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=str(e))
+```
+
+### Rollback Procedure
+
+```bash
+#!/bin/bash
+# rollback.sh - Rollback to previous version
+
+PREVIOUS_VERSION=$1
+
+if [ -z "$PREVIOUS_VERSION" ]; then
+    echo "Usage: $0 <previous_version_tag>"
+    exit 1
+fi
+
+# Rollback Kubernetes deployment
+kubectl rollout undo deployment/arf-rt --to-revision=${PREVIOUS_VERSION}
+
+# Wait for rollback
+kubectl rollout status deployment/arf-rt
+
+# Verify
+kubectl get pods -l app=arf-rt
+```
+
+---
+
+*Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
 ---
 
