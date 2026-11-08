@@ -2552,6 +2552,334 @@ If you use ARF-RT or its temporal extensions in academic work, please cite:
 
 ---
 
+## Best Practices (v0.9.1)
+
+### Configuration Best Practices
+
+#### Use Balanced Preset for Production
+```python
+# Recommended for most production use cases
+config = TemporalConfig.balanced()
+```
+
+#### Explicit Configuration Over Defaults
+```python
+# Good: Explicit configuration
+config = TemporalConfig(
+    min_hop_delta_seconds=0.5,
+    stale_credential_days=90,
+    max_path_length=10,
+    max_concurrent_sessions=5,
+)
+
+# Avoid: Implicit defaults (deprecated)
+config = TemporalConfig()  # Logs deprecation warning
+```
+
+#### Use Environment-Specific Overrides
+```python
+from arf_rt.util import load_profile_auto
+from arf_rt.temporal import TemporalConfig
+
+profile = load_profile_auto("config/production.yaml")
+config = TemporalConfig.balanced().with_overrides(
+    max_path_length=10 if profile.env == "prod" else 5,
+    stale_credential_days=30 if profile.env == "prod" else 7,
+)
+```
+
+#### Validate Configuration
+```python
+warnings = config.validate()
+if warnings:
+    for w in warnings:
+        logging.warning(f"Config warning: {w}")
+```
+
+### Temporal Evaluation Best Practices
+
+#### Enable Statistics for Debugging
+```python
+evaluator = TemporalEvaluator(config=config, enable_stats=True)
+verdict = evaluator.evaluate(path_edges, hints)
+
+# Access detailed statistics
+stats = evaluator.stats
+print(f"Constraints evaluated: {stats.constraints_evaluated}")
+print(f"Passed: {stats.constraints_passed}, Failed: {stats.constraints_failed}")
+print(f"Evaluation time: {stats.evaluation_time_ms:.2f}ms")
+```
+
+#### Use Extended Metrics for Analysis
+```python
+from arf_rt.temporal import TemporalMetricsExtended
+
+metrics = TemporalMetricsExtended()
+verdict = evaluator.evaluate_with_metrics(path_edges, hints, metrics)
+
+# Access percentile data
+print(f"Median path length: {metrics.median_path_length}")
+print(f"P95 path length: {metrics.p95_path_length}")
+print(f"Mean latency: {metrics.mean_latency_ms:.2f}ms")
+```
+
+#### Handle UNKNOWN Verdicts Appropriately
+```python
+verdict = evaluator.evaluate(path_edges, hints)
+
+if verdict.is_unknown():
+    missing = verdict.missing_data_constraints
+    # Log missing data for debugging
+    logging.warning(f"Missing temporal data for constraints: {missing}")
+    # Decide: treat as INFEASIBLE or investigate further
+elif verdict.is_infeasible():
+    logging.warning(f"Path infeasible due to {verdict.violated_constraint}: {verdict.reason}")
+```
+
+### Performance Best Practices
+
+#### Choose Appropriate Configuration for Workload
+```python
+# High-throughput (trade accuracy for speed)
+config = TemporalConfig.permissive()
+config.max_path_length = 5
+
+# Balanced (recommended)
+config = TemporalConfig.balanced()
+
+# Maximum accuracy
+config = TemporalConfig.strict()
+config.max_path_length = 15
+```
+
+#### Use Batch Processing for Multiple Scenarios
+```python
+from concurrent.futures import ProcessPoolExecutor
+from arf_rt.temporal import PathFeasibilityBatchRunner
+
+config = TemporalConfig.balanced()
+runner = PathFeasibilityBatchRunner(config=config)
+
+# Optimal worker count = CPU cores - 1
+with ProcessPoolExecutor(max_workers=os.cpu_count() - 1) as executor:
+    for batch in chunked(scenarios, 50):
+        executor.submit(runner.run_batch, batch)
+```
+
+#### Optimize Memory Usage
+```python
+# Disable stats if not needed
+evaluator = TemporalEvaluator(config=config, enable_stats=False)
+
+# Use base TemporalMetrics instead of Extended
+from arf_rt.temporal import TemporalMetrics
+metrics = TemporalMetrics()  # Not TemporalMetricsExtended
+
+# Clear caches periodically
+import gc
+gc.collect()
+```
+
+#### Database Optimization
+```python
+# SQLite PRAGMA settings for performance
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;
+PRAGMA cache_size = -32768;  # 32MB cache
+PRAGMA temp_store = MEMORY;
+PRAGMA mmap_size = 268435456;  # 256MB mmap
+```
+
+#### Caching Strategies
+```python
+from functools import lru_cache
+
+@lru_cache(maxsize=1024)
+def cached_temporal_eval(path_tuple, hints_frozen):
+    """Cache temporal evaluation results."""
+    return evaluator.evaluate(list(path_tuple), dict(hints_frozen))
+
+# Warm cache with common paths
+common_paths = get_common_attack_paths(scenario)
+for path in common_paths:
+    cached_temporal_eval(tuple(path), frozenset(hints.items()))
+```
+
+### Temporal Hint Best Practices
+
+#### Provide Complete Temporal Data
+```python
+# Good: Complete temporal data
+hint = TemporalHint(
+    edge_id="e1",
+    earliest_observed=datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
+    latest_observed=datetime(2026, 1, 1, 12, 0, 5, tzinfo=timezone.utc),
+    credential_issued=datetime(2026, 1, 1, 11, 0, 0, tzinfo=timezone.utc),
+    credential_expiry=datetime(2026, 1, 1, 13, 0, 0, tzinfo=timezone.utc),
+    last_used=datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
+)
+
+# Avoid: Incomplete data (leads to UNKNOWN verdicts)
+hint = TemporalHint(edge_id="e1")  # Missing all temporal data
+```
+
+#### Use UTC Timestamps
+```python
+from datetime import datetime, timezone
+
+# Good: Explicit UTC
+dt = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+
+# Avoid: Naive datetimes (assumed UTC but ambiguous)
+dt = datetime(2026, 1, 1, 12, 0, 0)  # No timezone info
+```
+
+#### Parse ISO 8601 Correctly
+```python
+from arf_rt.util import parse_iso8601
+
+# Handles various formats automatically
+dt = parse_iso8601("2026-01-01T12:00:00.000Z")
+dt = parse_iso8601("2026-01-01T12:00:00+00:00")
+dt = parse_iso8601("2026-01-01T12:00:00-05:00")
+```
+
+### Security Best Practices
+
+#### Never Store Credentials
+```python
+# ARF-RT processes ARNs and metadata only
+# No credentials, emails, or personal data are ever stored
+
+# For sharing scenarios, anonymize first
+python scripts/validate_fixtures.py --anonymize scenario.json --output scenario_anon.json
+```
+
+#### Use Local-First Processing
+```bash
+# ARF-RT runs locally; no telemetry, no cloud uploads
+arf-rt analyze scenario.json --format both --output results/
+```
+
+#### Secure Deployment
+```yaml
+# Kubernetes resource limits
+resources:
+  requests:
+    memory: "2Gi"
+    cpu: "1000m"
+  limits:
+    memory: "4Gi"
+    cpu: "2000m"
+
+# Network policies - restrict egress
+# Only allow necessary outbound connections
+```
+
+#### Audit Trail
+```python
+# All probe executions logged to call_log with full context
+# JSONL format for easy parsing and compliance evidence retention
+```
+
+### Testing Best Practices
+
+#### Run Tests Regularly
+```bash
+# Fast feedback loop (unit only)
+pytest tests/unit/ -q
+
+# Full validation (CI pipeline)
+pytest tests/unit tests/golden -q
+
+# Property-based tests (comprehensive)
+pytest tests/research/test_rdce_property_based.py -v
+
+# Research validation
+pytest tests/research/ -v --tb=short
+
+# With coverage
+pytest tests/unit tests/golden --cov=arf_rt --cov-report=term-missing
+```
+
+#### Validate Fixtures
+```bash
+# Strict validation before committing
+python scripts/validate_fixtures.py --strict
+
+# Anonymize for sharing
+python scripts/validate_fixtures.py --anonymize scenario.json --output scenario_anon.json
+```
+
+#### Run Benchmarks
+```bash
+# Standard benchmark suite
+python scripts/benchmark.py --runs 10 --output benchmark.json
+
+# Regression detection
+python scripts/compare_benchmarks.py baseline.json candidate.json --threshold 0.05
+
+# Profile specific scenario
+python scripts/profile_scenario.py scenario.json
+```
+
+### Monitoring & Observability
+
+#### Collect Metrics
+```python
+from arf_rt.temporal import TemporalEvaluator, TemporalMetricsExtended
+
+evaluator = TemporalEvaluator(enable_stats=True)
+metrics = TemporalMetricsExtended()
+
+verdict = evaluator.evaluate_with_metrics(path_edges, hints, metrics)
+
+# Log key metrics
+logging.info(f"Evaluation: {metrics.to_dict()}")
+logging.info(f"Latency: {metrics.mean_latency_ms:.2f}ms")
+```
+
+#### Export to Prometheus
+```python
+from prometheus_client import Counter, Histogram, Gauge
+
+TEMPORAL_EVALUATIONS = Counter('arf_rt_temporal_evaluations_total', 'Total evaluations', ['verdict'])
+TEMPORAL_LATENCY = Histogram('arf_rt_temporal_latency_seconds', 'Evaluation latency')
+
+TEMPORAL_EVALUATIONS.labels(verdict=verdict.kind.value).inc()
+TEMPORAL_LATENCY.observe(evaluator.stats.evaluation_time_ms / 1000)
+```
+
+#### Set Up Alerts
+```yaml
+groups:
+- name: arf-rt-temporal
+  rules:
+  - alert: HighInfeasibleRate
+    expr: arf_rt_temporal_elimination_rate > 0.8
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High temporal infeasible rate detected"
+      
+  - alert: EvaluationLatencyHigh
+    expr: histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m])) > 10
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Temporal evaluation latency > 10s"
+```
+
+---
+
+*Last updated: November 7, 2026 — v0.9.1 documentation refresh*
+
+---
+
+---
+
 ## Frequently Asked Questions (v0.9.1)
 
 ### General Questions
@@ -3490,6 +3818,334 @@ async with RetryContext(max_attempts=3) as ctx:
 
 *Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
+
+---
+
+---
+
+## Best Practices (v0.9.1)
+
+### Configuration Best Practices
+
+#### Use Balanced Preset for Production
+```python
+# Recommended for most production use cases
+config = TemporalConfig.balanced()
+```
+
+#### Explicit Configuration Over Defaults
+```python
+# Good: Explicit configuration
+config = TemporalConfig(
+    min_hop_delta_seconds=0.5,
+    stale_credential_days=90,
+    max_path_length=10,
+    max_concurrent_sessions=5,
+)
+
+# Avoid: Implicit defaults (deprecated)
+config = TemporalConfig()  # Logs deprecation warning
+```
+
+#### Use Environment-Specific Overrides
+```python
+from arf_rt.util import load_profile_auto
+from arf_rt.temporal import TemporalConfig
+
+profile = load_profile_auto("config/production.yaml")
+config = TemporalConfig.balanced().with_overrides(
+    max_path_length=10 if profile.env == "prod" else 5,
+    stale_credential_days=30 if profile.env == "prod" else 7,
+)
+```
+
+#### Validate Configuration
+```python
+warnings = config.validate()
+if warnings:
+    for w in warnings:
+        logging.warning(f"Config warning: {w}")
+```
+
+### Temporal Evaluation Best Practices
+
+#### Enable Statistics for Debugging
+```python
+evaluator = TemporalEvaluator(config=config, enable_stats=True)
+verdict = evaluator.evaluate(path_edges, hints)
+
+# Access detailed statistics
+stats = evaluator.stats
+print(f"Constraints evaluated: {stats.constraints_evaluated}")
+print(f"Passed: {stats.constraints_passed}, Failed: {stats.constraints_failed}")
+print(f"Evaluation time: {stats.evaluation_time_ms:.2f}ms")
+```
+
+#### Use Extended Metrics for Analysis
+```python
+from arf_rt.temporal import TemporalMetricsExtended
+
+metrics = TemporalMetricsExtended()
+verdict = evaluator.evaluate_with_metrics(path_edges, hints, metrics)
+
+# Access percentile data
+print(f"Median path length: {metrics.median_path_length}")
+print(f"P95 path length: {metrics.p95_path_length}")
+print(f"Mean latency: {metrics.mean_latency_ms:.2f}ms")
+```
+
+#### Handle UNKNOWN Verdicts Appropriately
+```python
+verdict = evaluator.evaluate(path_edges, hints)
+
+if verdict.is_unknown():
+    missing = verdict.missing_data_constraints
+    # Log missing data for debugging
+    logging.warning(f"Missing temporal data for constraints: {missing}")
+    # Decide: treat as INFEASIBLE or investigate further
+elif verdict.is_infeasible():
+    logging.warning(f"Path infeasible due to {verdict.violated_constraint}: {verdict.reason}")
+```
+
+### Performance Best Practices
+
+#### Choose Appropriate Configuration for Workload
+```python
+# High-throughput (trade accuracy for speed)
+config = TemporalConfig.permissive()
+config.max_path_length = 5
+
+# Balanced (recommended)
+config = TemporalConfig.balanced()
+
+# Maximum accuracy
+config = TemporalConfig.strict()
+config.max_path_length = 15
+```
+
+#### Use Batch Processing for Multiple Scenarios
+```python
+from concurrent.futures import ProcessPoolExecutor
+from arf_rt.temporal import PathFeasibilityBatchRunner
+
+config = TemporalConfig.balanced()
+runner = PathFeasibilityBatchRunner(config=config)
+
+# Optimal worker count = CPU cores - 1
+with ProcessPoolExecutor(max_workers=os.cpu_count() - 1) as executor:
+    for batch in chunked(scenarios, 50):
+        executor.submit(runner.run_batch, batch)
+```
+
+#### Optimize Memory Usage
+```python
+# Disable stats if not needed
+evaluator = TemporalEvaluator(config=config, enable_stats=False)
+
+# Use base TemporalMetrics instead of Extended
+from arf_rt.temporal import TemporalMetrics
+metrics = TemporalMetrics()  # Not TemporalMetricsExtended
+
+# Clear caches periodically
+import gc
+gc.collect()
+```
+
+#### Database Optimization
+```python
+# SQLite PRAGMA settings for performance
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;
+PRAGMA cache_size = -32768;  # 32MB cache
+PRAGMA temp_store = MEMORY;
+PRAGMA mmap_size = 268435456;  # 256MB mmap
+```
+
+#### Caching Strategies
+```python
+from functools import lru_cache
+
+@lru_cache(maxsize=1024)
+def cached_temporal_eval(path_tuple, hints_frozen):
+    """Cache temporal evaluation results."""
+    return evaluator.evaluate(list(path_tuple), dict(hints_frozen))
+
+# Warm cache with common paths
+common_paths = get_common_attack_paths(scenario)
+for path in common_paths:
+    cached_temporal_eval(tuple(path), frozenset(hints.items()))
+```
+
+### Temporal Hint Best Practices
+
+#### Provide Complete Temporal Data
+```python
+# Good: Complete temporal data
+hint = TemporalHint(
+    edge_id="e1",
+    earliest_observed=datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
+    latest_observed=datetime(2026, 1, 1, 12, 0, 5, tzinfo=timezone.utc),
+    credential_issued=datetime(2026, 1, 1, 11, 0, 0, tzinfo=timezone.utc),
+    credential_expiry=datetime(2026, 1, 1, 13, 0, 0, tzinfo=timezone.utc),
+    last_used=datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
+)
+
+# Avoid: Incomplete data (leads to UNKNOWN verdicts)
+hint = TemporalHint(edge_id="e1")  # Missing all temporal data
+```
+
+#### Use UTC Timestamps
+```python
+from datetime import datetime, timezone
+
+# Good: Explicit UTC
+dt = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+
+# Avoid: Naive datetimes (assumed UTC but ambiguous)
+dt = datetime(2026, 1, 1, 12, 0, 0)  # No timezone info
+```
+
+#### Parse ISO 8601 Correctly
+```python
+from arf_rt.util import parse_iso8601
+
+# Handles various formats automatically
+dt = parse_iso8601("2026-01-01T12:00:00.000Z")
+dt = parse_iso8601("2026-01-01T12:00:00+00:00")
+dt = parse_iso8601("2026-01-01T12:00:00-05:00")
+```
+
+### Security Best Practices
+
+#### Never Store Credentials
+```python
+# ARF-RT processes ARNs and metadata only
+# No credentials, emails, or personal data are ever stored
+
+# For sharing scenarios, anonymize first
+python scripts/validate_fixtures.py --anonymize scenario.json --output scenario_anon.json
+```
+
+#### Use Local-First Processing
+```bash
+# ARF-RT runs locally; no telemetry, no cloud uploads
+arf-rt analyze scenario.json --format both --output results/
+```
+
+#### Secure Deployment
+```yaml
+# Kubernetes resource limits
+resources:
+  requests:
+    memory: "2Gi"
+    cpu: "1000m"
+  limits:
+    memory: "4Gi"
+    cpu: "2000m"
+
+# Network policies - restrict egress
+# Only allow necessary outbound connections
+```
+
+#### Audit Trail
+```python
+# All probe executions logged to call_log with full context
+# JSONL format for easy parsing and compliance evidence retention
+```
+
+### Testing Best Practices
+
+#### Run Tests Regularly
+```bash
+# Fast feedback loop (unit only)
+pytest tests/unit/ -q
+
+# Full validation (CI pipeline)
+pytest tests/unit tests/golden -q
+
+# Property-based tests (comprehensive)
+pytest tests/research/test_rdce_property_based.py -v
+
+# Research validation
+pytest tests/research/ -v --tb=short
+
+# With coverage
+pytest tests/unit tests/golden --cov=arf_rt --cov-report=term-missing
+```
+
+#### Validate Fixtures
+```bash
+# Strict validation before committing
+python scripts/validate_fixtures.py --strict
+
+# Anonymize for sharing
+python scripts/validate_fixtures.py --anonymize scenario.json --output scenario_anon.json
+```
+
+#### Run Benchmarks
+```bash
+# Standard benchmark suite
+python scripts/benchmark.py --runs 10 --output benchmark.json
+
+# Regression detection
+python scripts/compare_benchmarks.py baseline.json candidate.json --threshold 0.05
+
+# Profile specific scenario
+python scripts/profile_scenario.py scenario.json
+```
+
+### Monitoring & Observability
+
+#### Collect Metrics
+```python
+from arf_rt.temporal import TemporalEvaluator, TemporalMetricsExtended
+
+evaluator = TemporalEvaluator(enable_stats=True)
+metrics = TemporalMetricsExtended()
+
+verdict = evaluator.evaluate_with_metrics(path_edges, hints, metrics)
+
+# Log key metrics
+logging.info(f"Evaluation: {metrics.to_dict()}")
+logging.info(f"Latency: {metrics.mean_latency_ms:.2f}ms")
+```
+
+#### Export to Prometheus
+```python
+from prometheus_client import Counter, Histogram, Gauge
+
+TEMPORAL_EVALUATIONS = Counter('arf_rt_temporal_evaluations_total', 'Total evaluations', ['verdict'])
+TEMPORAL_LATENCY = Histogram('arf_rt_temporal_latency_seconds', 'Evaluation latency')
+
+TEMPORAL_EVALUATIONS.labels(verdict=verdict.kind.value).inc()
+TEMPORAL_LATENCY.observe(evaluator.stats.evaluation_time_ms / 1000)
+```
+
+#### Set Up Alerts
+```yaml
+groups:
+- name: arf-rt-temporal
+  rules:
+  - alert: HighInfeasibleRate
+    expr: arf_rt_temporal_elimination_rate > 0.8
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High temporal infeasible rate detected"
+      
+  - alert: EvaluationLatencyHigh
+    expr: histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m])) > 10
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Temporal evaluation latency > 10s"
+```
+
+---
+
+*Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
 ---
 
@@ -4611,6 +5267,334 @@ resources:
 
 ---
 
+## Best Practices (v0.9.1)
+
+### Configuration Best Practices
+
+#### Use Balanced Preset for Production
+```python
+# Recommended for most production use cases
+config = TemporalConfig.balanced()
+```
+
+#### Explicit Configuration Over Defaults
+```python
+# Good: Explicit configuration
+config = TemporalConfig(
+    min_hop_delta_seconds=0.5,
+    stale_credential_days=90,
+    max_path_length=10,
+    max_concurrent_sessions=5,
+)
+
+# Avoid: Implicit defaults (deprecated)
+config = TemporalConfig()  # Logs deprecation warning
+```
+
+#### Use Environment-Specific Overrides
+```python
+from arf_rt.util import load_profile_auto
+from arf_rt.temporal import TemporalConfig
+
+profile = load_profile_auto("config/production.yaml")
+config = TemporalConfig.balanced().with_overrides(
+    max_path_length=10 if profile.env == "prod" else 5,
+    stale_credential_days=30 if profile.env == "prod" else 7,
+)
+```
+
+#### Validate Configuration
+```python
+warnings = config.validate()
+if warnings:
+    for w in warnings:
+        logging.warning(f"Config warning: {w}")
+```
+
+### Temporal Evaluation Best Practices
+
+#### Enable Statistics for Debugging
+```python
+evaluator = TemporalEvaluator(config=config, enable_stats=True)
+verdict = evaluator.evaluate(path_edges, hints)
+
+# Access detailed statistics
+stats = evaluator.stats
+print(f"Constraints evaluated: {stats.constraints_evaluated}")
+print(f"Passed: {stats.constraints_passed}, Failed: {stats.constraints_failed}")
+print(f"Evaluation time: {stats.evaluation_time_ms:.2f}ms")
+```
+
+#### Use Extended Metrics for Analysis
+```python
+from arf_rt.temporal import TemporalMetricsExtended
+
+metrics = TemporalMetricsExtended()
+verdict = evaluator.evaluate_with_metrics(path_edges, hints, metrics)
+
+# Access percentile data
+print(f"Median path length: {metrics.median_path_length}")
+print(f"P95 path length: {metrics.p95_path_length}")
+print(f"Mean latency: {metrics.mean_latency_ms:.2f}ms")
+```
+
+#### Handle UNKNOWN Verdicts Appropriately
+```python
+verdict = evaluator.evaluate(path_edges, hints)
+
+if verdict.is_unknown():
+    missing = verdict.missing_data_constraints
+    # Log missing data for debugging
+    logging.warning(f"Missing temporal data for constraints: {missing}")
+    # Decide: treat as INFEASIBLE or investigate further
+elif verdict.is_infeasible():
+    logging.warning(f"Path infeasible due to {verdict.violated_constraint}: {verdict.reason}")
+```
+
+### Performance Best Practices
+
+#### Choose Appropriate Configuration for Workload
+```python
+# High-throughput (trade accuracy for speed)
+config = TemporalConfig.permissive()
+config.max_path_length = 5
+
+# Balanced (recommended)
+config = TemporalConfig.balanced()
+
+# Maximum accuracy
+config = TemporalConfig.strict()
+config.max_path_length = 15
+```
+
+#### Use Batch Processing for Multiple Scenarios
+```python
+from concurrent.futures import ProcessPoolExecutor
+from arf_rt.temporal import PathFeasibilityBatchRunner
+
+config = TemporalConfig.balanced()
+runner = PathFeasibilityBatchRunner(config=config)
+
+# Optimal worker count = CPU cores - 1
+with ProcessPoolExecutor(max_workers=os.cpu_count() - 1) as executor:
+    for batch in chunked(scenarios, 50):
+        executor.submit(runner.run_batch, batch)
+```
+
+#### Optimize Memory Usage
+```python
+# Disable stats if not needed
+evaluator = TemporalEvaluator(config=config, enable_stats=False)
+
+# Use base TemporalMetrics instead of Extended
+from arf_rt.temporal import TemporalMetrics
+metrics = TemporalMetrics()  # Not TemporalMetricsExtended
+
+# Clear caches periodically
+import gc
+gc.collect()
+```
+
+#### Database Optimization
+```python
+# SQLite PRAGMA settings for performance
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;
+PRAGMA cache_size = -32768;  # 32MB cache
+PRAGMA temp_store = MEMORY;
+PRAGMA mmap_size = 268435456;  # 256MB mmap
+```
+
+#### Caching Strategies
+```python
+from functools import lru_cache
+
+@lru_cache(maxsize=1024)
+def cached_temporal_eval(path_tuple, hints_frozen):
+    """Cache temporal evaluation results."""
+    return evaluator.evaluate(list(path_tuple), dict(hints_frozen))
+
+# Warm cache with common paths
+common_paths = get_common_attack_paths(scenario)
+for path in common_paths:
+    cached_temporal_eval(tuple(path), frozenset(hints.items()))
+```
+
+### Temporal Hint Best Practices
+
+#### Provide Complete Temporal Data
+```python
+# Good: Complete temporal data
+hint = TemporalHint(
+    edge_id="e1",
+    earliest_observed=datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
+    latest_observed=datetime(2026, 1, 1, 12, 0, 5, tzinfo=timezone.utc),
+    credential_issued=datetime(2026, 1, 1, 11, 0, 0, tzinfo=timezone.utc),
+    credential_expiry=datetime(2026, 1, 1, 13, 0, 0, tzinfo=timezone.utc),
+    last_used=datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
+)
+
+# Avoid: Incomplete data (leads to UNKNOWN verdicts)
+hint = TemporalHint(edge_id="e1")  # Missing all temporal data
+```
+
+#### Use UTC Timestamps
+```python
+from datetime import datetime, timezone
+
+# Good: Explicit UTC
+dt = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+
+# Avoid: Naive datetimes (assumed UTC but ambiguous)
+dt = datetime(2026, 1, 1, 12, 0, 0)  # No timezone info
+```
+
+#### Parse ISO 8601 Correctly
+```python
+from arf_rt.util import parse_iso8601
+
+# Handles various formats automatically
+dt = parse_iso8601("2026-01-01T12:00:00.000Z")
+dt = parse_iso8601("2026-01-01T12:00:00+00:00")
+dt = parse_iso8601("2026-01-01T12:00:00-05:00")
+```
+
+### Security Best Practices
+
+#### Never Store Credentials
+```python
+# ARF-RT processes ARNs and metadata only
+# No credentials, emails, or personal data are ever stored
+
+# For sharing scenarios, anonymize first
+python scripts/validate_fixtures.py --anonymize scenario.json --output scenario_anon.json
+```
+
+#### Use Local-First Processing
+```bash
+# ARF-RT runs locally; no telemetry, no cloud uploads
+arf-rt analyze scenario.json --format both --output results/
+```
+
+#### Secure Deployment
+```yaml
+# Kubernetes resource limits
+resources:
+  requests:
+    memory: "2Gi"
+    cpu: "1000m"
+  limits:
+    memory: "4Gi"
+    cpu: "2000m"
+
+# Network policies - restrict egress
+# Only allow necessary outbound connections
+```
+
+#### Audit Trail
+```python
+# All probe executions logged to call_log with full context
+# JSONL format for easy parsing and compliance evidence retention
+```
+
+### Testing Best Practices
+
+#### Run Tests Regularly
+```bash
+# Fast feedback loop (unit only)
+pytest tests/unit/ -q
+
+# Full validation (CI pipeline)
+pytest tests/unit tests/golden -q
+
+# Property-based tests (comprehensive)
+pytest tests/research/test_rdce_property_based.py -v
+
+# Research validation
+pytest tests/research/ -v --tb=short
+
+# With coverage
+pytest tests/unit tests/golden --cov=arf_rt --cov-report=term-missing
+```
+
+#### Validate Fixtures
+```bash
+# Strict validation before committing
+python scripts/validate_fixtures.py --strict
+
+# Anonymize for sharing
+python scripts/validate_fixtures.py --anonymize scenario.json --output scenario_anon.json
+```
+
+#### Run Benchmarks
+```bash
+# Standard benchmark suite
+python scripts/benchmark.py --runs 10 --output benchmark.json
+
+# Regression detection
+python scripts/compare_benchmarks.py baseline.json candidate.json --threshold 0.05
+
+# Profile specific scenario
+python scripts/profile_scenario.py scenario.json
+```
+
+### Monitoring & Observability
+
+#### Collect Metrics
+```python
+from arf_rt.temporal import TemporalEvaluator, TemporalMetricsExtended
+
+evaluator = TemporalEvaluator(enable_stats=True)
+metrics = TemporalMetricsExtended()
+
+verdict = evaluator.evaluate_with_metrics(path_edges, hints, metrics)
+
+# Log key metrics
+logging.info(f"Evaluation: {metrics.to_dict()}")
+logging.info(f"Latency: {metrics.mean_latency_ms:.2f}ms")
+```
+
+#### Export to Prometheus
+```python
+from prometheus_client import Counter, Histogram, Gauge
+
+TEMPORAL_EVALUATIONS = Counter('arf_rt_temporal_evaluations_total', 'Total evaluations', ['verdict'])
+TEMPORAL_LATENCY = Histogram('arf_rt_temporal_latency_seconds', 'Evaluation latency')
+
+TEMPORAL_EVALUATIONS.labels(verdict=verdict.kind.value).inc()
+TEMPORAL_LATENCY.observe(evaluator.stats.evaluation_time_ms / 1000)
+```
+
+#### Set Up Alerts
+```yaml
+groups:
+- name: arf-rt-temporal
+  rules:
+  - alert: HighInfeasibleRate
+    expr: arf_rt_temporal_elimination_rate > 0.8
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High temporal infeasible rate detected"
+      
+  - alert: EvaluationLatencyHigh
+    expr: histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m])) > 10
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Temporal evaluation latency > 10s"
+```
+
+---
+
+*Last updated: November 7, 2026 — v0.9.1 documentation refresh*
+
+---
+
+---
+
 ## Frequently Asked Questions (v0.9.1)
 
 ### General Questions
@@ -5549,6 +6533,334 @@ async with RetryContext(max_attempts=3) as ctx:
 
 *Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
+
+---
+
+---
+
+## Best Practices (v0.9.1)
+
+### Configuration Best Practices
+
+#### Use Balanced Preset for Production
+```python
+# Recommended for most production use cases
+config = TemporalConfig.balanced()
+```
+
+#### Explicit Configuration Over Defaults
+```python
+# Good: Explicit configuration
+config = TemporalConfig(
+    min_hop_delta_seconds=0.5,
+    stale_credential_days=90,
+    max_path_length=10,
+    max_concurrent_sessions=5,
+)
+
+# Avoid: Implicit defaults (deprecated)
+config = TemporalConfig()  # Logs deprecation warning
+```
+
+#### Use Environment-Specific Overrides
+```python
+from arf_rt.util import load_profile_auto
+from arf_rt.temporal import TemporalConfig
+
+profile = load_profile_auto("config/production.yaml")
+config = TemporalConfig.balanced().with_overrides(
+    max_path_length=10 if profile.env == "prod" else 5,
+    stale_credential_days=30 if profile.env == "prod" else 7,
+)
+```
+
+#### Validate Configuration
+```python
+warnings = config.validate()
+if warnings:
+    for w in warnings:
+        logging.warning(f"Config warning: {w}")
+```
+
+### Temporal Evaluation Best Practices
+
+#### Enable Statistics for Debugging
+```python
+evaluator = TemporalEvaluator(config=config, enable_stats=True)
+verdict = evaluator.evaluate(path_edges, hints)
+
+# Access detailed statistics
+stats = evaluator.stats
+print(f"Constraints evaluated: {stats.constraints_evaluated}")
+print(f"Passed: {stats.constraints_passed}, Failed: {stats.constraints_failed}")
+print(f"Evaluation time: {stats.evaluation_time_ms:.2f}ms")
+```
+
+#### Use Extended Metrics for Analysis
+```python
+from arf_rt.temporal import TemporalMetricsExtended
+
+metrics = TemporalMetricsExtended()
+verdict = evaluator.evaluate_with_metrics(path_edges, hints, metrics)
+
+# Access percentile data
+print(f"Median path length: {metrics.median_path_length}")
+print(f"P95 path length: {metrics.p95_path_length}")
+print(f"Mean latency: {metrics.mean_latency_ms:.2f}ms")
+```
+
+#### Handle UNKNOWN Verdicts Appropriately
+```python
+verdict = evaluator.evaluate(path_edges, hints)
+
+if verdict.is_unknown():
+    missing = verdict.missing_data_constraints
+    # Log missing data for debugging
+    logging.warning(f"Missing temporal data for constraints: {missing}")
+    # Decide: treat as INFEASIBLE or investigate further
+elif verdict.is_infeasible():
+    logging.warning(f"Path infeasible due to {verdict.violated_constraint}: {verdict.reason}")
+```
+
+### Performance Best Practices
+
+#### Choose Appropriate Configuration for Workload
+```python
+# High-throughput (trade accuracy for speed)
+config = TemporalConfig.permissive()
+config.max_path_length = 5
+
+# Balanced (recommended)
+config = TemporalConfig.balanced()
+
+# Maximum accuracy
+config = TemporalConfig.strict()
+config.max_path_length = 15
+```
+
+#### Use Batch Processing for Multiple Scenarios
+```python
+from concurrent.futures import ProcessPoolExecutor
+from arf_rt.temporal import PathFeasibilityBatchRunner
+
+config = TemporalConfig.balanced()
+runner = PathFeasibilityBatchRunner(config=config)
+
+# Optimal worker count = CPU cores - 1
+with ProcessPoolExecutor(max_workers=os.cpu_count() - 1) as executor:
+    for batch in chunked(scenarios, 50):
+        executor.submit(runner.run_batch, batch)
+```
+
+#### Optimize Memory Usage
+```python
+# Disable stats if not needed
+evaluator = TemporalEvaluator(config=config, enable_stats=False)
+
+# Use base TemporalMetrics instead of Extended
+from arf_rt.temporal import TemporalMetrics
+metrics = TemporalMetrics()  # Not TemporalMetricsExtended
+
+# Clear caches periodically
+import gc
+gc.collect()
+```
+
+#### Database Optimization
+```python
+# SQLite PRAGMA settings for performance
+PRAGMA journal_mode = WAL;
+PRAGMA synchronous = NORMAL;
+PRAGMA cache_size = -32768;  # 32MB cache
+PRAGMA temp_store = MEMORY;
+PRAGMA mmap_size = 268435456;  # 256MB mmap
+```
+
+#### Caching Strategies
+```python
+from functools import lru_cache
+
+@lru_cache(maxsize=1024)
+def cached_temporal_eval(path_tuple, hints_frozen):
+    """Cache temporal evaluation results."""
+    return evaluator.evaluate(list(path_tuple), dict(hints_frozen))
+
+# Warm cache with common paths
+common_paths = get_common_attack_paths(scenario)
+for path in common_paths:
+    cached_temporal_eval(tuple(path), frozenset(hints.items()))
+```
+
+### Temporal Hint Best Practices
+
+#### Provide Complete Temporal Data
+```python
+# Good: Complete temporal data
+hint = TemporalHint(
+    edge_id="e1",
+    earliest_observed=datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
+    latest_observed=datetime(2026, 1, 1, 12, 0, 5, tzinfo=timezone.utc),
+    credential_issued=datetime(2026, 1, 1, 11, 0, 0, tzinfo=timezone.utc),
+    credential_expiry=datetime(2026, 1, 1, 13, 0, 0, tzinfo=timezone.utc),
+    last_used=datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
+)
+
+# Avoid: Incomplete data (leads to UNKNOWN verdicts)
+hint = TemporalHint(edge_id="e1")  # Missing all temporal data
+```
+
+#### Use UTC Timestamps
+```python
+from datetime import datetime, timezone
+
+# Good: Explicit UTC
+dt = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+
+# Avoid: Naive datetimes (assumed UTC but ambiguous)
+dt = datetime(2026, 1, 1, 12, 0, 0)  # No timezone info
+```
+
+#### Parse ISO 8601 Correctly
+```python
+from arf_rt.util import parse_iso8601
+
+# Handles various formats automatically
+dt = parse_iso8601("2026-01-01T12:00:00.000Z")
+dt = parse_iso8601("2026-01-01T12:00:00+00:00")
+dt = parse_iso8601("2026-01-01T12:00:00-05:00")
+```
+
+### Security Best Practices
+
+#### Never Store Credentials
+```python
+# ARF-RT processes ARNs and metadata only
+# No credentials, emails, or personal data are ever stored
+
+# For sharing scenarios, anonymize first
+python scripts/validate_fixtures.py --anonymize scenario.json --output scenario_anon.json
+```
+
+#### Use Local-First Processing
+```bash
+# ARF-RT runs locally; no telemetry, no cloud uploads
+arf-rt analyze scenario.json --format both --output results/
+```
+
+#### Secure Deployment
+```yaml
+# Kubernetes resource limits
+resources:
+  requests:
+    memory: "2Gi"
+    cpu: "1000m"
+  limits:
+    memory: "4Gi"
+    cpu: "2000m"
+
+# Network policies - restrict egress
+# Only allow necessary outbound connections
+```
+
+#### Audit Trail
+```python
+# All probe executions logged to call_log with full context
+# JSONL format for easy parsing and compliance evidence retention
+```
+
+### Testing Best Practices
+
+#### Run Tests Regularly
+```bash
+# Fast feedback loop (unit only)
+pytest tests/unit/ -q
+
+# Full validation (CI pipeline)
+pytest tests/unit tests/golden -q
+
+# Property-based tests (comprehensive)
+pytest tests/research/test_rdce_property_based.py -v
+
+# Research validation
+pytest tests/research/ -v --tb=short
+
+# With coverage
+pytest tests/unit tests/golden --cov=arf_rt --cov-report=term-missing
+```
+
+#### Validate Fixtures
+```bash
+# Strict validation before committing
+python scripts/validate_fixtures.py --strict
+
+# Anonymize for sharing
+python scripts/validate_fixtures.py --anonymize scenario.json --output scenario_anon.json
+```
+
+#### Run Benchmarks
+```bash
+# Standard benchmark suite
+python scripts/benchmark.py --runs 10 --output benchmark.json
+
+# Regression detection
+python scripts/compare_benchmarks.py baseline.json candidate.json --threshold 0.05
+
+# Profile specific scenario
+python scripts/profile_scenario.py scenario.json
+```
+
+### Monitoring & Observability
+
+#### Collect Metrics
+```python
+from arf_rt.temporal import TemporalEvaluator, TemporalMetricsExtended
+
+evaluator = TemporalEvaluator(enable_stats=True)
+metrics = TemporalMetricsExtended()
+
+verdict = evaluator.evaluate_with_metrics(path_edges, hints, metrics)
+
+# Log key metrics
+logging.info(f"Evaluation: {metrics.to_dict()}")
+logging.info(f"Latency: {metrics.mean_latency_ms:.2f}ms")
+```
+
+#### Export to Prometheus
+```python
+from prometheus_client import Counter, Histogram, Gauge
+
+TEMPORAL_EVALUATIONS = Counter('arf_rt_temporal_evaluations_total', 'Total evaluations', ['verdict'])
+TEMPORAL_LATENCY = Histogram('arf_rt_temporal_latency_seconds', 'Evaluation latency')
+
+TEMPORAL_EVALUATIONS.labels(verdict=verdict.kind.value).inc()
+TEMPORAL_LATENCY.observe(evaluator.stats.evaluation_time_ms / 1000)
+```
+
+#### Set Up Alerts
+```yaml
+groups:
+- name: arf-rt-temporal
+  rules:
+  - alert: HighInfeasibleRate
+    expr: arf_rt_temporal_elimination_rate > 0.8
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High temporal infeasible rate detected"
+      
+  - alert: EvaluationLatencyHigh
+    expr: histogram_quantile(0.95, rate(arf_rt_temporal_latency_seconds_bucket[5m])) > 10
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Temporal evaluation latency > 10s"
+```
+
+---
+
+*Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
 ---
 
