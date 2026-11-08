@@ -2548,6 +2548,172 @@ If you use ARF-RT or its temporal extensions in academic work, please cite:
 *Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
 
+---
+
+---
+
+## API Reference (v0.9.1)
+
+### Core Classes
+
+#### TemporalConfig
+```python
+from arf_rt.temporal import TemporalConfig
+
+config = TemporalConfig(
+    min_hop_delta_seconds: float = 0.5,
+    stale_credential_days: int = 90,
+    session_expiry_grace_seconds: float = 30.0,
+    unknown_passthrough: bool = True,
+    enabled_constraints: frozenset[str] = frozenset({"TC-1", "TC-2", "TC-3", "TC-4", "TC-5"}),
+    max_path_length: int = 10,
+    max_concurrent_sessions: int = 5,
+    credential_reuse_window_seconds: float = 3600.0,
+)
+
+# Presets
+config = TemporalConfig.strict()
+config = TemporalConfig.permissive()
+config = TemporalConfig.balanced()
+
+# Methods
+config.validate() -> List[str]
+config.to_dict() -> Dict
+config.from_dict(data: Dict) -> TemporalConfig
+config.with_overrides(**kwargs) -> TemporalConfig
+config.is_enabled(constraint_id: str) -> bool
+```
+
+#### TemporalEvaluator
+```python
+from arf_rt.temporal import TemporalEvaluator, TemporalConfig
+from datetime import datetime
+
+evaluator = TemporalEvaluator(
+    config: TemporalConfig = None,
+    reference_time: datetime = None,
+    enable_stats: bool = False,
+)
+
+# Properties
+evaluator.config -> TemporalConfig
+evaluator.reference_time -> datetime
+evaluator.stats -> EvaluationStats | None
+
+# Methods
+evaluator.evaluate(
+    path_edge_ids: List[str],
+    hints: Dict[str, TemporalHint],
+) -> TemporalVerdict
+
+evaluator.evaluate_with_metrics(
+    path_edge_ids: List[str],
+    hints: Dict[str, TemporalHint],
+    metrics: TemporalMetrics = None,
+) -> TemporalVerdict
+```
+
+#### TemporalHint
+```python
+from arf_rt.temporal import TemporalHint
+from datetime import datetime
+
+hint = TemporalHint(
+    edge_id: str,
+    earliest_observed: datetime = None,
+    latest_observed: datetime = None,
+    credential_issued: datetime = None,
+    credential_expiry: datetime = None,
+    last_used: datetime = None,
+)
+
+# Methods
+hint.days_since_last_use(reference: datetime) -> float | None
+```
+
+#### TemporalVerdict
+```python
+from arf_rt.temporal import TemporalVerdict, VerdictKind
+
+# Class methods
+TemporalVerdict.feasible() -> TemporalVerdict
+TemporalVerdict.infeasible(constraint_id: str, reason: str) -> TemporalVerdict
+TemporalVerdict.unknown(missing: frozenset[str]) -> TemporalVerdict
+
+# Properties
+verdict.kind -> VerdictKind  # FEASIBLE / INFEASIBLE / UNKNOWN
+verdict.violated_constraint -> str | None
+verdict.reason -> str | None
+verdict.missing_data_constraints -> frozenset[str]
+
+# Methods
+verdict.is_feasible() -> bool
+verdict.is_infeasible() -> bool
+verdict.is_unknown() -> bool
+```
+
+#### TemporalMetrics & TemporalMetricsExtended
+```python
+from arf_rt.temporal import TemporalMetrics, TemporalMetricsExtended
+
+metrics = TemporalMetrics()
+metrics.record_feasible(path_length: int)
+metrics.record_infeasible(constraint_id: str, path_length: int)
+metrics.record_unknown(path_length: int)
+
+# Properties
+metrics.total_paths -> int
+metrics.feasible_count -> int
+metrics.infeasible_count -> int
+metrics.unknown_count -> int
+metrics.elimination_rate -> float
+metrics.unknown_rate -> float
+metrics.mean_path_length() -> float
+metrics.to_dict() -> Dict
+
+# Extended metrics
+extended = TemporalMetricsExtended()
+extended.record_latency(latency_ms: float)
+extended.median_path_length -> float
+extended.p95_path_length -> float
+extended.p99_path_length -> float
+extended.std_path_length -> float
+extended.mean_latency_ms -> float
+extended.median_latency_ms -> float
+extended.p95_latency_ms -> float
+```
+
+### Utility Functions
+
+#### datetime_helpers
+```python
+from arf_rt.util import (
+    parse_iso8601, format_iso8601, is_within_temporal_window,
+    parse_duration_seconds, time_range_overlaps, time_range_contains,
+    intersect_time_ranges, format_duration_seconds,
+)
+```
+
+#### network
+```python
+from arf_rt.util import (
+    parse_ip, parse_network, is_ip_in_network, is_ip_in_any_network,
+    is_private_ip, network_overlaps, network_contains,
+    get_network_bounds, calculate_subnet_split, format_cidr, is_reserved_ip,
+)
+```
+
+#### math_stats
+```python
+from arf_rt.util import (
+    shannon_entropy, normalize_distribution, kl_divergence,
+    js_divergence, cosine_similarity, euclidean_distance,
+    mean, variance, standard_deviation, median, quantile, percentile,
+    iqr, skewness, kurtosis, covariance, correlation,
+    cross_entropy, mutual_information, softmax, logsumexp,
+)
+```
+
 
 ---
 
@@ -2837,6 +3003,172 @@ async with RetryContext(max_attempts=3) as ctx:
 
 *Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
+
+---
+
+---
+
+## API Reference (v0.9.1)
+
+### Core Classes
+
+#### TemporalConfig
+```python
+from arf_rt.temporal import TemporalConfig
+
+config = TemporalConfig(
+    min_hop_delta_seconds: float = 0.5,
+    stale_credential_days: int = 90,
+    session_expiry_grace_seconds: float = 30.0,
+    unknown_passthrough: bool = True,
+    enabled_constraints: frozenset[str] = frozenset({"TC-1", "TC-2", "TC-3", "TC-4", "TC-5"}),
+    max_path_length: int = 10,
+    max_concurrent_sessions: int = 5,
+    credential_reuse_window_seconds: float = 3600.0,
+)
+
+# Presets
+config = TemporalConfig.strict()
+config = TemporalConfig.permissive()
+config = TemporalConfig.balanced()
+
+# Methods
+config.validate() -> List[str]
+config.to_dict() -> Dict
+config.from_dict(data: Dict) -> TemporalConfig
+config.with_overrides(**kwargs) -> TemporalConfig
+config.is_enabled(constraint_id: str) -> bool
+```
+
+#### TemporalEvaluator
+```python
+from arf_rt.temporal import TemporalEvaluator, TemporalConfig
+from datetime import datetime
+
+evaluator = TemporalEvaluator(
+    config: TemporalConfig = None,
+    reference_time: datetime = None,
+    enable_stats: bool = False,
+)
+
+# Properties
+evaluator.config -> TemporalConfig
+evaluator.reference_time -> datetime
+evaluator.stats -> EvaluationStats | None
+
+# Methods
+evaluator.evaluate(
+    path_edge_ids: List[str],
+    hints: Dict[str, TemporalHint],
+) -> TemporalVerdict
+
+evaluator.evaluate_with_metrics(
+    path_edge_ids: List[str],
+    hints: Dict[str, TemporalHint],
+    metrics: TemporalMetrics = None,
+) -> TemporalVerdict
+```
+
+#### TemporalHint
+```python
+from arf_rt.temporal import TemporalHint
+from datetime import datetime
+
+hint = TemporalHint(
+    edge_id: str,
+    earliest_observed: datetime = None,
+    latest_observed: datetime = None,
+    credential_issued: datetime = None,
+    credential_expiry: datetime = None,
+    last_used: datetime = None,
+)
+
+# Methods
+hint.days_since_last_use(reference: datetime) -> float | None
+```
+
+#### TemporalVerdict
+```python
+from arf_rt.temporal import TemporalVerdict, VerdictKind
+
+# Class methods
+TemporalVerdict.feasible() -> TemporalVerdict
+TemporalVerdict.infeasible(constraint_id: str, reason: str) -> TemporalVerdict
+TemporalVerdict.unknown(missing: frozenset[str]) -> TemporalVerdict
+
+# Properties
+verdict.kind -> VerdictKind  # FEASIBLE / INFEASIBLE / UNKNOWN
+verdict.violated_constraint -> str | None
+verdict.reason -> str | None
+verdict.missing_data_constraints -> frozenset[str]
+
+# Methods
+verdict.is_feasible() -> bool
+verdict.is_infeasible() -> bool
+verdict.is_unknown() -> bool
+```
+
+#### TemporalMetrics & TemporalMetricsExtended
+```python
+from arf_rt.temporal import TemporalMetrics, TemporalMetricsExtended
+
+metrics = TemporalMetrics()
+metrics.record_feasible(path_length: int)
+metrics.record_infeasible(constraint_id: str, path_length: int)
+metrics.record_unknown(path_length: int)
+
+# Properties
+metrics.total_paths -> int
+metrics.feasible_count -> int
+metrics.infeasible_count -> int
+metrics.unknown_count -> int
+metrics.elimination_rate -> float
+metrics.unknown_rate -> float
+metrics.mean_path_length() -> float
+metrics.to_dict() -> Dict
+
+# Extended metrics
+extended = TemporalMetricsExtended()
+extended.record_latency(latency_ms: float)
+extended.median_path_length -> float
+extended.p95_path_length -> float
+extended.p99_path_length -> float
+extended.std_path_length -> float
+extended.mean_latency_ms -> float
+extended.median_latency_ms -> float
+extended.p95_latency_ms -> float
+```
+
+### Utility Functions
+
+#### datetime_helpers
+```python
+from arf_rt.util import (
+    parse_iso8601, format_iso8601, is_within_temporal_window,
+    parse_duration_seconds, time_range_overlaps, time_range_contains,
+    intersect_time_ranges, format_duration_seconds,
+)
+```
+
+#### network
+```python
+from arf_rt.util import (
+    parse_ip, parse_network, is_ip_in_network, is_ip_in_any_network,
+    is_private_ip, network_overlaps, network_contains,
+    get_network_bounds, calculate_subnet_split, format_cidr, is_reserved_ip,
+)
+```
+
+#### math_stats
+```python
+from arf_rt.util import (
+    shannon_entropy, normalize_distribution, kl_divergence,
+    js_divergence, cosine_similarity, euclidean_distance,
+    mean, variance, standard_deviation, median, quantile, percentile,
+    iqr, skewness, kurtosis, covariance, correlation,
+    cross_entropy, mutual_information, softmax, logsumexp,
+)
+```
 
 
 ---
@@ -3301,6 +3633,172 @@ resources:
 *Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
 
+---
+
+---
+
+## API Reference (v0.9.1)
+
+### Core Classes
+
+#### TemporalConfig
+```python
+from arf_rt.temporal import TemporalConfig
+
+config = TemporalConfig(
+    min_hop_delta_seconds: float = 0.5,
+    stale_credential_days: int = 90,
+    session_expiry_grace_seconds: float = 30.0,
+    unknown_passthrough: bool = True,
+    enabled_constraints: frozenset[str] = frozenset({"TC-1", "TC-2", "TC-3", "TC-4", "TC-5"}),
+    max_path_length: int = 10,
+    max_concurrent_sessions: int = 5,
+    credential_reuse_window_seconds: float = 3600.0,
+)
+
+# Presets
+config = TemporalConfig.strict()
+config = TemporalConfig.permissive()
+config = TemporalConfig.balanced()
+
+# Methods
+config.validate() -> List[str]
+config.to_dict() -> Dict
+config.from_dict(data: Dict) -> TemporalConfig
+config.with_overrides(**kwargs) -> TemporalConfig
+config.is_enabled(constraint_id: str) -> bool
+```
+
+#### TemporalEvaluator
+```python
+from arf_rt.temporal import TemporalEvaluator, TemporalConfig
+from datetime import datetime
+
+evaluator = TemporalEvaluator(
+    config: TemporalConfig = None,
+    reference_time: datetime = None,
+    enable_stats: bool = False,
+)
+
+# Properties
+evaluator.config -> TemporalConfig
+evaluator.reference_time -> datetime
+evaluator.stats -> EvaluationStats | None
+
+# Methods
+evaluator.evaluate(
+    path_edge_ids: List[str],
+    hints: Dict[str, TemporalHint],
+) -> TemporalVerdict
+
+evaluator.evaluate_with_metrics(
+    path_edge_ids: List[str],
+    hints: Dict[str, TemporalHint],
+    metrics: TemporalMetrics = None,
+) -> TemporalVerdict
+```
+
+#### TemporalHint
+```python
+from arf_rt.temporal import TemporalHint
+from datetime import datetime
+
+hint = TemporalHint(
+    edge_id: str,
+    earliest_observed: datetime = None,
+    latest_observed: datetime = None,
+    credential_issued: datetime = None,
+    credential_expiry: datetime = None,
+    last_used: datetime = None,
+)
+
+# Methods
+hint.days_since_last_use(reference: datetime) -> float | None
+```
+
+#### TemporalVerdict
+```python
+from arf_rt.temporal import TemporalVerdict, VerdictKind
+
+# Class methods
+TemporalVerdict.feasible() -> TemporalVerdict
+TemporalVerdict.infeasible(constraint_id: str, reason: str) -> TemporalVerdict
+TemporalVerdict.unknown(missing: frozenset[str]) -> TemporalVerdict
+
+# Properties
+verdict.kind -> VerdictKind  # FEASIBLE / INFEASIBLE / UNKNOWN
+verdict.violated_constraint -> str | None
+verdict.reason -> str | None
+verdict.missing_data_constraints -> frozenset[str]
+
+# Methods
+verdict.is_feasible() -> bool
+verdict.is_infeasible() -> bool
+verdict.is_unknown() -> bool
+```
+
+#### TemporalMetrics & TemporalMetricsExtended
+```python
+from arf_rt.temporal import TemporalMetrics, TemporalMetricsExtended
+
+metrics = TemporalMetrics()
+metrics.record_feasible(path_length: int)
+metrics.record_infeasible(constraint_id: str, path_length: int)
+metrics.record_unknown(path_length: int)
+
+# Properties
+metrics.total_paths -> int
+metrics.feasible_count -> int
+metrics.infeasible_count -> int
+metrics.unknown_count -> int
+metrics.elimination_rate -> float
+metrics.unknown_rate -> float
+metrics.mean_path_length() -> float
+metrics.to_dict() -> Dict
+
+# Extended metrics
+extended = TemporalMetricsExtended()
+extended.record_latency(latency_ms: float)
+extended.median_path_length -> float
+extended.p95_path_length -> float
+extended.p99_path_length -> float
+extended.std_path_length -> float
+extended.mean_latency_ms -> float
+extended.median_latency_ms -> float
+extended.p95_latency_ms -> float
+```
+
+### Utility Functions
+
+#### datetime_helpers
+```python
+from arf_rt.util import (
+    parse_iso8601, format_iso8601, is_within_temporal_window,
+    parse_duration_seconds, time_range_overlaps, time_range_contains,
+    intersect_time_ranges, format_duration_seconds,
+)
+```
+
+#### network
+```python
+from arf_rt.util import (
+    parse_ip, parse_network, is_ip_in_network, is_ip_in_any_network,
+    is_private_ip, network_overlaps, network_contains,
+    get_network_bounds, calculate_subnet_split, format_cidr, is_reserved_ip,
+)
+```
+
+#### math_stats
+```python
+from arf_rt.util import (
+    shannon_entropy, normalize_distribution, kl_divergence,
+    js_divergence, cosine_similarity, euclidean_distance,
+    mean, variance, standard_deviation, median, quantile, percentile,
+    iqr, skewness, kurtosis, covariance, correlation,
+    cross_entropy, mutual_information, softmax, logsumexp,
+)
+```
+
 
 ---
 
@@ -3590,6 +4088,172 @@ async with RetryContext(max_attempts=3) as ctx:
 
 *Last updated: November 7, 2026 — v0.9.1 documentation refresh*
 
+
+---
+
+---
+
+## API Reference (v0.9.1)
+
+### Core Classes
+
+#### TemporalConfig
+```python
+from arf_rt.temporal import TemporalConfig
+
+config = TemporalConfig(
+    min_hop_delta_seconds: float = 0.5,
+    stale_credential_days: int = 90,
+    session_expiry_grace_seconds: float = 30.0,
+    unknown_passthrough: bool = True,
+    enabled_constraints: frozenset[str] = frozenset({"TC-1", "TC-2", "TC-3", "TC-4", "TC-5"}),
+    max_path_length: int = 10,
+    max_concurrent_sessions: int = 5,
+    credential_reuse_window_seconds: float = 3600.0,
+)
+
+# Presets
+config = TemporalConfig.strict()
+config = TemporalConfig.permissive()
+config = TemporalConfig.balanced()
+
+# Methods
+config.validate() -> List[str]
+config.to_dict() -> Dict
+config.from_dict(data: Dict) -> TemporalConfig
+config.with_overrides(**kwargs) -> TemporalConfig
+config.is_enabled(constraint_id: str) -> bool
+```
+
+#### TemporalEvaluator
+```python
+from arf_rt.temporal import TemporalEvaluator, TemporalConfig
+from datetime import datetime
+
+evaluator = TemporalEvaluator(
+    config: TemporalConfig = None,
+    reference_time: datetime = None,
+    enable_stats: bool = False,
+)
+
+# Properties
+evaluator.config -> TemporalConfig
+evaluator.reference_time -> datetime
+evaluator.stats -> EvaluationStats | None
+
+# Methods
+evaluator.evaluate(
+    path_edge_ids: List[str],
+    hints: Dict[str, TemporalHint],
+) -> TemporalVerdict
+
+evaluator.evaluate_with_metrics(
+    path_edge_ids: List[str],
+    hints: Dict[str, TemporalHint],
+    metrics: TemporalMetrics = None,
+) -> TemporalVerdict
+```
+
+#### TemporalHint
+```python
+from arf_rt.temporal import TemporalHint
+from datetime import datetime
+
+hint = TemporalHint(
+    edge_id: str,
+    earliest_observed: datetime = None,
+    latest_observed: datetime = None,
+    credential_issued: datetime = None,
+    credential_expiry: datetime = None,
+    last_used: datetime = None,
+)
+
+# Methods
+hint.days_since_last_use(reference: datetime) -> float | None
+```
+
+#### TemporalVerdict
+```python
+from arf_rt.temporal import TemporalVerdict, VerdictKind
+
+# Class methods
+TemporalVerdict.feasible() -> TemporalVerdict
+TemporalVerdict.infeasible(constraint_id: str, reason: str) -> TemporalVerdict
+TemporalVerdict.unknown(missing: frozenset[str]) -> TemporalVerdict
+
+# Properties
+verdict.kind -> VerdictKind  # FEASIBLE / INFEASIBLE / UNKNOWN
+verdict.violated_constraint -> str | None
+verdict.reason -> str | None
+verdict.missing_data_constraints -> frozenset[str]
+
+# Methods
+verdict.is_feasible() -> bool
+verdict.is_infeasible() -> bool
+verdict.is_unknown() -> bool
+```
+
+#### TemporalMetrics & TemporalMetricsExtended
+```python
+from arf_rt.temporal import TemporalMetrics, TemporalMetricsExtended
+
+metrics = TemporalMetrics()
+metrics.record_feasible(path_length: int)
+metrics.record_infeasible(constraint_id: str, path_length: int)
+metrics.record_unknown(path_length: int)
+
+# Properties
+metrics.total_paths -> int
+metrics.feasible_count -> int
+metrics.infeasible_count -> int
+metrics.unknown_count -> int
+metrics.elimination_rate -> float
+metrics.unknown_rate -> float
+metrics.mean_path_length() -> float
+metrics.to_dict() -> Dict
+
+# Extended metrics
+extended = TemporalMetricsExtended()
+extended.record_latency(latency_ms: float)
+extended.median_path_length -> float
+extended.p95_path_length -> float
+extended.p99_path_length -> float
+extended.std_path_length -> float
+extended.mean_latency_ms -> float
+extended.median_latency_ms -> float
+extended.p95_latency_ms -> float
+```
+
+### Utility Functions
+
+#### datetime_helpers
+```python
+from arf_rt.util import (
+    parse_iso8601, format_iso8601, is_within_temporal_window,
+    parse_duration_seconds, time_range_overlaps, time_range_contains,
+    intersect_time_ranges, format_duration_seconds,
+)
+```
+
+#### network
+```python
+from arf_rt.util import (
+    parse_ip, parse_network, is_ip_in_network, is_ip_in_any_network,
+    is_private_ip, network_overlaps, network_contains,
+    get_network_bounds, calculate_subnet_split, format_cidr, is_reserved_ip,
+)
+```
+
+#### math_stats
+```python
+from arf_rt.util import (
+    shannon_entropy, normalize_distribution, kl_divergence,
+    js_divergence, cosine_similarity, euclidean_distance,
+    mean, variance, standard_deviation, median, quantile, percentile,
+    iqr, skewness, kurtosis, covariance, correlation,
+    cross_entropy, mutual_information, softmax, logsumexp,
+)
+```
 
 
 ---
