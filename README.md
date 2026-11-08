@@ -2551,6 +2551,83 @@ If you use ARF-RT or its temporal extensions in academic work, please cite:
 
 ---
 
+## Configuration Reference (v0.9.1)
+
+### TemporalConfig Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| min_hop_delta_seconds | float | 0.5 | Minimum time between consecutive hops (TC-3 velocity threshold) |
+| stale_credential_days | int | 90 | Days after which credential is considered stale (TC-4) |
+| session_expiry_grace_seconds | float | 30.0 | Grace window for session expiry checks (TC-2) |
+| unknown_passthrough | bool | True | Allow UNKNOWN verdicts to pass through to Bayesian layer |
+| enabled_constraints | frozenset[str] | All TC-1..TC-5 | Set of active temporal constraints |
+| max_path_length | int | 10 | Maximum hops per attack path |
+| max_concurrent_sessions | int | 5 | Max concurrent sessions per principal (TC-5) |
+| credential_reuse_window_seconds | float | 3600.0 | Window for detecting credential reuse (TC-5) |
+
+### Preset Configurations
+
+```python
+# Strict - Conservative, fails UNKNOWN, tight bounds
+config = TemporalConfig.strict()
+
+# Permissive - Recall-favoring, passes UNKNOWN, disables velocity/staleness
+config = TemporalConfig.permissive()
+
+# Balanced - Moderate settings (recommended for production)
+config = TemporalConfig.balanced()
+```
+
+### Custom Configuration
+
+```python
+from arf_rt.temporal import TemporalConfig
+
+config = TemporalConfig(
+    min_hop_delta_seconds=1.0,
+    stale_credential_days=30,
+    session_expiry_grace_seconds=10.0,
+    unknown_passthrough=False,
+    enabled_constraints=frozenset({"TC-1", "TC-2", "TC-3"}),
+    max_path_length=8,
+    max_concurrent_sessions=3,
+    credential_reuse_window_seconds=1800.0,
+)
+
+# Or use with_overrides for incremental changes
+config = TemporalConfig.balanced().with_overrides(
+    max_path_length=5,
+    stale_credential_days=14,
+)
+
+# Validation
+warnings = config.validate()
+if warnings:
+    for w in warnings:
+        logging.warning(f"Config warning: {w}")
+
+# Serialization
+config_dict = config.to_dict()
+restored = TemporalConfig.from_dict(config_dict)
+```
+
+### Environment Variable Overrides
+
+| Env Var | Config Parameter | Type |
+|---------|------------------|------|
+| ARF_MAX_DEPTH | max_path_depth | int |
+| ARF_TOP_K | top_k_paths | int |
+| ARF_SAFE_MODE | safe_replay_mode | bool |
+| ARF_PROFILE | profile_name | str |
+
+All ARF_* prefixed environment variables are automatically applied to the config.
+
+
+
+
+---
+
 ## Architecture Overview (v0.9.1)
 
 ### System Components
@@ -2759,6 +2836,83 @@ async with RetryContext(max_attempts=3) as ctx:
 ---
 
 *Last updated: November 7, 2026 — v0.9.1 documentation refresh*
+
+
+
+---
+
+## Configuration Reference (v0.9.1)
+
+### TemporalConfig Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| min_hop_delta_seconds | float | 0.5 | Minimum time between consecutive hops (TC-3 velocity threshold) |
+| stale_credential_days | int | 90 | Days after which credential is considered stale (TC-4) |
+| session_expiry_grace_seconds | float | 30.0 | Grace window for session expiry checks (TC-2) |
+| unknown_passthrough | bool | True | Allow UNKNOWN verdicts to pass through to Bayesian layer |
+| enabled_constraints | frozenset[str] | All TC-1..TC-5 | Set of active temporal constraints |
+| max_path_length | int | 10 | Maximum hops per attack path |
+| max_concurrent_sessions | int | 5 | Max concurrent sessions per principal (TC-5) |
+| credential_reuse_window_seconds | float | 3600.0 | Window for detecting credential reuse (TC-5) |
+
+### Preset Configurations
+
+```python
+# Strict - Conservative, fails UNKNOWN, tight bounds
+config = TemporalConfig.strict()
+
+# Permissive - Recall-favoring, passes UNKNOWN, disables velocity/staleness
+config = TemporalConfig.permissive()
+
+# Balanced - Moderate settings (recommended for production)
+config = TemporalConfig.balanced()
+```
+
+### Custom Configuration
+
+```python
+from arf_rt.temporal import TemporalConfig
+
+config = TemporalConfig(
+    min_hop_delta_seconds=1.0,
+    stale_credential_days=30,
+    session_expiry_grace_seconds=10.0,
+    unknown_passthrough=False,
+    enabled_constraints=frozenset({"TC-1", "TC-2", "TC-3"}),
+    max_path_length=8,
+    max_concurrent_sessions=3,
+    credential_reuse_window_seconds=1800.0,
+)
+
+# Or use with_overrides for incremental changes
+config = TemporalConfig.balanced().with_overrides(
+    max_path_length=5,
+    stale_credential_days=14,
+)
+
+# Validation
+warnings = config.validate()
+if warnings:
+    for w in warnings:
+        logging.warning(f"Config warning: {w}")
+
+# Serialization
+config_dict = config.to_dict()
+restored = TemporalConfig.from_dict(config_dict)
+```
+
+### Environment Variable Overrides
+
+| Env Var | Config Parameter | Type |
+|---------|------------------|------|
+| ARF_MAX_DEPTH | max_path_depth | int |
+| ARF_TOP_K | top_k_paths | int |
+| ARF_SAFE_MODE | safe_replay_mode | bool |
+| ARF_PROFILE | profile_name | str |
+
+All ARF_* prefixed environment variables are automatically applied to the config.
+
 
 
 
@@ -3150,6 +3304,83 @@ resources:
 
 ---
 
+## Configuration Reference (v0.9.1)
+
+### TemporalConfig Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| min_hop_delta_seconds | float | 0.5 | Minimum time between consecutive hops (TC-3 velocity threshold) |
+| stale_credential_days | int | 90 | Days after which credential is considered stale (TC-4) |
+| session_expiry_grace_seconds | float | 30.0 | Grace window for session expiry checks (TC-2) |
+| unknown_passthrough | bool | True | Allow UNKNOWN verdicts to pass through to Bayesian layer |
+| enabled_constraints | frozenset[str] | All TC-1..TC-5 | Set of active temporal constraints |
+| max_path_length | int | 10 | Maximum hops per attack path |
+| max_concurrent_sessions | int | 5 | Max concurrent sessions per principal (TC-5) |
+| credential_reuse_window_seconds | float | 3600.0 | Window for detecting credential reuse (TC-5) |
+
+### Preset Configurations
+
+```python
+# Strict - Conservative, fails UNKNOWN, tight bounds
+config = TemporalConfig.strict()
+
+# Permissive - Recall-favoring, passes UNKNOWN, disables velocity/staleness
+config = TemporalConfig.permissive()
+
+# Balanced - Moderate settings (recommended for production)
+config = TemporalConfig.balanced()
+```
+
+### Custom Configuration
+
+```python
+from arf_rt.temporal import TemporalConfig
+
+config = TemporalConfig(
+    min_hop_delta_seconds=1.0,
+    stale_credential_days=30,
+    session_expiry_grace_seconds=10.0,
+    unknown_passthrough=False,
+    enabled_constraints=frozenset({"TC-1", "TC-2", "TC-3"}),
+    max_path_length=8,
+    max_concurrent_sessions=3,
+    credential_reuse_window_seconds=1800.0,
+)
+
+# Or use with_overrides for incremental changes
+config = TemporalConfig.balanced().with_overrides(
+    max_path_length=5,
+    stale_credential_days=14,
+)
+
+# Validation
+warnings = config.validate()
+if warnings:
+    for w in warnings:
+        logging.warning(f"Config warning: {w}")
+
+# Serialization
+config_dict = config.to_dict()
+restored = TemporalConfig.from_dict(config_dict)
+```
+
+### Environment Variable Overrides
+
+| Env Var | Config Parameter | Type |
+|---------|------------------|------|
+| ARF_MAX_DEPTH | max_path_depth | int |
+| ARF_TOP_K | top_k_paths | int |
+| ARF_SAFE_MODE | safe_replay_mode | bool |
+| ARF_PROFILE | profile_name | str |
+
+All ARF_* prefixed environment variables are automatically applied to the config.
+
+
+
+
+---
+
 ## Architecture Overview (v0.9.1)
 
 ### System Components
@@ -3358,6 +3589,83 @@ async with RetryContext(max_attempts=3) as ctx:
 ---
 
 *Last updated: November 7, 2026 — v0.9.1 documentation refresh*
+
+
+
+---
+
+## Configuration Reference (v0.9.1)
+
+### TemporalConfig Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| min_hop_delta_seconds | float | 0.5 | Minimum time between consecutive hops (TC-3 velocity threshold) |
+| stale_credential_days | int | 90 | Days after which credential is considered stale (TC-4) |
+| session_expiry_grace_seconds | float | 30.0 | Grace window for session expiry checks (TC-2) |
+| unknown_passthrough | bool | True | Allow UNKNOWN verdicts to pass through to Bayesian layer |
+| enabled_constraints | frozenset[str] | All TC-1..TC-5 | Set of active temporal constraints |
+| max_path_length | int | 10 | Maximum hops per attack path |
+| max_concurrent_sessions | int | 5 | Max concurrent sessions per principal (TC-5) |
+| credential_reuse_window_seconds | float | 3600.0 | Window for detecting credential reuse (TC-5) |
+
+### Preset Configurations
+
+```python
+# Strict - Conservative, fails UNKNOWN, tight bounds
+config = TemporalConfig.strict()
+
+# Permissive - Recall-favoring, passes UNKNOWN, disables velocity/staleness
+config = TemporalConfig.permissive()
+
+# Balanced - Moderate settings (recommended for production)
+config = TemporalConfig.balanced()
+```
+
+### Custom Configuration
+
+```python
+from arf_rt.temporal import TemporalConfig
+
+config = TemporalConfig(
+    min_hop_delta_seconds=1.0,
+    stale_credential_days=30,
+    session_expiry_grace_seconds=10.0,
+    unknown_passthrough=False,
+    enabled_constraints=frozenset({"TC-1", "TC-2", "TC-3"}),
+    max_path_length=8,
+    max_concurrent_sessions=3,
+    credential_reuse_window_seconds=1800.0,
+)
+
+# Or use with_overrides for incremental changes
+config = TemporalConfig.balanced().with_overrides(
+    max_path_length=5,
+    stale_credential_days=14,
+)
+
+# Validation
+warnings = config.validate()
+if warnings:
+    for w in warnings:
+        logging.warning(f"Config warning: {w}")
+
+# Serialization
+config_dict = config.to_dict()
+restored = TemporalConfig.from_dict(config_dict)
+```
+
+### Environment Variable Overrides
+
+| Env Var | Config Parameter | Type |
+|---------|------------------|------|
+| ARF_MAX_DEPTH | max_path_depth | int |
+| ARF_TOP_K | top_k_paths | int |
+| ARF_SAFE_MODE | safe_replay_mode | bool |
+| ARF_PROFILE | profile_name | str |
+
+All ARF_* prefixed environment variables are automatically applied to the config.
+
 
 
 
