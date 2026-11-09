@@ -414,6 +414,7 @@ python scripts/generate_compliance_report.py scenario.json --framework CIS_AWS -
 | `import-pmapper <pmapper.json> [--org aws_org.json] [--start ARN --target ARN]` | Build scenario from PMapper + AWS Organizations |
 | `hash <scenario>` | Print `canonical_run_hash` (determinism check) |
 | `export <scenario> [-o FILE]` | Export full machine-readable state |
+| `compliance <scenario> [--framework FW] [--format FMT]` | Generate compliance report for CIS, NIST, PCI-DSS, SOC2 |
 
 ## How It Works
 
