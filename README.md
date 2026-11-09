@@ -331,6 +331,7 @@ ARF-RT provides a suite of developer utilities in `scripts/`:
 | `simulate_revocation.py` | Interactive credential revocation blast-radius calculator | `python scripts/simulate_revocation.py --paths paths.json` |
 | `generate_synthetic_cloudtrail.py` | Synthetic AWS CloudTrail log generation with configurable anomaly injection | `python scripts/generate_synthetic_cloudtrail.py --events 500` |
 | `score_credentials.py` | Temporal exploitation risk scoring for credential edges (table/JSON/CSV) | `python scripts/score_credentials.py -i log.json --top 10` |
+| `generate_compliance_report.py` | Generates compliance reports for CIS, NIST, PCI-DSS, SOC2 | `python scripts/generate_compliance_report.py --framework CIS_AWS` |
 
 ## Quick Start
 
