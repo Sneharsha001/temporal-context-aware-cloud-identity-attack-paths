@@ -396,6 +396,9 @@ python scripts/validate_policy_windows.py scenario.json --strict
 
 # Run dashboard
 python scripts/run_temporal_dashboard.py scenario.json
+
+# Generate compliance report
+python scripts/generate_compliance_report.py scenario.json --framework CIS_AWS --format json -o compliance_report.json
 ```
 
 **→ [Full 5-minute demo walkthrough](docs/quickstart.md)** — import a real AWS graph, probe strategically, watch entropy collapse from 0.56 → 0.10 nats across two probes.
