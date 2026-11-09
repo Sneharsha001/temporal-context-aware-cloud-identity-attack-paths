@@ -155,6 +155,7 @@ Nested dictionary and collection manipulation:
 - **`map_values()` / `map_keys()`** — Dictionary transformations
 - **`get_nested()` / `set_nested()`** — Dot-notation path access
 - **`chunk_list()`** — Split lists into fixed-size chunks
+- **`deep_clone()`** — Deep copy with circular reference handling
 
 ### `arf_rt.util.dag`
 
