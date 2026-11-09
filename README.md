@@ -245,6 +245,7 @@ Extended metrics with percentiles and latency tracking:
 - **`percentile()`** — Histogram percentile calculation
 - **Path length percentiles** — Median, p95, p99, standard deviation
 - **Latency tracking** — Mean, median, p95 evaluation latency
+- **Credential risk distribution** — Risk score histogram and percentile analysis
 
 ---
 
