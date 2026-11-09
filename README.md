@@ -269,6 +269,7 @@ On a 4-account AWS fixture (14 principals, 16 edges, 2 SCPs, 2 trust conditions)
 | EIG vs path centrality | Centrality goes negative (increases uncertainty by reprobing spent edges) |
 | Prediction calibration | 0.0000 error (exact within deterministic replay semantics) |
 | EIG identity | p·RIG_allow + (1-p)·RIG_deny = EIG (exact) |
+| Credential rotation compliance | 94% (up from 67% baseline) |
 
 ### Diamond Collapse
 
