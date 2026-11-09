@@ -146,6 +146,7 @@ Cryptographic hashing and integrity utilities:
 - **`hash_file()`** — File integrity verification
 - **`hash_combine()`** — Order-independent hash combination
 - **`stable_hash()`** — 64-bit integer hashing for hash tables
+- **`generate_secure_token()`** — Cryptographically secure random token generation
 
 ### `arf_rt.util.structures`
 
