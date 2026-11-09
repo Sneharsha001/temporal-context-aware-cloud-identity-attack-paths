@@ -79,6 +79,7 @@ ARF-RT features a comprehensive **Temporal Context Subsystem** (`arf_rt/temporal
 | `WINDOW_TOO_NARROW` | Multi-hop path completes in < 1s (bot threshold) | Velocity analysis |
 | `STALE_CREDENTIAL` | Credential last used > 90 days ago | IAM last-used data |
 | `CONCURRENT_SESSION` | Overlapping sessions suggest credential sharing | Session ID correlation |
+| `ROTATION_VIOLATION` | Credential exceeds mandatory rotation interval | IAM rotation policy |
 
 > **Status:** Temporal context module is in active development on `temporal-context-dev`. Integration with the production CCPF evaluator is planned for Prompt 10+.
 
