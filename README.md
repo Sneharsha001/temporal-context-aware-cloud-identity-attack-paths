@@ -123,6 +123,7 @@ Extended statistical functions for path analysis:
 - **`cross_entropy()`** — Cross-entropy for ML loss computation
 - **`mutual_information()`** — Information-theoretic dependency measure
 - **`softmax()` / `logsumexp()`** — Numerically stable probability transforms
+- **`geometric_mean()`** — Geometric mean for multiplicative data
 
 ### `arf_rt.util.text`
 
