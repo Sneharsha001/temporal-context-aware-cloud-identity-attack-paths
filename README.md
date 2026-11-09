@@ -492,7 +492,7 @@ Three execution modes with full audit trail:
 
 - **DRY_RUN** (default): Logs what would be called. No side effects.
 - **CONFIRM**: Calls a confirm function before each probe.
-- **LIVE**: Not yet implemented (fails gracefully).
+- **LIVE**: Executes probes against live cloud APIs with full audit trail.
 
 Every probe is recorded in `call_log` with edge details, EIG score, disposition, and `run_hash` tying it to the exact pipeline state.
 
