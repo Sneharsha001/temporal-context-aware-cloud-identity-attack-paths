@@ -196,6 +196,7 @@ Graph export for visualization tools:
 - **`export_to_mermaid()`** — Mermaid.js diagrams
 - **`export_to_gephi()`** — GEXF for Gephi
 - **`export_to_graphml()`** — GraphML XML
+- **`export_to_plantuml()`** — PlantUML diagram format
 - **`style_attack_path_dot()`** — Highlighted attack path DOT
 
 ### `arf_rt.util.config_loader`
