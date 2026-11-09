@@ -192,6 +192,7 @@ Resilient execution with exponential backoff:
 - **`retry_async()`** — Decorator for async functions
 - **`RetryContext`** — Context manager for manual control
 - **`retry_context()`** — Context manager factory
+- **`circuit_breaker()`** — Circuit breaker pattern for fault tolerance
 
 ### `arf_rt.util.visualization`
 
