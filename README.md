@@ -217,6 +217,7 @@ New configuration options for fine-grained control:
 - **`max_path_length`** — Maximum hops per attack path (default: 10)
 - **`max_concurrent_sessions`** — Concurrent session limit per principal (default: 5)
 - **`credential_reuse_window_seconds`** — Suspicious reuse detection window (default: 3600s)
+- **`credential_rotation_interval_days`** — Mandatory rotation interval (default: 90 days)
 - **`validate()`** — Configuration validation with warnings
 - **`to_dict()` / `from_dict()`** — Serialization support
 - **`balanced()` preset** — Moderate settings alongside existing `strict()` and `permissive()`
