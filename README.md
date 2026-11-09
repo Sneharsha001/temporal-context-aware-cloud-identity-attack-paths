@@ -95,6 +95,7 @@ Extended temporal operations for precise time-range analysis:
 - **`time_range_contains()`** — Verify if one range fully contains another
 - **`intersect_time_ranges()`** — Compute the intersection of two time ranges
 - **`format_duration_seconds()`** — Human-readable duration formatting (e.g., "1h 30m 45s")
+- **`parse_cron_expression()`** — Parse cron expressions into next execution times
 
 ### `arf_rt.util.network`
 
