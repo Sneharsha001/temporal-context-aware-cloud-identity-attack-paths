@@ -68,6 +68,7 @@ ARF-RT features a comprehensive **Temporal Context Subsystem** (`arf_rt/temporal
 | **Detect Drift** | `scripts/detect_temporal_drift.py` | Compares baseline vs. current snapshots to detect window contractions and drift. |
 | **Report Coverage** | `scripts/report_temporal_coverage.py` | Audits temporal hint completeness across graph edges with threshold checks. |
 | **Run Dashboard** | `scripts/run_temporal_dashboard.py` | Unified terminal dashboard synthesizing scores, alerts, policy, and drift. |
+| **Export Report** | `scripts/export_report.py` | Exports analysis results in multiple formats (JSON, CSV, Markdown, PDF). |
 
 ### Temporal Constraint Types
 
