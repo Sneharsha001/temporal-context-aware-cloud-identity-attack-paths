@@ -307,6 +307,9 @@ Extended metrics with percentiles and latency tracking:
 - **Path length percentiles** — Median, p95, p99, standard deviation
 - **Latency tracking** — Mean, median, p95 evaluation latency
 - **Credential risk distribution** — Risk score histogram and percentile analysis
+- **Constraint violation breakdown** — Violation counts by constraint type (TC-1..TC-7)
+- **Path entropy tracking** — Shannon entropy of path distributions over time
+- **EIG effectiveness score** — Expected vs realized information gain ratio
 
 ---
 
