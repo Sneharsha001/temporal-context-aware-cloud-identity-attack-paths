@@ -362,6 +362,8 @@ ARF-RT formulates attack path discovery through Bayesian experimental design and
 - **Expected Information Gain:** For candidate probe edge $e$:
   $$\text{EIG}(e) = H(\mathcal{P}) - \sum_{o \in \{0, 1\}} P(e=o) H(\mathcal{P} \mid e=o)$$
 - **Structural Equivalence Partitioning:** Disjoint-set union models joint failure across paths governed by identical SCPs or permission boundaries, collapsing combinatorial path explosion into minimal correlated equivalence classes.
+- **Temporal Constraint Integration:** Temporal constraints (TC-1..TC-7) are modeled as conditional probability filters $P(\pi | 	ext{TC})$, reducing path entropy by eliminating temporally infeasible paths.
+- **Credential Risk Propagation:** Credential risk scores propagate through attack paths via multiplicative risk aggregation, enabling end-to-end risk quantification.
 
 ## Enterprise Cloud Defense Highlights
 
