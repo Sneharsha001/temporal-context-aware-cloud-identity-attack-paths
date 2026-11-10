@@ -374,6 +374,7 @@ Graph export for visualization tools:
 - **`style_attack_path_dot()`** — Highlighted attack path DOT
 - **`export_to_svg()`** — SVG vector graphics export
 - **`export_to_png()`** — PNG raster export via headless browser
+- **`export_to_pdf()`** — PDF document export for reports
 
 ### `arf_rt.util.config_loader`
 
