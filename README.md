@@ -9,7 +9,7 @@ A Bayesian reasoning engine for cloud identity attack path analysis. ARF-RT inge
 
 **SEMANTICS_VERSION:** 1.0.0  
 **Scope:** Replay-only. No live cloud SDK calls.  
-**Last Updated:** 2026-11-09 — v0.9.2: enhanced utility modules (13 new), temporal evaluator enhancements, comprehensive test infrastructure, compliance mappings, formal verification artifacts (O1–O8), migration guide, comprehensive documentation refresh, November 9th updates, new temporal constraints, credential rotation tracking, and monitoring enhancements.
+**Last Updated:** 2026-11-10 — v0.9.3: enhanced utility modules (13 new), temporal evaluator enhancements, comprehensive test infrastructure, compliance mappings, formal verification artifacts (O1–O8), migration guide, comprehensive documentation refresh, November 9th updates, new temporal constraints, credential rotation tracking, monitoring enhancements, and November 10th documentation improvements.
 
 -------
 
