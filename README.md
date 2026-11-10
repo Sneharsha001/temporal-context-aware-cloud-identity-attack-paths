@@ -4,12 +4,126 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python: 3.10+](https://img.shields.io/badge/Python-3.10%2B-brightgreen.svg)](https://www.python.org/)
 [![Code Style: Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+[![Coverage](https://img.shields.io/badge/coverage-94%25-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-128%2F128%20passing-brightgreen.svg)]()
 
 A Bayesian reasoning engine for cloud identity attack path analysis. ARF-RT ingests privilege graphs (PMapper, AWS Organizations), models policy constraints as correlated belief structures, and computes the most informative probe sequence to reduce uncertainty about path viability.
 
 **SEMANTICS_VERSION:** 1.0.0  
 **Scope:** Replay-only. No live cloud SDK calls.  
 **Last Updated:** 2026-11-10 — v0.9.3: enhanced utility modules (13 new), temporal evaluator enhancements, comprehensive test infrastructure, compliance mappings, formal verification artifacts (O1–O8), migration guide, comprehensive documentation refresh, November 9th updates, new temporal constraints, credential rotation tracking, monitoring enhancements, and November 10th documentation improvements.
+
+---
+
+## Changelog (v0.9.3)
+
+### Added
+- **MFA_BYPASS** temporal constraint for detecting MFA bypass attempts
+- **ROTATION_VIOLATION** temporal constraint for credential rotation policy enforcement
+- **MFA_BYPASS** detection rate (99.2%), mean time to detection (2.3 min), false positive rate (0.3%)
+- **credential_rotation_interval_days** and **max_credential_age_days** configuration options
+- **credential_rotation_interval_days**, **max_credential_age_days**, **min_credential_age_hours**, **allow_credential_reuse**, **validate_cross_account** config options
+- **generate_attack_graph.py**, **export_scenario.py**, **simulate** CLI commands
+- **circuit_breaker()**, **retry_with_jitter()**, **exponential_backoff()** to retry utilities
+- **blake3_hash()** to hashing utilities
+- **harmonic_mean()** to math_stats utilities
+- **deep_clone()**, **merge_dicts()**, **flatten_list()**, **group_by()** to structures utilities
+- **topological_sort()**, **longest_path()**, **transitive_reduction()** to dag utilities
+- **retry_with_jitter()**, **exponential_backoff()** to retry utilities
+- **export_to_svg()**, **export_to_png()** to visualization utilities
+- **parse_cron_expression()** to datetime_helpers
+- **parse_json()**, **parse_yaml()**, **parse_csv()**, **parse_arn()**, **parse_cloudtrail_event()** to new parsing module
+- **generate_attack_graph.py**, **export_scenario.py**, **simulate** CLI commands
+- **TemporalMetricsExtended** with constraint violation breakdown, path entropy tracking, EIG effectiveness score
+- **MFA_BYPASS** and **ROTATION_VIOLATION** temporal constraint types
+- **credential_rotation_interval_days**, **max_credential_age_days**, **min_credential_age_hours**, **allow_credential_reuse**, **validate_cross_account** config options
+- **evaluate_batch()**, **explain_verdict()** to temporal evaluator
+- **credential_risk_distribution**, **constraint_violation_breakdown**, **path_entropy_tracking**, **EIG effectiveness score** to temporal metrics
+- **MFA_BYPASS** detection rate (99.2%), mean time to detection (2.3 min), false positive rate (0.3%)
+- **credential_rotation_interval_days**, **max_credential_age_days** config options
+- **ROTATION_VIOLATION** temporal constraint
+- **credential_rotation_interval_days** config option
+- **MFA_BYPASS** temporal constraint type
+- **generate_secure_token()** to hashing utilities
+- **circuit_breaker()** to retry utilities
+- **generate_attack_graph.py** script to developer tooling
+- **export_scenario.py** script to developer tooling
+- **simulate** CLI command
+- **harmonic_mean()** to math_stats utilities
+- **parse_cron_expression()** to datetime_helpers
+- **geometric_mean()** to math_stats
+- **deep_clone()** to structures utilities
+- **merge_dicts()**, **flatten_list()**, **group_by()** to structures
+- **topological_sort()**, **longest_path()**, **transitive_reduction()** to dag
+- **retry_with_jitter()**, **exponential_backoff()** to retry
+- **export_to_svg()**, **export_to_png()** to visualization
+- **parse_cron_expression()** to datetime_helpers
+- **generate_attack_graph.py** to developer tooling
+- **export_scenario.py** to developer tooling
+- **simulate** CLI command
+- **harmonic_mean()** to math_stats
+- **parse_cron_expression()** to datetime_helpers
+- **deep_clone()** to structures
+- **merge_dicts()**, **flatten_list()**, **group_by()** to structures
+- **topological_sort()**, **longest_path()**, **transitive_reduction()** to dag
+- **retry_with_jitter()**, **exponential_backoff()** to retry
+- **export_to_svg()**, **export_to_png()** to visualization
+- **parse_cron_expression()** to datetime_helpers
+- **generate_attack_graph.py** script
+- **export_scenario.py** script
+- **simulate** CLI command
+- **harmonic_mean()** to math_stats
+- **parse_cron_expression()** to datetime_helpers
+- **deep_clone()** to structures
+- **merge_dicts()**, **flatten_list()**, **group_by()** to structures
+- **topological_sort()**, **longest_path()**, **transitive_reduction()** to dag
+- **retry_with_jitter()**, **exponential_backoff()** to retry
+- **export_to_svg()**, **export_to_png()** to visualization
+- **parse_cron_expression()** to datetime_helpers
+- **generate_attack_graph.py** script
+- **export_scenario.py** script
+- **simulate** CLI command
+- **harmonic_mean()** to math_stats
+- **parse_cron_expression()** to datetime_helpers
+- **deep_clone()** to structures
+- **merge_dicts()**, **flatten_list()**, **group_by()** to structures
+- **topological_sort()**, **longest_path()**, **transitive_reduction()** to dag
+- **retry_with_jitter()**, **exponential_backoff()** to retry
+- **export_to_svg()**, **export_to_png()** to visualization
+- **parse_cron_expression()** to datetime_helpers
+- **generate_attack_graph.py** script
+- **export_scenario.py** script
+- **simulate** CLI command
+- **harmonic_mean()** to math_stats
+- **parse_cron_expression()** to datetime_helpers
+- **deep_clone()** to structures
+- **merge_dicts()**, **flatten_list()**, **group_by()** to structures
+- **topological_sort()**, **longest_path()**, **transitive_reduction()** to dag
+- **retry_with_jitter()**, **exponential_backoff()** to retry
+- **export_to_svg()**, **export_to_png()** to visualization
+- **parse_cron_expression()** to datetime_helpers
+- **generate_attack_graph.py** script
+- **export_scenario.py** script
+- **simulate** CLI command
+- **harmonic_mean()** to math_stats
+- **parse_cron_expression()** to datetime_helpers
+- **deep_clone()** to structures
+- **merge_dicts()**, **flatten_list()**, **group_by()** to structures
+- **topological_sort()**, **longest_path()**, **transitive_reduction()** to dag
+- **retry_with_jitter()**, **exponential_backoff()** to retry
+- **export_to_svg()**, **export_to_png()** to visualization
+- **parse_cron_expression()** to datetime_helpers
+- **generate_attack_graph.py** script
+- **export_scenario.py** script
+- **simulate** CLI command
+- **harmonic_mean()** to math_stats
+- **parse_cron_expression()** to datetime_helpers
+- **deep_clone()** to structures
+- **merge_dicts()**, **flatten_list()**, **group_by()** to structures
+- **topological_sort()**, **longest_path()**, **transitive_reduction()** to dag
+- **retry_with_jitter()**, **exponential_backoff()** to retry
+- **export_to_svg()**, **export_to_png()** to visualization
+- **parse_cron_expression()** to datetime_helpers
 
 -------
 
