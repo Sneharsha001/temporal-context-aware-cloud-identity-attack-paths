@@ -86,6 +86,37 @@ ARF-RT features a comprehensive **Temporal Context Subsystem** (`arf_rt/temporal
 
 ---
 
+## November 10, 2026 Enhancements (v0.9.3)
+
+### New Temporal Constraint: `MFA_BYPASS`
+Added detection for MFA challenge bypassed or missing for privileged actions, sourced from CloudTrail MFA fields. This constraint helps identify potential security gaps where privileged actions are performed without proper multi-factor authentication.
+
+### Credential Rotation Tracking Enhancements
+- Added `credential_rotation_interval_days` configuration option for mandatory rotation intervals (default: 90 days)
+- Added `max_credential_age_days` configuration for maximum credential lifetime before forced rotation (default: 365 days)
+- New `ROTATION_VIOLATION` temporal constraint detects credentials exceeding mandatory rotation intervals
+- Enhanced `CredentialScorer` with rotation compliance scoring
+
+### Monitoring & Observability Improvements
+- Added `credential_risk_distribution` metric to `TemporalMetricsExtended` for risk score histogram and percentile analysis
+- Enhanced `TemporalMetricsExtended` with percentile calculations (median, p95, p99) and latency tracking
+- New alerting rules for high infeasible rates, evaluation latency, and UNKNOWN verdict spikes
+
+### Security Hardening
+- Added `MFA_BYPASS` temporal constraint type for detecting MFA bypass attempts
+- Enhanced Security Hardening Guide with threat model, input validation, database security, network security, container security, secrets management, audit & compliance, and incident response sections
+- Updated Security Hardening Guide with compliance checklist (GDPR, CCPA, SOC 2, ISO 27001, PCI-DSS)
+
+### Documentation Improvements
+- Updated version to v0.9.3 with comprehensive changelog
+- Added Architecture Overview section with system components diagram and key design principles
+- Enhanced Quick Start Guide with temporal analysis examples
+- Expanded Configuration Reference with new parameters and environment variable overrides
+- Added Migration Guide for v0.8 → v0.9 upgrade path
+- Added Performance Optimization Tips section with configuration tuning, batch processing, memory optimization, and profiling commands
+
+---
+
 ## Enhanced Utility Modules (v0.9.1)
 
 ### `arf_rt.util.datetime_helpers`
