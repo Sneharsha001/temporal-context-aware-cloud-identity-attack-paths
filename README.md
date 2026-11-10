@@ -494,6 +494,7 @@ python scripts/generate_compliance_report.py scenario.json --framework CIS_AWS -
 | `hash <scenario>` | Print `canonical_run_hash` (determinism check) |
 | `export <scenario> [-o FILE]` | Export full machine-readable state |
 | `compliance <scenario> [--framework FW] [--format FMT]` | Generate compliance report for CIS, NIST, PCI-DSS, SOC2 |
+| `simulate <scenario> [--steps N] [--seed INT]` | Simulate attack path execution with temporal constraints |
 
 ## How It Works
 
