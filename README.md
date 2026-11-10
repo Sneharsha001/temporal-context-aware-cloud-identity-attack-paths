@@ -156,6 +156,17 @@ Extended statistical functions for path analysis:
 - **`mutual_information()`** — Information-theoretic dependency measure
 - **`softmax()` / `logsumexp()`** — Numerically stable probability transforms
 - **`geometric_mean()`** — Geometric mean for multiplicative data
+- **`harmonic_mean()`** — Harmonic mean for rates and ratios
+
+### `arf_rt.util.parsing`
+
+Parsing utilities for structured data:
+
+- **`parse_json()`** — Robust JSON parsing with error context
+- **`parse_yaml()`** — YAML parsing with schema validation
+- **`parse_csv()`** — CSV parsing with type inference
+- **`parse_arn()`** — AWS ARN parsing and validation
+- **`parse_cloudtrail_event()`** — CloudTrail event parsing and normalization
 
 ### `arf_rt.util.text`
 
