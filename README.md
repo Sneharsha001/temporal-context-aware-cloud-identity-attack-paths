@@ -242,6 +242,8 @@ Resilient execution with exponential backoff:
 - **`RetryContext`** — Context manager for manual control
 - **`retry_context()`** — Context manager factory
 - **`circuit_breaker()`** — Circuit breaker pattern for fault tolerance
+- **`retry_with_jitter()`** — Retry with random jitter to prevent thundering herd
+- **`exponential_backoff()`** — Configurable exponential backoff strategy
 
 ### `arf_rt.util.visualization`
 
@@ -254,6 +256,8 @@ Graph export for visualization tools:
 - **`export_to_graphml()`** — GraphML XML
 - **`export_to_plantuml()`** — PlantUML diagram format
 - **`style_attack_path_dot()`** — Highlighted attack path DOT
+- **`export_to_svg()`** — SVG vector graphics export
+- **`export_to_png()`** — PNG raster export via headless browser
 
 ### `arf_rt.util.config_loader`
 
