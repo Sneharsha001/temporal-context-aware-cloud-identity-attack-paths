@@ -201,6 +201,9 @@ Nested dictionary and collection manipulation:
 - **`get_nested()` / `set_nested()`** — Dot-notation path access
 - **`chunk_list()`** — Split lists into fixed-size chunks
 - **`deep_clone()`** — Deep copy with circular reference handling
+- **`merge_dicts()`** — Recursively merge dictionaries with conflict resolution
+- **`flatten_list()`** — Flatten nested lists to a single level
+- **`group_by()`** — Group items by key function
 
 ### `arf_rt.util.dag`
 
@@ -214,6 +217,9 @@ Directed Acyclic Graph algorithms:
 - **`is_dag()`** — DAG validation
 - **`reverse_graph()`** — Edge reversal
 - **`get_sources()` / `get_sinks()`** — Graph boundary nodes
+- **`topological_sort()`** — Kahn's algorithm for topological ordering
+- **`longest_path()`** — Find longest path in DAG
+- **`transitive_reduction()`** — Compute transitive reduction
 
 ### `arf_rt.util.graph_traversal`
 
