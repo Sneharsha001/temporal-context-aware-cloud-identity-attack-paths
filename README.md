@@ -529,6 +529,7 @@ ARF-RT provides a suite of developer utilities in `scripts/`:
 | `generate_compliance_report.py` | Generates compliance reports for CIS, NIST, PCI-DSS, SOC2 | `python scripts/generate_compliance_report.py --framework CIS_AWS` |
 | `generate_attack_graph.py` | Generates attack path visualizations in DOT/Mermaid/GraphML | `python scripts/generate_attack_graph.py scenario.json --format mermaid` |
 | `export_scenario.py` | Exports scenario to JSON/YAML/GraphML for sharing | `python scripts/export_scenario.py scenario.json --format graphml -o output.graphml` |
+| `generate_policy_report.py` | Generates IAM policy analysis report with risk scoring | `python scripts/generate_policy_report.py scenario.json --format pdf -o report.pdf` |
 
 ## Quick Start
 
