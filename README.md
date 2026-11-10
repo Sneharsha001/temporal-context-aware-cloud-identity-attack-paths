@@ -9,7 +9,7 @@
 
 A Bayesian reasoning engine for cloud identity attack path analysis. ARF-RT ingests privilege graphs (PMapper, AWS Organizations), models policy constraints as correlated belief structures, and computes the most informative probe sequence to reduce uncertainty about path viability.
 
-**Keywords:** Cloud Security, IAM, Attack Path Analysis, Temporal Logic, Bayesian Inference, EIG, CCPF
+**Keywords:** Cloud Security, IAM, Attack Path Analysis, Temporal Logic, Bayesian Inference, EIG, CCPF, Cloud Identity, Temporal Analysis, Risk Topology
 
 **SEMANTICS_VERSION:** 1.0.0  
 **Scope:** Replay-only. No live cloud SDK calls.  
