@@ -189,6 +189,7 @@ Cryptographic hashing and integrity utilities:
 - **`hash_combine()`** — Order-independent hash combination
 - **`stable_hash()`** — 64-bit integer hashing for hash tables
 - **`generate_secure_token()`** — Cryptographically secure random token generation
+- **`blake3_hash()`** — High-speed cryptographic hashing with BLAKE3
 
 ### `arf_rt.util.structures`
 
