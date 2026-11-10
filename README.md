@@ -410,6 +410,7 @@ ARF-RT provides a suite of developer utilities in `scripts/`:
 | `score_credentials.py` | Temporal exploitation risk scoring for credential edges (table/JSON/CSV) | `python scripts/score_credentials.py -i log.json --top 10` |
 | `generate_compliance_report.py` | Generates compliance reports for CIS, NIST, PCI-DSS, SOC2 | `python scripts/generate_compliance_report.py --framework CIS_AWS` |
 | `generate_attack_graph.py` | Generates attack path visualizations in DOT/Mermaid/GraphML | `python scripts/generate_attack_graph.py scenario.json --format mermaid` |
+| `export_scenario.py` | Exports scenario to JSON/YAML/GraphML for sharing | `python scripts/export_scenario.py scenario.json --format graphml -o output.graphml` |
 
 ## Quick Start
 
