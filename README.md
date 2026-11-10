@@ -490,6 +490,7 @@ In real-world multi-account AWS topologies (e.g., Security, Core, Workload, and 
 - **Exact Calibration:** Exact probability calibration ($0.0000$ error under deterministic replay) ensures security teams investigate genuine identity threats first.
 - **MFA Bypass Detection:** 99.2% detection rate for MFA bypass attempts with 2.3-minute mean time to detection.
 - **Credential Hygiene:** 94% rotation compliance with automated drift detection and remediation.
+- **Threat Hunting Integration:** Native integration with MITRE ATT&CK framework for automated threat hunting workflows.
 
 ## Graph Visualization & Topological DAG Analysis
 
