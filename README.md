@@ -279,10 +279,13 @@ New configuration options for fine-grained control:
 - **`credential_reuse_window_seconds`** — Suspicious reuse detection window (default: 3600s)
 - **`credential_rotation_interval_days`** — Mandatory rotation interval (default: 90 days)
 - **`max_credential_age_days`** — Maximum credential lifetime before forced rotation (default: 365 days)
+- **`min_credential_age_hours`** — Minimum credential age before rotation allowed (default: 1 hour)
+- **`allow_credential_reuse`** — Allow credential reuse across paths (default: false)
 - **`validate()`** — Configuration validation with warnings
 - **`to_dict()` / `from_dict()`** — Serialization support
 - **`balanced()` preset** — Moderate settings alongside existing `strict()` and `permissive()`
 - **`with_overrides()`** — Create modified config copies
+- **`validate_cross_account()`** — Validate cross-account trust relationships
 
 ### `arf_rt.temporal.evaluator` Enhancements
 
@@ -292,6 +295,8 @@ Enhanced evaluation with statistics and metrics integration:
 - **`enable_stats` parameter** — Optional statistics collection
 - **`evaluate_with_metrics()`** — Integrated metrics collection
 - **`config` / `reference_time` properties** — Access evaluation settings
+- **`evaluate_batch()`** — Batch evaluation for multiple paths
+- **`explain_verdict()`** — Human-readable verdict explanation
 
 ### `arf_rt.temporal.metrics` Extensions
 
